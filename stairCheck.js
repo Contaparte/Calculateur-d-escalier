@@ -3,8 +3,13 @@
 /**
  * Parse une saisie métrique (en mm) ou impériale (pieds‑pouces-fraction)
  * et renvoie la valeur en millimètres.
- * Pour le système impérial, le format attendu est : X'-Y Z/W"
- *   ex. 7'-3 15/32"
+ * Formats impériaux supportés :
+ *  - A'-B C/G"   (ex. 7'-3 15/32")
+ *  - A'          (ex. 7')
+ *  - A'-B"       (ex. 7'-3")
+ *  - B"          (ex. 36")
+ *  - B C/G"      (ex. 3 15/32")
+ *  - C/G"        (ex. 15/32")
  */
 function parseMeasurement(input, system) {
   input = input.trim();
@@ -13,15 +18,47 @@ function parseMeasurement(input, system) {
     if (isNaN(mm)) throw new Error('Format métrique invalide (ex: 190 ou 2050)');
     return mm;
   } else {
-    // impérial : X'-Y Z/W"
-    const re = /^(\d+)['’]-(\d+)(?:\s+(\d+)\/(\d+))?["”]?$/;
-    const m = input.match(re);
-    if (!m) throw new Error('Format impérial invalide (ex: 7\'-3 15/32")');
-    const feet = parseInt(m[1], 10);
-    const inches = parseInt(m[2], 10);
-    const frac = m[3] ? (parseInt(m[3], 10) / parseInt(m[4], 10)) : 0;
-    const totalInches = feet * 12 + inches + frac;
-    return totalInches * 25.4;
+    // On retire d'abord les guillemets doubles pour simplifier
+    const s = input.replace(/["”]/g, '');
+
+    // 1) Pieds‑pouces‑fraction : A'-B C/G
+    let m = s.match(/^(\d+)['’]-(\d+)\s+(\d+)\/(\d+)$/);
+    if (m) {
+      const [ , ft, in_, num, den ] = m.map(Number);
+      return (ft * 12 + in_ + num/den) * 25.4;
+    }
+    // 2) Pieds‑pouces : A'-B
+    m = s.match(/^(\d+)['’]-(\d+)$/);
+    if (m) {
+      const [ , ft, in_ ] = m.map(Number);
+      return (ft * 12 + in_) * 25.4;
+    }
+    // 3) Pieds seuls : A'
+    m = s.match(/^(\d+)['’]$/);
+    if (m) {
+      const ft = parseInt(m[1], 10);
+      return ft * 12 * 25.4;
+    }
+    // 4) Pouces‑fraction : B C/G
+    m = s.match(/^(\d+)\s+(\d+)\/(\d+)$/);
+    if (m) {
+      const [ , in_, num, den ] = m.map(Number);
+      return (in_ + num/den) * 25.4;
+    }
+    // 5) Fraction seule : C/G
+    m = s.match(/^(\d+)\/(\d+)$/);
+    if (m) {
+      const [ , num, den ] = m.map(Number);
+      return (num/den) * 25.4;
+    }
+    // 6) Pouces seuls : B
+    m = s.match(/^(\d+)$/);
+    if (m) {
+      const in_ = parseInt(m[1], 10);
+      return in_ * 25.4;
+    }
+
+    throw new Error('Format impérial invalide (ex: 7\'-3 15/32", 7\', 3 15/32", 15/32")');
   }
 }
 
@@ -46,13 +83,11 @@ function validateStair() {
     // Seuils CNB
     let riserMin, riserMax, treadMin, treadMax, widthMin, headMin;
     if (bType === 'part9') {
-      // Maisons et petits bâtiments (Partie 9) — valeurs "privé"
       riserMin = 125;   riserMax = 200;
       treadMin = 255;   treadMax = 355;
       widthMin = 860;
       headMin  = 1950;
     } else {
-      // Autres bâtiments (Partie 3) — valeurs "commun"
       riserMin = 125;   riserMax = 180;
       treadMin = 280;   treadMax = Infinity;
       widthMin = 900;

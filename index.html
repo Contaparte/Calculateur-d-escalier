@@ -1,839 +1,394 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calculateur d'escalier CNB 2015</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      line-height: 1.6;
-      color: #333;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    
-    h1 {
-      color: #2c5282;
-      margin-bottom: 20px;
-    }
-    
-    h2 {
-      color: #3182ce;
-      margin-top: 30px;
-      margin-bottom: 15px;
-    }
-    
-    .container {
-      background-color: #f8fafc;
-      border-radius: 8px;
-      padding: 20px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      margin-bottom: 20px;
-    }
-    
-    .form-group {
-      margin-bottom: 15px;
-    }
-    
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: 500;
-    }
-    
-    input, select {
-      width: 100%;
-      padding: 8px 12px;
-      border: 1px solid #cbd5e0;
-      border-radius: 4px;
-      font-size: 16px;
-    }
-    
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 20px;
-    }
-    
-    button {
-      background-color: #3182ce;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 16px;
-      transition: background-color 0.2s;
-    }
-    
-    button:hover {
-      background-color: #2c5282;
-    }
-    
-    .results {
-      background-color: #f0fff4;
-      border: 1px solid #c6f6d5;
-      border-radius: 8px;
-      padding: 20px;
-      margin-top: 20px;
-      display: none;
-    }
-    
-    .results h3 {
-      color: #38a169;
-      margin-top: 0;
-    }
-    
-    .result-row {
-      display: flex;
-      margin-bottom: 10px;
-    }
-    
-    .result-label {
-      font-weight: 500;
-      min-width: 200px;
-    }
-    
-    .result-value {
-      font-weight: 700;
-    }
-    
-    .errors {
-      background-color: #fff5f5;
-      border: 1px solid #fed7d7;
-      border-radius: 8px;
-      padding: 20px;
-      margin-top: 20px;
-      display: none;
-    }
-    
-    .errors h3 {
-      color: #e53e3e;
-      margin-top: 0;
-    }
-    
-    .error-list {
-      padding-left: 20px;
-      color: #e53e3e;
-    }
-    
-    .rules {
-      background-color: #fffbeb;
-      border: 1px solid #feebc8;
-      border-radius: 8px;
-      padding: 20px;
-      margin-top: 20px;
-      display: none;
-    }
-    
-    .rules h3 {
-      color: #d97706;
-      margin-top: 0;
-    }
-    
-    .toggle-rules {
-      color: #3182ce;
-      text-decoration: underline;
-      background: none;
-      border: none;
-      padding: 0;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    
-    .rule-check {
-      display: flex;
-      margin-bottom: 8px;
-    }
-    
-    .rule-label {
-      min-width: 200px;
-    }
-    
-    .pas-checks {
-      background-color: #ebf8ff;
-      border-radius: 4px;
-      padding: 10px;
-      margin-top: 15px;
-    }
-    
-    .valid {
-      color: #38a169;
-    }
-    
-    .invalid {
-      color: #e53e3e;
-    }
-    
-    #imprimable {
-      margin-top: 15px;
-    }
-  </style>
-</head>
-<body>
-  <h1>Calculateur d'escalier CNB 2015</h1>
-  
-  <div class="container">
-    <h2>Paramètres de l'escalier</h2>
-    
-    <div class="grid">
-      <div class="form-group">
-        <label for="typeBatiment">Type de bâtiment / d'escalier</label>
-        <select id="typeBatiment">
-          <option value="prive">Escalier privé (logement individuel)</option>
-          <option value="commun">Escalier commun (habitation)</option>
-          <option value="autre">Autre bâtiment (partie 3 du CNB)</option>
-        </select>
-      </div>
-      
-      <div class="form-group">
-        <label for="formeEscalier">Forme de l'escalier</label>
-        <select id="formeEscalier">
-          <option value="droit">Droit</option>
-          <option value="l">En L</option>
-          <option value="u">En U</option>
-          <option value="helicoidal">Hélicoïdal</option>
-        </select>
-      </div>
-      
-      <div class="form-group">
-        <label for="systemeUnites">Système d'unités</label>
-        <select id="systemeUnites">
-          <option value="metrique">Métrique (mm)</option>
-          <option value="imperial">Impérial (pieds-pouces)</option>
-        </select>
-      </div>
-      
-      <div class="form-group" id="nombrePersonnesContainer" style="display: none;">
-        <label for="nombrePersonnes">Nombre de personnes desservies</label>
-        <input type="number" id="nombrePersonnes" placeholder="Ex: 50">
-      </div>
-    </div>
-    
-    <div class="grid">
-      <div class="form-group">
-        <label for="hauteurEscalier">Hauteur totale de l'escalier <span id="uniteHauteur">(mm)</span></label>
-        <input type="number" id="hauteurEscalier" placeholder="Ex: 2700 mm">
-        <input type="text" id="hauteurImperial" placeholder="Ex: 9'-6 0/32&quot;" style="display: none;">
-        <small id="formatImperialHauteur" style="display: none; color: #666;">Format: X'-Y Z/W" (ex: 9'-6 0/32")</small>
-      </div>
-      
-      <div class="form-group">
-        <label for="largeurEscalier">Largeur de l'escalier (optionnel) <span id="uniteLargeur">(mm)</span></label>
-        <input type="number" id="largeurEscalier" placeholder="Ex: 900 mm">
-        <input type="text" id="largeurImperial" placeholder="Ex: 3'-0 0/32&quot;" style="display: none;">
-        <small id="formatImperialLargeur" style="display: none; color: #666;">Format: X'-Y Z/W" (ex: 3'-0 0/32")</small>
-      </div>
-    </div>
-  </div>
-  
-  <div style="text-align: center; margin: 20px 0;">
-    <button id="calculerBtn">Calculer l'escalier</button>
-  </div>
-  
-  <div id="erreurs" class="errors">
-    <h3>Attention :</h3>
-    <ul id="erreursList" class="error-list"></ul>
-  </div>
-  
-  <div id="resultats" class="results">
-    <h3>Résultats du calcul</h3>
-    
-    <div class="grid">
-      <div>
-        <div class="result-row">
-          <div class="result-label">Nombre de contremarches :</div>
-          <div id="nbContremarches" class="result-value"></div>
-        </div>
-        
-        <div class="result-row">
-          <div class="result-label">Nombre de marches :</div>
-          <div id="nbMarches" class="result-value"></div>
-        </div>
-        
-        <div class="result-row">
-          <div class="result-label">Hauteur de contremarche :</div>
-          <div id="hauteurContremarche" class="result-value"></div>
-        </div>
-      </div>
-      
-      <div>
-        <div class="result-row">
-          <div class="result-label">Profondeur du giron :</div>
-          <div id="profondeurGiron" class="result-value"></div>
-        </div>
-        
-        <div class="result-row">
-          <div class="result-label">Longueur horizontale :</div>
-          <div id="longueurTotale" class="result-value"></div>
-        </div>
-        
-        <div class="result-row">
-          <div class="result-label">Largeur minimale requise :</div>
-          <div id="largeurMinimale" class="result-value"></div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="pas-checks">
-      <h4>Vérification de la règle du pas :</h4>
-      
-      <div class="rule-check">
-        <div class="rule-label">Hauteur + giron :</div>
-        <div id="regleSomme" class="rule-value"></div>
-      </div>
-      
-      <div class="rule-check">
-        <div class="rule-label">2 × hauteur + giron :</div>
-        <div id="regleSommeDouble" class="rule-value"></div>
-      </div>
-      
-      <div class="rule-check">
-        <div class="rule-label">Hauteur × giron :</div>
-        <div id="regleProduit" class="rule-value"></div>
-      </div>
-    </div>
-    
-    <div id="imprimable">
-      <button id="imprimerBtn">Imprimer les résultats</button>
-    </div>
-  </div>
-  
-  <div>
-    <button id="toggleRules" class="toggle-rules">Afficher les règles du CNB</button>
-  </div>
-  
-  <div id="regles" class="rules">
-    <h3>Règles applicables du CNB 2015</h3>
-    
-    <div>
-      <h4>Hauteur de contremarche :</h4>
-      <ul>
-        <li>Escalier privé : entre 125 mm et 200 mm</li>
-        <li>Escalier commun : entre 125 mm et 180 mm</li>
-      </ul>
-    </div>
-    
-    <div>
-      <h4>Profondeur du giron :</h4>
-      <ul>
-        <li>Escalier privé : entre 255 mm et 355 mm</li>
-        <li>Escalier commun : minimum 280 mm (pas de maximum)</li>
-      </ul>
-    </div>
-    
-    <div>
-      <h4>Largeur minimale :</h4>
-      <ul>
-        <li>Escalier privé : 860 mm</li>
-        <li>Escalier commun dans une habitation : 900 mm</li>
-        <li>Escalier dans d'autres bâtiments : 900 mm ou 8 mm par personne (la plus grande valeur)</li>
-        <li>Escalier hélicoïdal : 660 mm de largeur libre entre mains courantes</li>
-      </ul>
-    </div>
-    
-    <div>
-      <h4>Règle du pas (au moins 2 critères doivent être respectés) :</h4>
-      <ul>
-        <li>Escalier privé :
-          <ul>
-            <li>Hauteur + giron = 420 à 440 mm</li>
-            <li>2 × hauteur + giron = 480 à 500 mm</li>
-            <li>Hauteur × giron = 5740 à 6010 mm²</li>
-          </ul>
-        </li>
-        <li>Escalier commun :
-          <ul>
-            <li>Hauteur + giron = 430 à 450 mm</li>
-            <li>2 × hauteur + giron = 490 à 510 mm</li>
-            <li>Hauteur × giron = 5645 à 6326 mm²</li>
-          </ul>
-        </li>
-      </ul>
-    </div>
-    
-    <div>
-      <h4>Hauteur maximale d'une volée :</h4>
-      <p>3,7 m maximum entre deux paliers</p>
-    </div>
-  </div>
+import React, { useState, useEffect } from 'react';
 
-  <script>
-    // Limites du CNB
-    const limites = {
-      prive: {
-        hauteurContremarche: { min: 125, max: 200 },
-        giron: { min: 255, max: 355 },
-        largeur: 860,
-        reglePas: {
-          somme: { min: 420, max: 440 },
-          sommeDouble: { min: 480, max: 500 },
-          produit: { min: 5740, max: 6010 }
-        }
-      },
-      commun: {
-        hauteurContremarche: { min: 125, max: 180 },
-        giron: { min: 280, max: 9999 }, // Pas de maximum réel
-        largeur: 900,
-        reglePas: {
-          somme: { min: 430, max: 450 },
-          sommeDouble: { min: 490, max: 510 },
-          produit: { min: 5645, max: 6326 }
-        }
-      },
-      autre: {
-        hauteurContremarche: { min: 125, max: 180 },
-        giron: { min: 280, max: 9999 },
-        largeur: 900,
-        reglePas: {
-          somme: { min: 430, max: 450 },
-          sommeDouble: { min: 490, max: 510 },
-          produit: { min: 5645, max: 6326 }
-        }
-      }
-    };
+const EscalierCalculator = () => {
+  // État pour les paramètres de l'escalier
+  const [unitesMesure, setUnitesMesure] = useState('imperial'); // 'imperial' ou 'metrique'
+  const [hauteurEscalier, setHauteurEscalier] = useState({ pieds: 9, pouces: 0, fraction: 0 });
+  const [hauteurEscalierCm, setHauteurEscalierCm] = useState(274.32); // 9 pieds en cm
+  const [formeEscalier, setFormeEscalier] = useState('droit'); // droit, L, U
+  const [largeurEscalier, setLargeurEscalier] = useState({ pieds: 3, pouces: 6, fraction: 0 }); // 42 pouces par défaut
+  const [largeurEscalierCm, setLargeurEscalierCm] = useState(106.68); // 42 pouces en cm
+  const [resultat, setResultat] = useState(null);
 
-    // Éléments du DOM
-    const typeBatimentEl = document.getElementById('typeBatiment');
-    const formeEscalierEl = document.getElementById('formeEscalier');
-    const systemeUnitesEl = document.getElementById('systemeUnites');
-    const nombrePersonnesContainerEl = document.getElementById('nombrePersonnesContainer');
-    const nombrePersonnesEl = document.getElementById('nombrePersonnes');
-    const hauteurEscalierEl = document.getElementById('hauteurEscalier');
-    const hauteurImperialEl = document.getElementById('hauteurImperial');
-    const formatImperialHauteurEl = document.getElementById('formatImperialHauteur');
-    const largeurEscalierEl = document.getElementById('largeurEscalier');
-    const largeurImperialEl = document.getElementById('largeurImperial');
-    const formatImperialLargeurEl = document.getElementById('formatImperialLargeur');
-    const uniteHauteurEl = document.getElementById('uniteHauteur');
-    const uniteLargeurEl = document.getElementById('uniteLargeur');
-    const calculerBtn = document.getElementById('calculerBtn');
-    const imprimerBtn = document.getElementById('imprimerBtn');
-    const erreursEl = document.getElementById('erreurs');
-    const erreursListEl = document.getElementById('erreursList');
-    const resultatsEl = document.getElementById('resultats');
-    const nbContremarches = document.getElementById('nbContremarches');
-    const nbMarches = document.getElementById('nbMarches');
-    const hauteurContremarche = document.getElementById('hauteurContremarche');
-    const profondeurGiron = document.getElementById('profondeurGiron');
-    const longueurTotale = document.getElementById('longueurTotale');
-    const largeurMinimale = document.getElementById('largeurMinimale');
-    const regleSomme = document.getElementById('regleSomme');
-    const regleSommeDouble = document.getElementById('regleSommeDouble');
-    const regleProduit = document.getElementById('regleProduit');
-    const toggleRulesBtn = document.getElementById('toggleRules');
-    const reglesEl = document.getElementById('regles');
+  // Conversion entre les systèmes métriques et impériaux
+  const cmVersPouces = (cm) => cm / 2.54;
+  const poucesVersCm = (pouces) => pouces * 2.54;
+  
+  // Convertir la hauteur totale en pouces
+  const hauteurTotaleEnPouces = () => {
+    return hauteurEscalier.pieds * 12 + hauteurEscalier.pouces + hauteurEscalier.fraction / 32;
+  };
+  
+  // Convertir la hauteur totale en cm
+  const hauteurTotaleEnCm = () => {
+    return unitesMesure === 'imperial' ? poucesVersCm(hauteurTotaleEnPouces()) : hauteurEscalierCm;
+  };
+  
+  // Convertir la largeur totale en pouces
+  const largeurTotaleEnPouces = () => {
+    return largeurEscalier.pieds * 12 + largeurEscalier.pouces + largeurEscalier.fraction / 32;
+  };
+  
+  // Convertir la largeur totale en cm
+  const largeurTotaleEnCm = () => {
+    return unitesMesure === 'imperial' ? poucesVersCm(largeurTotaleEnPouces()) : largeurEscalierCm;
+  };
 
-    // Conversion métrique/impérial
-    function convertirImperialEnMetrique(valeur) {
-      if (!valeur) return '';
-      
-      // Format attendu: X'-Y Z/W" (ex: 9'-6 0/32")
-      const regex = /(\d+)'[-\s]*(\d+)(?:\s+(\d+)\/(\d+))?"/;
-      const match = valeur.match(regex);
-      
-      if (match) {
-        const pieds = parseInt(match[1], 10);
-        const pouces = parseInt(match[2], 10);
-        const numerateur = match[3] ? parseInt(match[3], 10) : 0;
-        const denominateur = match[4] ? parseInt(match[4], 10) : 1;
-        
-        const total = (pieds * 12 + pouces + numerateur / denominateur) * 25.4;
-        return total.toFixed(0);
-      }
-      return '';
+  // Mettre à jour la hauteur en cm quand la hauteur impériale change
+  useEffect(() => {
+    if (unitesMesure === 'imperial') {
+      setHauteurEscalierCm(poucesVersCm(hauteurTotaleEnPouces()));
     }
+  }, [hauteurEscalier, unitesMesure]);
 
-    function convertirMetriqueEnImperial(valeurMm) {
-      if (!valeurMm) return '';
-      
-      const totalPouces = valeurMm / 25.4;
+  // Mettre à jour la hauteur impériale quand la hauteur en cm change
+  useEffect(() => {
+    if (unitesMesure === 'metrique') {
+      const totalPouces = cmVersPouces(hauteurEscalierCm);
       const pieds = Math.floor(totalPouces / 12);
       const pouces = Math.floor(totalPouces % 12);
-      const fractionPouces = totalPouces - Math.floor(totalPouces);
+      const fractionDecimale = (totalPouces % 1) * 32;
+      const fraction = Math.round(fractionDecimale);
       
-      // Convertir la fraction en 32èmes de pouce
-      let numerateur = Math.round(fractionPouces * 32);
-      let denominateur = 32;
-      
-      // Simplifier la fraction
-      function pgcd(a, b) {
-        return b ? pgcd(b, a % b) : a;
-      }
-      
-      if (numerateur > 0) {
-        const diviseur = pgcd(numerateur, denominateur);
-        numerateur = numerateur / diviseur;
-        denominateur = denominateur / diviseur;
-      }
-      
-      // Format: X'-Y Z/W"
-      let resultat = `${pieds}'-${pouces}`;
-      if (numerateur > 0) {
-        resultat += ` ${numerateur}/${denominateur}`;
-      } else {
-        resultat += " 0/32";  // Ajout de 0/32 même quand la fraction est nulle
-      }
-      resultat += '"';
-      
-      return resultat;
+      setHauteurEscalier({ pieds, pouces, fraction });
     }
+  }, [hauteurEscalierCm, unitesMesure]);
 
-    // Fonction pour afficher les erreurs
-    function afficherErreurs(erreurs) {
-      erreursListEl.innerHTML = '';
-      
-      erreurs.forEach(erreur => {
-        const li = document.createElement('li');
-        li.textContent = erreur;
-        erreursListEl.appendChild(li);
-      });
-      
-      erreursEl.style.display = 'block';
+  // Mettre à jour la largeur en cm quand la largeur impériale change
+  useEffect(() => {
+    if (unitesMesure === 'imperial') {
+      setLargeurEscalierCm(poucesVersCm(largeurTotaleEnPouces()));
     }
+  }, [largeurEscalier, unitesMesure]);
 
-    // Fonction pour imprimer les résultats
-    function imprimerResultats() {
-      const contenuImpression = `
-        <html>
-          <head>
-            <title>Résultats du calculateur d'escalier CNB 2015</title>
-            <style>
-              body {
-                font-family: sans-serif;
-                line-height: 1.6;
-                padding: 20px;
-              }
-              h1 {
-                color: #2c5282;
-              }
-              h2 {
-                color: #3182ce;
-                margin-top: 20px;
-              }
-              .section {
-                margin-bottom: 20px;
-              }
-              .row {
-                display: flex;
-                margin-bottom: 10px;
-              }
-              .label {
-                font-weight: bold;
-                width: 250px;
-              }
-              .valid {
-                color: #38a169;
-              }
-              .invalid {
-                color: #e53e3e;
-              }
-            </style>
-          </head>
-          <body>
-            <h1>Résultats du calculateur d'escalier CNB 2015</h1>
-            
-            <div class="section">
-              <h2>Paramètres de l'escalier</h2>
-              <div class="row">
-                <div class="label">Type de bâtiment / d'escalier :</div>
-                <div>${typeBatimentEl.options[typeBatimentEl.selectedIndex].text}</div>
-              </div>
-              <div class="row">
-                <div class="label">Forme de l'escalier :</div>
-                <div>${formeEscalierEl.options[formeEscalierEl.selectedIndex].text}</div>
-              </div>
-              <div class="row">
-                <div class="label">Hauteur totale :</div>
-                <div>${hauteurEscalierEl.value} mm</div>
-              </div>
-              ${largeurEscalierEl.value ? `
-              <div class="row">
-                <div class="label">Largeur proposée :</div>
-                <div>${largeurEscalierEl.value} mm</div>
-              </div>
-              ` : ''}
-            </div>
-            
-            <div class="section">
-              <h2>Dimensions calculées</h2>
-              <div class="row">
-                <div class="label">Nombre de contremarches :</div>
-                <div>${nbContremarches.textContent}</div>
-              </div>
-              <div class="row">
-                <div class="label">Nombre de marches :</div>
-                <div>${nbMarches.textContent}</div>
-              </div>
-              <div class="row">
-                <div class="label">Hauteur de contremarche :</div>
-                <div>${hauteurContremarche.textContent}</div>
-              </div>
-              <div class="row">
-                <div class="label">Profondeur du giron :</div>
-                <div>${profondeurGiron.textContent}</div>
-              </div>
-              <div class="row">
-                <div class="label">Longueur horizontale :</div>
-                <div>${longueurTotale.textContent}</div>
-              </div>
-              <div class="row">
-                <div class="label">Largeur minimale requise :</div>
-                <div>${largeurMinimale.textContent}</div>
-              </div>
-            </div>
-            
-            <div class="section">
-              <h2>Vérification de la règle du pas</h2>
-              <div class="row">
-                <div class="label">Hauteur + giron :</div>
-                <div class="${regleSomme.className}">${regleSomme.textContent}</div>
-              </div>
-              <div class="row">
-                <div class="label">2 × hauteur + giron :</div>
-                <div class="${regleSommeDouble.className}">${regleSommeDouble.textContent}</div>
-              </div>
-              <div class="row">
-                <div class="label">Hauteur × giron :</div>
-                <div class="${regleProduit.className}">${regleProduit.textContent}</div>
-              </div>
-            </div>
-            
-            <div class="section">
-              <p><em>Document généré le ${new Date().toLocaleDateString()} par le Calculateur d'escalier CNB 2015</em></p>
-            </div>
-          </body>
-        </html>
-      `;
+  // Mettre à jour la largeur impériale quand la largeur en cm change
+  useEffect(() => {
+    if (unitesMesure === 'metrique') {
+      const totalPouces = cmVersPouces(largeurEscalierCm);
+      const pieds = Math.floor(totalPouces / 12);
+      const pouces = Math.floor(totalPouces % 12);
+      const fractionDecimale = (totalPouces % 1) * 32;
+      const fraction = Math.round(fractionDecimale);
       
-      const fenetre = window.open('', '_blank');
-      fenetre.document.write(contenuImpression);
-      fenetre.document.close();
-      fenetre.focus();
-      fenetre.print();
+      setLargeurEscalier({ pieds, pouces, fraction });
     }
+  }, [largeurEscalierCm, unitesMesure]);
 
-    // Événements
-    typeBatimentEl.addEventListener('change', () => {
-      if (typeBatimentEl.value === 'autre') {
-        nombrePersonnesContainerEl.style.display = 'block';
-      } else {
-        nombrePersonnesContainerEl.style.display = 'none';
-      }
-    });
-
-    systemeUnitesEl.addEventListener('change', () => {
-      if (systemeUnitesEl.value === 'imperial') {
-        hauteurEscalierEl.style.display = 'none';
-        hauteurImperialEl.style.display = 'block';
-        formatImperialHauteurEl.style.display = 'block';
-        largeurEscalierEl.style.display = 'none';
-        largeurImperialEl.style.display = 'block';
-        formatImperialLargeurEl.style.display = 'block';
-        uniteHauteurEl.textContent = "(pieds-pouces)";
-        uniteLargeurEl.textContent = "(pieds-pouces)";
-        
-        // Conversion métrique vers impérial
-        if (hauteurEscalierEl.value) {
-          hauteurImperialEl.value = convertirMetriqueEnImperial(hauteurEscalierEl.value);
-        }
-        if (largeurEscalierEl.value) {
-          largeurImperialEl.value = convertirMetriqueEnImperial(largeurEscalierEl.value);
-        }
-      } else {
-        hauteurEscalierEl.style.display = 'block';
-        hauteurImperialEl.style.display = 'none';
-        formatImperialHauteurEl.style.display = 'none';
-        largeurEscalierEl.style.display = 'block';
-        largeurImperialEl.style.display = 'none';
-        formatImperialLargeurEl.style.display = 'none';
-        uniteHauteurEl.textContent = "(mm)";
-        uniteLargeurEl.textContent = "(mm)";
-        
-        // Conversion impérial vers métrique
-        if (hauteurImperialEl.value) {
-          hauteurEscalierEl.value = convertirImperialEnMetrique(hauteurImperialEl.value);
-        }
-        if (largeurImperialEl.value) {
-          largeurEscalierEl.value = convertirImperialEnMetrique(largeurImperialEl.value);
-        }
-      }
-    });
-
-    hauteurImperialEl.addEventListener('input', () => {
-      hauteurEscalierEl.value = convertirImperialEnMetrique(hauteurImperialEl.value);
-    });
-
-    largeurImperialEl.addEventListener('input', () => {
-      largeurEscalierEl.value = convertirImperialEnMetrique(largeurImperialEl.value);
-    });
-
-    toggleRulesBtn.addEventListener('click', () => {
-      if (reglesEl.style.display === 'none' || reglesEl.style.display === '') {
-        reglesEl.style.display = 'block';
-        toggleRulesBtn.textContent = 'Masquer les règles du CNB';
-      } else {
-        reglesEl.style.display = 'none';
-        toggleRulesBtn.textContent = 'Afficher les règles du CNB';
-      }
-    });
+  // Calculer l'escalier
+  const calculerEscalier = () => {
+    let hauteur, nombreContreMarches, hauteurContreMarche, giron, longueurEscalier;
     
-    imprimerBtn.addEventListener('click', imprimerResultats);
+    // Conversion en unités appropriées
+    hauteur = unitesMesure === 'imperial' ? hauteurTotaleEnPouces() : hauteurEscalierCm;
+    
+    // Déterminer le nombre de contremarches
+    // Hauteur max de CM: 7.87" (impérial) ou 200mm (métrique)
+    const hauteurMaxCM = unitesMesure === 'imperial' ? 7.87 : 20;
+    nombreContreMarches = Math.ceil(hauteur / hauteurMaxCM);
+    
+    // Calculer la hauteur des contremarches
+    hauteurContreMarche = hauteur / nombreContreMarches;
+    
+    // Définir le giron (profondeur de marche)
+    // Giron min: 10" (impérial) ou 255mm (métrique)
+    const gironMin = unitesMesure === 'imperial' ? 10 : 25.5;
+    giron = gironMin;
+    
+    // Vérifier les règles du pas
+    const estRegle1Respectee = (giron + hauteurContreMarche >= 17 && giron + hauteurContreMarche <= 18);
+    const estRegle2Respectee = (giron * hauteurContreMarche >= 71 && giron * hauteurContreMarche <= 74);
+    const estRegle3Respectee = (giron + (2 * hauteurContreMarche) >= 22 && giron + (2 * hauteurContreMarche) <= 25);
+    
+    // Calculer la longueur horizontale de l'escalier
+    // Nombre de marches = nombre de contremarches - 1
+    const nombreMarches = nombreContreMarches - 1;
+    longueurEscalier = giron * nombreMarches;
+    
+    // Préparer les résultats dans les bonnes unités
+    const resultats = {
+      unitesMesure,
+      hauteurEscalier: unitesMesure === 'imperial' ? 
+        `${hauteurEscalier.pieds}'-${hauteurEscalier.pouces} ${hauteurEscalier.fraction}/32"` : 
+        `${hauteurEscalierCm.toFixed(2)} cm`,
+      nombreContreMarches,
+      hauteurContreMarche: unitesMesure === 'imperial' ? 
+        `${(hauteurContreMarche).toFixed(2)}"` : 
+        `${(hauteurContreMarche).toFixed(2)} cm`,
+      giron: unitesMesure === 'imperial' ? 
+        `${giron.toFixed(2)}"` : 
+        `${(giron * 2.54).toFixed(2)} cm`,
+      longueurEscalier: unitesMesure === 'imperial' ? 
+        `${Math.floor(longueurEscalier/12)}'-${(longueurEscalier%12).toFixed(2)}"` : 
+        `${(longueurEscalier * 2.54).toFixed(2)} cm`,
+      largeurEscalier: unitesMesure === 'imperial' ? 
+        `${largeurEscalier.pieds}'-${largeurEscalier.pouces} ${largeurEscalier.fraction}/32"` : 
+        `${largeurEscalierCm.toFixed(2)} cm`,
+      reglesPasRespectees: {
+        regle1: estRegle1Respectee,
+        regle2: estRegle2Respectee,
+        regle3: estRegle3Respectee
+      },
+      formeEscalier
+    };
+    
+    setResultat(resultats);
+  };
 
-    calculerBtn.addEventListener('click', calculerEscalier);
+  // Générer les options pour les fractions (1/32 à 31/32)
+  const optionsFractions = Array.from({ length: 32 }, (_, i) => (
+    <option key={i} value={i}>{i > 0 ? `${i}/32` : '0'}</option>
+  ));
 
-    function calculerEscalier() {
-      // Réinitialiser les erreurs et les résultats
-      erreursListEl.innerHTML = '';
-      erreursEl.style.display = 'none';
-      resultatsEl.style.display = 'none';
+  return (
+    <div className="p-4 max-w-4xl mx-auto bg-white rounded-lg shadow">
+      <h1 className="text-2xl font-bold mb-6 text-center">Calculateur d'Escalier</h1>
       
-      const typeBatiment = typeBatimentEl.value;
-      const formeEscalier = formeEscalierEl.value;
-      const systemeUnites = systemeUnitesEl.value;
-      const nombrePersonnes = nombrePersonnesEl.value;
+      {/* Sélection du système de mesure */}
+      <div className="mb-6">
+        <label className="block text-gray-700 font-bold mb-2">Système de mesure</label>
+        <div className="flex">
+          <button 
+            className={`px-4 py-2 rounded-l-lg ${unitesMesure === 'imperial' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+            onClick={() => setUnitesMesure('imperial')}
+          >
+            Impérial (pieds/pouces)
+          </button>
+          <button 
+            className={`px-4 py-2 rounded-r-lg ${unitesMesure === 'metrique' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+            onClick={() => setUnitesMesure('metrique')}
+          >
+            Métrique (cm)
+          </button>
+        </div>
+      </div>
       
-      // Récupérer la hauteur
-      let hauteurEscalierValeur;
-      if (systemeUnites === 'imperial') {
-        // Si en impérial, on récupère la valeur déjà convertie en mm
-        hauteurEscalierValeur = hauteurEscalierEl.value; 
-      } else {
-        hauteurEscalierValeur = hauteurEscalierEl.value;
-      }
+      {/* Forme de l'escalier */}
+      <div className="mb-6">
+        <label className="block text-gray-700 font-bold mb-2">Forme de l'escalier</label>
+        <select 
+          className="w-full px-3 py-2 border rounded"
+          value={formeEscalier}
+          onChange={(e) => setFormeEscalier(e.target.value)}
+        >
+          <option value="droit">Droit</option>
+          <option value="L">En L</option>
+          <option value="U">En U</option>
+        </select>
+      </div>
       
-      // Récupérer la largeur
-      let largeurEscalierValeur;
-      if (systemeUnites === 'imperial') {
-        // Si en impérial, on récupère la valeur déjà convertie en mm
-        largeurEscalierValeur = largeurEscalierEl.value;
-      } else {
-        largeurEscalierValeur = largeurEscalierEl.value;
-      }
+      {/* Hauteur de l'escalier */}
+      <div className="mb-6">
+        <label className="block text-gray-700 font-bold mb-2">Hauteur de l'escalier</label>
+        {unitesMesure === 'imperial' ? (
+          <div className="flex space-x-2">
+            <div className="w-1/3">
+              <label className="block text-gray-600 text-sm mb-1">Pieds</label>
+              <input 
+                type="number" 
+                min="0"
+                className="w-full px-3 py-2 border rounded"
+                value={hauteurEscalier.pieds}
+                onChange={(e) => setHauteurEscalier({...hauteurEscalier, pieds: parseInt(e.target.value) || 0})}
+              />
+            </div>
+            <div className="w-1/3">
+              <label className="block text-gray-600 text-sm mb-1">Pouces</label>
+              <input 
+                type="number" 
+                min="0" 
+                max="11"
+                className="w-full px-3 py-2 border rounded"
+                value={hauteurEscalier.pouces}
+                onChange={(e) => setHauteurEscalier({...hauteurEscalier, pouces: parseInt(e.target.value) || 0})}
+              />
+            </div>
+            <div className="w-1/3">
+              <label className="block text-gray-600 text-sm mb-1">Fraction</label>
+              <select 
+                className="w-full px-3 py-2 border rounded"
+                value={hauteurEscalier.fraction}
+                onChange={(e) => setHauteurEscalier({...hauteurEscalier, fraction: parseInt(e.target.value)})}
+              >
+                {optionsFractions}
+              </select>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <input 
+              type="number" 
+              step="0.1"
+              min="0"
+              className="w-full px-3 py-2 border rounded"
+              value={hauteurEscalierCm}
+              onChange={(e) => setHauteurEscalierCm(parseFloat(e.target.value) || 0)}
+            />
+            <span className="text-sm text-gray-500">cm</span>
+          </div>
+        )}
+      </div>
       
-      // Vérifier les entrées
-      const erreurs = [];
+      {/* Largeur de l'escalier */}
+      <div className="mb-6">
+        <label className="block text-gray-700 font-bold mb-2">Largeur de l'escalier</label>
+        {unitesMesure === 'imperial' ? (
+          <div className="flex space-x-2">
+            <div className="w-1/3">
+              <label className="block text-gray-600 text-sm mb-1">Pieds</label>
+              <input 
+                type="number" 
+                min="0"
+                className="w-full px-3 py-2 border rounded"
+                value={largeurEscalier.pieds}
+                onChange={(e) => setLargeurEscalier({...largeurEscalier, pieds: parseInt(e.target.value) || 0})}
+              />
+            </div>
+            <div className="w-1/3">
+              <label className="block text-gray-600 text-sm mb-1">Pouces</label>
+              <input 
+                type="number" 
+                min="0" 
+                max="11"
+                className="w-full px-3 py-2 border rounded"
+                value={largeurEscalier.pouces}
+                onChange={(e) => setLargeurEscalier({...largeurEscalier, pouces: parseInt(e.target.value) || 0})}
+              />
+            </div>
+            <div className="w-1/3">
+              <label className="block text-gray-600 text-sm mb-1">Fraction</label>
+              <select 
+                className="w-full px-3 py-2 border rounded"
+                value={largeurEscalier.fraction}
+                onChange={(e) => setLargeurEscalier({...largeurEscalier, fraction: parseInt(e.target.value)})}
+              >
+                {optionsFractions}
+              </select>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <input 
+              type="number" 
+              step="0.1"
+              min="0"
+              className="w-full px-3 py-2 border rounded"
+              value={largeurEscalierCm}
+              onChange={(e) => setLargeurEscalierCm(parseFloat(e.target.value) || 0)}
+            />
+            <span className="text-sm text-gray-500">cm</span>
+          </div>
+        )}
+      </div>
       
-      if (!hauteurEscalierValeur) {
-        erreurs.push("La hauteur de l'escalier est requise");
-      }
+      {/* Bouton de calcul */}
+      <div className="mb-6">
+        <button 
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
+          onClick={calculerEscalier}
+        >
+          Calculer l'escalier
+        </button>
+      </div>
       
-      if (typeBatiment === 'autre' && !nombrePersonnes) {
-        erreurs.push("Le nombre de personnes est requis pour ce type de bâtiment");
-      }
-      
-      if (erreurs.length > 0) {
-        afficherErreurs(erreurs);
-        return;
-      }
-      
-      // Conversion en nombres
-      const hauteur = parseFloat(hauteurEscalierValeur);
-      
-      // Déterminer les limites selon le type de bâtiment
-      const limitesApplicables = limites[typeBatiment] || limites.commun;
-      
-      // Calculer le nombre de contremarches (arrondi au supérieur)
-      const nombreCm = Math.ceil(hauteur / limitesApplicables.hauteurContremarche.max);
-      
-      // Calculer la hauteur réelle de la contremarche
-      const hauteurCm = hauteur / nombreCm;
-      
-      // Vérifier si la hauteur calculée est conforme
-      if (hauteurCm < limitesApplicables.hauteurContremarche.min || 
-          hauteurCm > limitesApplicables.hauteurContremarche.max) {
-      
-      // Calcul du giron idéal selon la règle 2h + g = 490 à 510 mm
-      const gironIdeal = limitesApplicables.reglePas.sommeDouble.min - (2 * hauteurCm);
-      
-      // Vérifier si le giron calculé est conforme
-      if (gironIdeal < limitesApplicables.giron.min || 
-          gironIdeal > limitesApplicables.giron.max) {
-        erreurs.push(`Le giron calculé (${gironIdeal.toFixed(1)} mm) ne respecte pas les limites du CNB (${limitesApplicables.giron.min}-${limitesApplicables.giron.max === 9999 ? 'pas de max' : limitesApplicables.giron.max} mm)`);
-      }
-      
-      // Calcul de la longueur horizontale de l'escalier
-      const longueur = gironIdeal * (nombreCm - 1);
-      
-      // Calculer la largeur minimale requise
-      let largeurMin = limitesApplicables.largeur;
-      
-      if (typeBatiment === 'autre' && nombrePersonnes) {
-        // 900 mm ou 8 mm par personne, selon le plus grand
-        largeurMin = Math.max(largeurMin, 8 * parseInt(nombrePersonnes));
-      }
-      
-      // Ajuster pour les escaliers hélicoïdaux
-      if (formeEscalier === 'helicoidal') {
-        largeurMin = 660; // Largeur libre minimale entre mains courantes
-      }
-      
-      // Vérifier si la largeur proposée est suffisante
-      if (largeurEscalierValeur && parseFloat(largeurEscalierValeur) < largeurMin) {
-        erreurs.push(`La largeur proposée (${largeurEscalierValeur} mm) est inférieure à la largeur minimale requise (${largeurMin} mm)`);
-      }
-      
-      // Vérification des règles du pas
-      const sommeHplusG = hauteurCm + gironIdeal;
-      const somme2HplusG = 2 * hauteurCm + gironIdeal;
-      const produitHfoisG = hauteurCm * gironIdeal;
-      
-      // Calculer combien de règles sont respectées
-      let reglesRespectees = 0;
-      
-      // Règle 1: h + g = 420 à 440 mm (privé) ou 430 à 450 mm (commun)
-      const regle1Respectee = sommeHplusG >= limitesApplicables.reglePas.somme.min && 
-                            sommeHplusG <= limitesApplicables.reglePas.somme.max;
-      if (regle1Respectee) reglesRespectees++;
-      
-      // Règle 2: 2h + g = 480 à 500 mm (privé) ou 490 à 510 mm (commun)
-      const regle2Respectee = somme2HplusG >= limitesApplicables.reglePas.sommeDouble.min && 
-                            somme2HplusG <= limitesApplicables.reglePas.sommeDouble.max;
-      if (regle2Respectee) reglesRespectees++;
-      
-      // Règle 3: h × g = 5740 à 6010 mm² (privé) ou 5645 à 6326 mm² (commun)
-      const regle3Respectee = produitHfoisG >= limitesApplicables.reglePas.produit.min && 
-                            produitHfoisG <= limitesApplicables.reglePas.produit.max;
-      if (regle3Respectee) reglesRespectees++;
-      
-      if (reglesRespectees < 2) {
-        erreurs.push(`Les dimensions calculées ne respectent pas assez de critères de la règle du pas. Au moins 2 critères doivent être respectés, mais seulement ${reglesRespectees} sont respectés.`);
-      }
-      
-      // Afficher les erreurs s'il y en a
-      if (erreurs.length > 0) {
-        afficherErreurs(erreurs);
-        return;
-      }
-      
-      // Afficher les résultats
-      nbContremarches.textContent = nombreCm;
-      nbMarches.textContent = nombreCm - 1;
-      
-      if (systemeUnites === 'imperial') {
-        hauteurContremarche.textContent = `${hauteurCm.toFixed(1)} mm (${convertirMetriqueEnImperial(hauteurCm.toFixed(1))})`;
-        profondeurGiron.textContent = `${gironIdeal.toFixed(1)} mm (${convertirMetriqueEnImperial(gironIdeal.toFixed(1))})`;
-        longueurTotale.textContent = `${longueur.toFixed(0)} mm (${convertirMetriqueEnImperial(longueur.toFixed(0))})`;
-        largeurMinimale.textContent = `${largeurMin} mm (${convertirMetriqueEnImperial(largeurMin)})`;
-      } else {
-        hauteurContremarche.textContent = `${hauteurCm.toFixed(1)} mm`;
-        profondeurGiron.textContent = `${gironIdeal.toFixed(1)} mm`;
-        longueurTotale.textContent = `${longueur.toFixed(0)} mm`;
-        largeurMinimale.textContent = `${largeurMin} mm`;
-      }
-      
-      // Afficher les vérifications de règles du pas
-      regleSomme.className = regle1Respectee ? 'rule-value valid' : 'rule-value invalid';
-      regleSomme.textContent = `${sommeHplusG.toFixed(1)} mm (doit être entre ${limitesApplicables.reglePas.somme.min} et ${limitesApplicables.reglePas.somme.max} mm)`;
-      
-      regleSommeDouble.className = regle2Respectee ? 'rule-value valid' : 'rule-value invalid';
-      regleSommeDouble.textContent = `${somme2HplusG.toFixed(1)} mm (doit être entre ${limitesApplicables.reglePas.sommeDouble.min} et ${limitesApplicables.reglePas.sommeDouble.max} mm)`;
-      
-      regleProduit.className = regle3Respectee ? 'rule-value valid' : 'rule-value invalid';
-      regleProduit.textContent = `${produitHfoisG.toFixed(0)} mm² (doit être entre ${limitesApplicables.reglePas.produit.min} et ${limitesApplicables.reglePas.produit.max} mm²)`;
-      
-      // Afficher les résultats
-      resultatsEl.style.display = 'block';
-    }
+      {/* Affichage des résultats */}
+      {resultat && (
+        <div className="mt-8 p-4 border rounded bg-gray-50">
+          <h2 className="text-xl font-bold mb-4">Résultats du calcul</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="font-semibold">Forme de l'escalier:</p>
+              <p>{resultat.formeEscalier === 'droit' ? 'Droit' : resultat.formeEscalier === 'L' ? 'En L' : 'En U'}</p>
+            </div>
+            <div>
+              <p className="font-semibold">Hauteur totale:</p>
+              <p>{resultat.hauteurEscalier}</p>
+            </div>
+            <div>
+              <p className="font-semibold">Nombre de contremarches:</p>
+              <p>{resultat.nombreContreMarches}</p>
+            </div>
+            <div>
+              <p className="font-semibold">Hauteur d'une contremarche:</p>
+              <p>{resultat.hauteurContreMarche}</p>
+            </div>
+            <div>
+              <p className="font-semibold">Giron (profondeur de marche):</p>
+              <p>{resultat.giron}</p>
+            </div>
+            <div>
+              <p className="font-semibold">Longueur horizontale:</p>
+              <p>{resultat.longueurEscalier}</p>
+            </div>
+            <div>
+              <p className="font-semibold">Largeur:</p>
+              <p>{resultat.largeurEscalier}</p>
+            </div>
+            <div>
+              <p className="font-semibold">Validation des règles du pas:</p>
+              <ul className="list-disc pl-5">
+                <li className={resultat.reglesPasRespectees.regle1 ? "text-green-600" : "text-red-600"}>
+                  {resultat.reglesPasRespectees.regle1 ? "✓" : "✗"} Règle 1: Giron + CM = 17" à 18"
+                </li>
+                <li className={resultat.reglesPasRespectees.regle2 ? "text-green-600" : "text-red-600"}>
+                  {resultat.reglesPasRespectees.regle2 ? "✓" : "✗"} Règle 2: Giron × CM = 71" à 74"
+                </li>
+                <li className={resultat.reglesPasRespectees.regle3 ? "text-green-600" : "text-red-600"}>
+                  {resultat.reglesPasRespectees.regle3 ? "✓" : "✗"} Règle 3: Giron + 2(CM) = 22" à 25"
+                </li>
+              </ul>
+            </div>
+          </div>
+          
+          {/* Section schéma visuel simplifiée */}
+          <div className="mt-6">
+            <h3 className="font-bold mb-2">Représentation schématique:</h3>
+            <div className="border p-4 bg-white">
+              {resultat.formeEscalier === 'droit' && (
+                <div className="h-64 flex justify-center items-center">
+                  <div className="relative w-4/5 h-40 border border-gray-400">
+                    {/* Représentation simplifiée de l'escalier droit */}
+                    {Array.from({ length: resultat.nombreContreMarches }).map((_, i) => (
+                      <div 
+                        key={i}
+                        className="absolute bg-gray-300 border border-gray-400"
+                        style={{
+                          width: `${100 / resultat.nombreContreMarches}%`,
+                          height: '40%', 
+                          bottom: `${(i / resultat.nombreContreMarches) * 100}%`,
+                          left: `${(i / resultat.nombreContreMarches) * 100}%`
+                        }}
+                      ></div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {resultat.formeEscalier === 'L' && (
+                <div className="h-64 flex justify-center items-center">
+                  <div className="relative w-4/5 h-40 border border-gray-400">
+                    {/* Représentation simplifiée de l'escalier en L */}
+                    <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-gray-200 border border-gray-400"></div>
+                    <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gray-200 border border-gray-400"></div>
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl">L</div>
+                  </div>
+                </div>
+              )}
+              {resultat.formeEscalier === 'U' && (
+                <div className="h-64 flex justify-center items-center">
+                  <div className="relative w-4/5 h-40 border border-gray-400">
+                    {/* Représentation simplifiée de l'escalier en U */}
+                    <div className="absolute top-0 left-0 w-1/3 h-full bg-gray-200 border border-gray-400"></div>
+                    <div className="absolute top-0 right-0 w-1/3 h-full bg-gray-200 border border-gray-400"></div>
+                    <div className="absolute top-0 left-1/3 w-1/3 h-1/5 bg-gray-200 border border-gray-400"></div>
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl">U</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default EscalierCalculator;

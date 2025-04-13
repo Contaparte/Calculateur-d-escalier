@@ -8,12 +8,17 @@
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
-      max-width: 600px;
+      max-width: 800px;
       margin: auto;
     }
     h1 {
       text-align: center;
       margin-bottom: 1em;
+    }
+    h2 {
+      margin-top: 1.5em;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 0.5em;
     }
     label {
       display: block;
@@ -52,63 +57,268 @@
     .success {
       color: #090;
     }
+    .warning {
+      color: #f90;
+    }
+    .info {
+      color: #007ACC;
+    }
+    .section {
+      padding: 1em;
+      margin-bottom: 1em;
+      background: #f5f5f5;
+      border-radius: 4px;
+    }
+    .flex-row {
+      display: flex;
+      gap: 1em;
+    }
+    .flex-row > div {
+      flex: 1;
+    }
+    .hidden {
+      display: none;
+    }
+    .calculation-result {
+      margin-top: 2em;
+      padding: 1em;
+      background: #e9f5ff;
+      border-radius: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1em;
+    }
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+    th, td {
+      padding: 0.5em;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
   </style>
 </head>
 <body>
   <h1>Vérification Conformité Escalier</h1>
   <form id="stairForm">
-    <label for="buildingType">Type de bâtiment :</label>
-    <select id="buildingType" name="buildingType">
-      <option value="part9">Maisons et petits bâtiments (Partie 9)</option>
-      <option value="part3">Autres bâtiments (Partie 3)</option>
-    </select>
+    <div class="section">
+      <h2>Caractéristiques du bâtiment</h2>
+      <div class="flex-row">
+        <div>
+          <label for="buildingType">Type de bâtiment :</label>
+          <select id="buildingType" name="buildingType">
+            <option value="dwelling">Logement individuel ou maison avec logement accessoire</option>
+            <option value="residential">Bâtiment résidentiel (habitation)</option>
+            <option value="industrial">Établissement industriel</option>
+            <option value="other">Autres bâtiments</option>
+          </select>
+        </div>
+        <div>
+          <label for="useType">Usage de l'escalier :</label>
+          <select id="useType" name="useType">
+            <option value="private">Privé (desservant un seul logement)</option>
+            <option value="common">Commun (desservant plusieurs logements)</option>
+            <option value="exit">Issue de secours</option>
+            <option value="service">Service (local technique)</option>
+          </select>
+        </div>
+      </div>
 
-    <label for="measurementSystem">Système de mesure :</label>
-    <select id="measurementSystem" name="measurementSystem">
-      <option value="metric">Métrique (mm)</option>
-      <option value="imperial">Impérial (pieds‑pouces)</option>
-    </select>
-
-    <div id="inputs">
-      <label for="riserHeight">Hauteur de contremarche :</label>
-      <input
-        type="text"
-        id="riserHeight"
-        name="riserHeight"
-        placeholder="Ex : 7‑3 15/32&quot; ou 190 mm"
-      />
-
-      <label for="treadDepth">Profondeur de giron :</label>
-      <input
-        type="text"
-        id="treadDepth"
-        name="treadDepth"
-        placeholder="Ex : 10‑0 0/32&quot; ou 255 mm"
-      />
-
-      <label for="stairWidth">Largeur de l’escalier :</label>
-      <input
-        type="text"
-        id="stairWidth"
-        name="stairWidth"
-        placeholder="Ex : 3‑0 0/32&quot; ou 860 mm"
-      />
-
-      <label for="headroom">Hauteur libre (échappée) :</label>
-      <input
-        type="text"
-        id="headroom"
-        name="headroom"
-        placeholder="Ex : 6‑6 0/32&quot; ou 2050 mm"
-      />
+      <div class="flex-row">
+        <div>
+          <label for="location">Emplacement :</label>
+          <select id="location" name="location">
+            <option value="interior">Intérieur</option>
+            <option value="exterior">Extérieur</option>
+          </select>
+        </div>
+        <div>
+          <label for="accessible">Parcours sans obstacles :</label>
+          <select id="accessible" name="accessible">
+            <option value="no">Non</option>
+            <option value="yes">Oui</option>
+          </select>
+        </div>
+      </div>
     </div>
 
-    <button type="button" onclick="validateStair()">Vérifier la conformité</button>
+    <div class="section">
+      <h2>Configuration de l'escalier</h2>
+      <div class="flex-row">
+        <div>
+          <label for="stairType">Type d'escalier :</label>
+          <select id="stairType" name="stairType">
+            <option value="straight">Droit</option>
+            <option value="l-shaped">En L (tournant)</option>
+            <option value="u-shaped">En U (tournant)</option>
+            <option value="spiral">Hélicoïdal</option>
+            <option value="winder">Avec marches rayonnantes</option>
+          </select>
+        </div>
+        <div>
+          <label for="measurementSystem">Système de mesure :</label>
+          <select id="measurementSystem" name="measurementSystem">
+            <option value="metric">Métrique (mm)</option>
+            <option value="imperial">Impérial (pieds‑pouces)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Dimensions générales</h2>
+      <div class="flex-row">
+        <div>
+          <label for="totalRise">Hauteur totale à gravir :</label>
+          <input
+            type="text"
+            id="totalRise"
+            name="totalRise"
+            placeholder="Ex : 2850 mm ou 9'-4\""
+          />
+        </div>
+        <div>
+          <label for="availableRunLength">Longueur horizontale disponible :</label>
+          <input
+            type="text"
+            id="availableRunLength"
+            name="availableRunLength"
+            placeholder="Ex : 3600 mm ou 12'-0\""
+          />
+        </div>
+      </div>
+
+      <div class="flex-row">
+        <div>
+          <label for="stairWidth">Largeur de l'escalier :</label>
+          <input
+            type="text"
+            id="stairWidth"
+            name="stairWidth"
+            placeholder="Ex : 860 mm ou 3'-0\""
+          />
+        </div>
+        <div>
+          <label for="headroom">Hauteur libre (échappée) :</label>
+          <input
+            type="text"
+            id="headroom"
+            name="headroom"
+            placeholder="Ex : 2050 mm ou 6'-6\""
+          />
+        </div>
+      </div>
+
+      <div id="customDimensions" class="flex-row">
+        <div>
+          <label for="riserHeight">Hauteur de contremarche souhaitée :</label>
+          <input
+            type="text"
+            id="riserHeight"
+            name="riserHeight"
+            placeholder="Ex : 190 mm ou 7\"-1/2\"" 
+          />
+        </div>
+        <div>
+          <label for="treadDepth">Profondeur de giron souhaitée :</label>
+          <input
+            type="text"
+            id="treadDepth"
+            name="treadDepth"
+            placeholder="Ex : 255 mm ou 10\"-0\""
+          />
+        </div>
+      </div>
+
+      <!-- Options supplémentaires pour les escaliers tournants -->
+      <div id="turningOptions" class="hidden">
+        <div class="flex-row">
+          <div>
+            <label for="innerWidth">Largeur côté intérieur (escalier tournant) :</label>
+            <input
+              type="text"
+              id="innerWidth"
+              name="innerWidth"
+              placeholder="Ex : 300 mm ou 12\"-0\""
+            />
+          </div>
+          <div>
+            <label for="turningAngle">Angle de rotation (degrés) :</label>
+            <select id="turningAngle" name="turningAngle">
+              <option value="90">90° (quart de tour)</option>
+              <option value="180">180° (demi-tour)</option>
+              <option value="custom">Autre angle</option>
+            </select>
+          </div>
+        </div>
+        <div id="customAngleDiv" class="hidden">
+          <label for="customAngle">Angle personnalisé (degrés) :</label>
+          <input
+            type="number"
+            id="customAngle"
+            name="customAngle"
+            min="0"
+            max="360"
+            placeholder="Ex : 45"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Caractéristiques additionnelles</h2>
+      <div class="flex-row">
+        <div>
+          <label for="hasRiser">Contremarches fermées :</label>
+          <select id="hasRiser" name="hasRiser">
+            <option value="yes">Oui</option>
+            <option value="no">Non</option>
+          </select>
+        </div>
+        <div>
+          <label for="handrailsCount">Nombre de mains courantes :</label>
+          <select id="handrailsCount" name="handrailsCount">
+            <option value="1">1 (un côté)</option>
+            <option value="2">2 (deux côtés)</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="flex-row">
+        <div>
+          <label for="guardHeight">Hauteur de garde-corps (si applicable) :</label>
+          <input
+            type="text"
+            id="guardHeight"
+            name="guardHeight"
+            placeholder="Ex : 1070 mm ou 3'-6\""
+          />
+        </div>
+        <div>
+          <label for="handrailHeight">Hauteur de main courante :</label>
+          <input
+            type="text"
+            id="handrailHeight"
+            name="handrailHeight"
+            placeholder="Ex : 900 mm ou 3'-0\""
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="flex-row">
+      <button type="button" onclick="calculateStair()">Calculer les dimensions</button>
+      <button type="button" onclick="validateStair()">Vérifier la conformité</button>
+    </div>
   </form>
 
   <div id="results"></div>
 
-  <!-- Partie 2: inclure ensuite ce script en bas de page -->
+  <!-- Script -->
   <script src="stairCheck.js"></script>
 </body>
 </html>

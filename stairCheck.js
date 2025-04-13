@@ -401,6 +401,9 @@ function calculateStair() {
     calculationDiv.innerHTML = resultTable;
     resEl.appendChild(calculationDiv);
     
+    // Afficher une proposition d'escalier conforme
+    proposeCompliantStair(bestRiserHeight, bestTreadDepth, stepsCount, totalRunLength, riserLimits, treadLimits, mSys, availableRun);
+    
   } catch (e) {
     const div = document.createElement('div');
     div.className = 'error';
@@ -410,287 +413,246 @@ function calculateStair() {
 }
 
 /**
- * Fonction principale appelée au clic du bouton "Vérifier la conformité".
+ * Fonction de proposition d'un escalier conforme
  */
-function validateStair() {
+function proposeCompliantStair(riserHeight, treadDepth, stepsCount, totalRunLength, riserLimits, treadLimits, mSys, availableRun) {
+  const resEl = document.getElementById('results');
   const bType = document.getElementById('buildingType').value;
   const useType = document.getElementById('useType').value;
   const stairType = document.getElementById('stairType').value;
   const location = document.getElementById('location').value;
   const accessible = document.getElementById('accessible').value;
-  const mSys = document.getElementById('measurementSystem').value;
-  const resEl = document.getElementById('results');
   
-  resEl.innerHTML = '';
-
-  try {
-    // 1) Récupération et conversion
-    const riser = parseMeasurement(document.getElementById('riserHeight').value, mSys);
-    const tread = parseMeasurement(document.getElementById('treadDepth').value, mSys);
+  // Déterminer si l'escalier calculé est conforme
+  let isCompliant = true;
+  const issues = [];
+  const suggestions = [];
+  
+  // Vérification des limites de base
+  if (riserHeight < riserLimits.MIN || riserHeight > riserLimits.MAX) {
+    isCompliant = false;
+    issues.push(`Hauteur de contremarche (${formatMeasurement(riserHeight, mSys)}) hors limites de ${formatMeasurement(riserLimits.MIN, mSys)} à ${formatMeasurement(riserLimits.MAX, mSys)}`);
+  }
+  
+  if (treadDepth < treadLimits.MIN || (treadLimits.MAX !== Infinity && treadDepth > treadLimits.MAX)) {
+    isCompliant = false;
+    const maxTxt = (treadLimits.MAX === Infinity) ? '∞' : formatMeasurement(treadLimits.MAX, mSys);
+    issues.push(`Profondeur du giron (${formatMeasurement(treadDepth, mSys)}) hors limites de ${formatMeasurement(treadLimits.MIN, mSys)} à ${maxTxt}`);
+  }
+  
+  if (availableRun && totalRunLength > availableRun) {
+    isCompliant = false;
+    issues.push(`Longueur totale de l'escalier (${formatMeasurement(totalRunLength, mSys)}) dépasse l'espace disponible (${formatMeasurement(availableRun, mSys)})`);
+  }
+  
+  // Vérification de la hauteur de volée
+  const totalHeight = riserHeight * stepsCount;
+  if (totalHeight > CNB_LIMITS.MAX_FLIGHT_HEIGHT) {
+    issues.push(`La hauteur totale de la volée (${formatMeasurement(totalHeight, mSys)}) dépasse la limite de ${formatMeasurement(CNB_LIMITS.MAX_FLIGHT_HEIGHT, mSys)}`);
+    suggestions.push(`Diviser l'escalier en deux volées avec un palier intermédiaire`);
+  }
+  
+  // Vérification du nombre de marches
+  if (stepsCount < 3) {
+    issues.push(`Le nombre de marches (${stepsCount}) est inférieur au minimum de 3 marches requises`);
+  }
+  
+  // Vérification du confort
+  const riserInInches = riserHeight / 25.4;
+  const treadInInches = treadDepth / 25.4;
+  const comfortValue = riserInInches + treadInInches;
+  
+  if (comfortValue < 17 || comfortValue > 18) {
+    suggestions.push(`Pour un meilleur confort, la somme hauteur + giron devrait être entre 17" et 18" (actuellement ${comfortValue.toFixed(2)}")`);
+  }
+  
+  // Vérification de la formule de Blondel
+  const blondelValue = 2 * riserHeight + treadDepth;
+  if (blondelValue < 580 || blondelValue > 680) {
+    suggestions.push(`Pour un meilleur confort, la formule 2R+G devrait être proche de 630mm (actuellement ${Math.round(blondelValue)}mm)`);
+  }
+  
+  // Vérifications spécifiques au type d'escalier
+  if (stairType === 'spiral') {
     const width = parseMeasurement(document.getElementById('stairWidth').value, mSys);
-    const headroom = parseMeasurement(document.getElementById('headroom').value, mSys);
-    const guardHeight = parseMeasurement(document.getElementById('guardHeight').value, mSys);
-    const handrailHeight = parseMeasurement(document.getElementById('handrailHeight').value, mSys);
     
-    // Valeurs pour escaliers tournants ou hélicoïdaux
-    let innerWidth = null;
-    let turningAngle = null;
+    if (width && width < CNB_LIMITS.WIDTH.SPIRAL) {
+      issues.push(`La largeur d'un escalier hélicoïdal doit être d'au moins ${formatMeasurement(CNB_LIMITS.WIDTH.SPIRAL, mSys)}`);
+    }
     
-    if (stairType === 'spiral' || stairType === 'l-shaped' || stairType === 'u-shaped' || stairType === 'winder') {
-      innerWidth = parseMeasurement(document.getElementById('innerWidth').value, mSys);
-      
-      if (document.getElementById('turningAngle').value === 'custom') {
-        turningAngle = parseInt(document.getElementById('customAngle').value);
-      } else {
-        turningAngle = parseInt(document.getElementById('turningAngle').value);
+    if (useType === 'exit') {
+      issues.push(`Les escaliers hélicoïdaux ne peuvent pas être utilisés comme issues selon le CNB §9.8.4.7`);
+      suggestions.push(`Utiliser un autre type d'escalier pour les issues`);
+    } else if (document.getElementById('handrailsCount').value !== '2') {
+      issues.push(`Les escaliers hélicoïdaux doivent avoir des mains courantes des deux côtés selon le CNB §9.8.4.7`);
+    }
+  } else if (stairType === 'winder') {
+    if (document.getElementById('turningAngle').value !== '30' && document.getElementById('turningAngle').value !== '45') {
+      issues.push(`Les marches rayonnantes doivent permettre de tourner à un angle de 30° ou 45° selon le CNB §9.8.4.6`);
+    }
+    
+    if (document.getElementById('turningAngle').value === 'custom') {
+      const customAngle = parseInt(document.getElementById('customAngle').value);
+      if (customAngle > 90) {
+        issues.push(`Les marches rayonnantes ne doivent pas permettre de tourner à plus de 90° selon le CNB §9.8.4.6`);
       }
     }
-
-    // 2) Détermination des seuils CNB selon le type d'escalier
-    const stairTypeCode = getStairTypeForLimits();
-    let riserMin, riserMax, treadMin, treadMax, widthMin, headMin;
-    let guardMin, handrailMin, handrailMax;
+  }
+  
+  // Proposition de solution
+  const propositionDiv = document.createElement('div');
+  propositionDiv.className = 'calculation-result';
+  
+  if (isCompliant && issues.length === 0) {
+    propositionDiv.innerHTML = `
+      <h2>Proposition d'escalier conforme</h2>
+      <div class="success">
+        <p>L'escalier calculé est conforme au Code National du Bâtiment 2015.</p>
+        <p>Caractéristiques de l'escalier proposé :</p>
+        <ul>
+          <li>Nombre de marches : <strong>${stepsCount}</strong></li>
+          <li>Hauteur de contremarche : <strong>${formatMeasurement(riserHeight, mSys)}</strong></li>
+          <li>Profondeur de giron : <strong>${formatMeasurement(treadDepth, mSys)}</strong></li>
+          <li>Longueur totale de l'escalier : <strong>${formatMeasurement(totalRunLength, mSys)}</strong></li>
+        </ul>
+    `;
     
-    // Limites pour hauteurs de contremarches et profondeurs de girons
-    riserMin = CNB_LIMITS.RISER_HEIGHT[stairTypeCode].MIN;
-    riserMax = CNB_LIMITS.RISER_HEIGHT[stairTypeCode].MAX;
-    treadMin = CNB_LIMITS.TREAD_DEPTH[stairTypeCode].MIN;
-    treadMax = CNB_LIMITS.TREAD_DEPTH[stairTypeCode].MAX || Infinity;
+    // Ajouter les exigences spécifiques selon le type d'escalier
+    let specificRequirements = '';
     
-    // Limites pour largeurs
     if (stairType === 'spiral') {
-      widthMin = CNB_LIMITS.WIDTH.SPIRAL;
-    } else if (useType === 'private' || (bType === 'dwelling' && useType !== 'exit')) {
-      widthMin = CNB_LIMITS.WIDTH.PRIVATE;
-    } else if (useType === 'exit') {
-      widthMin = CNB_LIMITS.WIDTH.EXIT;
-    } else {
-      widthMin = CNB_LIMITS.WIDTH.COMMON_RESIDENTIAL;
-    }
-    
-    // Limites pour hauteurs libres
-    if (stairType === 'spiral') {
-      headMin = CNB_LIMITS.HEADROOM.SPIRAL;
-    } else if (bType === 'dwelling' && useType === 'private') {
-      headMin = CNB_LIMITS.HEADROOM.PRIVATE;
-    } else {
-      headMin = CNB_LIMITS.HEADROOM.COMMON;
-    }
-    
-    // Limites pour garde-corps et mains courantes
-    if (bType === 'dwelling' && location === 'interior') {
-      guardMin = CNB_LIMITS.GUARD_HEIGHT.RESIDENTIAL_INTERIOR;
-    } else {
-      guardMin = CNB_LIMITS.GUARD_HEIGHT.COMMON;
-    }
-    
-    handrailMin = CNB_LIMITS.HANDRAIL_HEIGHT.MIN;
-    handrailMax = CNB_LIMITS.HANDRAIL_HEIGHT.MAX;
-    
-    // Ajustements pour parcours sans obstacles
-    if (accessible === 'yes') {
-      treadMin = Math.max(treadMin, 280); // Valeur minimale pour accessibilité
-      
-      if (stairType !== 'spiral') {
-        widthMin = Math.max(widthMin, CNB_LIMITS.BARRIER_FREE.RAMP_WIDTH);
-      }
-      
-      handrailMin = CNB_LIMITS.BARRIER_FREE.HANDRAIL_HEIGHT.MIN;
-      handrailMax = CNB_LIMITS.BARRIER_FREE.HANDRAIL_HEIGHT.MAX;
-    }
-
-    // 3) Validation CNB
-    const errors = [];
-    const warnings = [];
-    
-    // Vérifications de base
-    if (riser && (riser < riserMin || riser > riserMax)) {
-      errors.push(`Hauteur de contremarche (${riser.toFixed(1)} mm) doit être entre ${riserMin} et ${riserMax} mm (CNB 2015 §9.8.4.1).`);
-    }
-    
-    if (tread && (tread < treadMin || tread > treadMax)) {
-      const maxTxt = (treadMax === Infinity) ? '∞' : treadMax;
-      errors.push(`Profondeur de giron (${tread.toFixed(1)} mm) doit être ≥ ${treadMin} mm et ≤ ${maxTxt} mm (CNB 2015 §9.8.4.2).`);
-    }
-    
-    if (width && width < widthMin) {
-      errors.push(`Largeur de l'escalier (${width.toFixed(1)} mm) doit être ≥ ${widthMin} mm (CNB 2015 §9.8.2.1).`);
-    }
-    
-    if (headroom && headroom < headMin) {
-      errors.push(`Hauteur libre (${headroom.toFixed(1)} mm) doit être ≥ ${headMin} mm (CNB 2015 §9.8.2.2).`);
-    }
-    
-    // Vérifications spécifiques aux garde-corps et mains courantes
-    if (guardHeight && guardHeight < guardMin) {
-      errors.push(`Hauteur du garde-corps (${guardHeight.toFixed(1)} mm) doit être ≥ ${guardMin} mm (CNB 2015 §9.8.8.3).`);
-    }
-    
-    if (handrailHeight && (handrailHeight < handrailMin || handrailHeight > handrailMax)) {
-      errors.push(`Hauteur de la main courante (${handrailHeight.toFixed(1)} mm) doit être entre ${handrailMin} et ${handrailMax} mm (CNB 2015 §9.8.7.4).`);
-    }
-    
-    // Vérifications spécifiques aux escaliers tournants et hélicoïdaux
-    if (stairType === 'spiral') {
-      if (width && width < CNB_LIMITS.WIDTH.SPIRAL) {
-        errors.push(`Largeur libre entre mains courantes d'un escalier hélicoïdal (${width.toFixed(1)} mm) doit être ≥ ${CNB_LIMITS.WIDTH.SPIRAL} mm (CNB 2015 §9.8.4.7).`);
-      }
-      
-      if (!innerWidth) {
-        warnings.push("Pour un escalier hélicoïdal, veuillez spécifier la largeur du côté intérieur pour une vérification complète.");
-      } else if (innerWidth < 190) {
-        errors.push(`Pour un escalier hélicoïdal, la profondeur de marche mesurée à 300 mm de l'axe de la main courante côté étroit (${innerWidth.toFixed(1)} mm) doit être ≥ 190 mm (CNB 2015 §9.8.4.7).`);
-      }
-      
-      if (useType === 'exit') {
-        errors.push("Les escaliers hélicoïdaux ne doivent pas être utilisés comme issues (CNB 2015 §9.8.4.7).");
-      }
+      specificRequirements = `
+        <p>Exigences supplémentaires pour un escalier hélicoïdal :</p>
+        <ul>
+          <li>Largeur libre entre mains courantes : min. <strong>${formatMeasurement(CNB_LIMITS.WIDTH.SPIRAL, mSys)}</strong></li>
+          <li>Profondeur de marche à 300mm de l'axe de la main courante : min. <strong>${formatMeasurement(CNB_LIMITS.TREAD_DEPTH.SPIRAL.MIN, mSys)}</strong></li>
+          <li>Hauteur libre minimale : <strong>${formatMeasurement(CNB_LIMITS.HEADROOM.SPIRAL, mSys)}</strong></li>
+          <li>Mains courantes des deux côtés obligatoires</li>
+        </ul>
+      `;
     } else if (stairType === 'winder') {
-      if (!turningAngle) {
-        warnings.push("Pour des marches rayonnantes, veuillez spécifier l'angle de rotation pour une vérification complète.");
-      } else if (turningAngle > 90) {
-        errors.push(`L'angle de rotation pour des marches rayonnantes (${turningAngle}°) ne doit pas être supérieur à 90° (CNB 2015 §9.8.4.6).`);
-      } else if (turningAngle !== 30 && turningAngle !== 45) {
-        errors.push(`Les marches rayonnantes doivent permettre de tourner à un angle de 30° ou 45° sans écart positif ou négatif (CNB 2015 §9.8.4.6).`);
-      }
-      
-      if (innerWidth && innerWidth < 150) {
-        errors.push(`Pour des marches dansantes/rayonnantes, le giron à l'extrémité étroite (${innerWidth.toFixed(1)} mm) doit être ≥ 150 mm (CNB 2015 §9.8.4.3).`);
-      }
+      specificRequirements = `
+        <p>Exigences supplémentaires pour un escalier avec marches rayonnantes :</p>
+        <ul>
+          <li>Les marches rayonnantes doivent permettre de tourner à un angle de 30° ou 45°</li>
+          <li>L'angle de rotation total ne doit pas dépasser 90°</li>
+          <li>Giron minimal à l'extrémité étroite : <strong>150 mm</strong></li>
+        </ul>
+      `;
     }
     
-    // Vérification de la règle du pas (confort) si hauteur et profondeur spécifiées
-    if (riser && tread) {
-      const riserIn = riser / 25.4;
-      const treadIn = tread / 25.4;
-      const rules = [
-        { name: 'Giron + CM',     value: treadIn + riserIn,      min: 17, max: 18 },
-        { name: 'Giron × CM',     value: treadIn * riserIn,      min: 71, max: 74 },
-        { name: 'Giron + 2×CM',   value: treadIn + 2*riserIn,    min: 22, max: 25 },
-      ];
-      
-      let okCount = 0;
-      const ruleWarnings = [];
-      
-      rules.forEach(r => {
-        if (r.value >= r.min && r.value <= r.max) {
-          okCount++;
-        } else {
-          ruleWarnings.push(`Règle du pas « ${r.name} » = ${r.value.toFixed(2)}" (devrait être entre ${r.min}" et ${r.max}") – recommandé pour le confort.`);
-        }
-      });
-      
-      // Vérification de la formule Blondel (2R + G = 630)
-      const blondel = 2 * riser + tread;
-      if (blondel < 580 || blondel > 680) {
-        ruleWarnings.push(`Formule de Blondel (2R + G) = ${blondel.toFixed(0)} mm (devrait être ≈ 630 mm) – recommandé pour le confort.`);
-      }
-      
-      // Ajouter les avertissements si moins de 2 règles sont respectées
-      if (okCount < 2) {
-        warnings.push(...ruleWarnings);
-        warnings.push(`Confort de marche non optimal : seules ${okCount} règle(s) sur 3 respectée(s). Il est recommandé d'en respecter au moins 2.`);
-      }
-    }
-
-    // 4) Affichage résultats CNB
-    const validationDiv = document.createElement('div');
-    validationDiv.className = 'calculation-result';
-    validationDiv.innerHTML = '<h2>Résultats de vérification de conformité</h2>';
+    // Ajout des exigences de garde-corps et mains courantes
+    let guardRequirements = `
+      <p>Exigences pour les mains courantes et garde-corps :</p>
+      <ul>
+        <li>Hauteur de main courante : <strong>${formatMeasurement(CNB_LIMITS.HANDRAIL_HEIGHT.MIN, mSys)} à ${formatMeasurement(CNB_LIMITS.HANDRAIL_HEIGHT.MAX, mSys)}</strong></li>
+    `;
     
-    if (errors.length) {
-      const errorsList = document.createElement('div');
-      errorsList.innerHTML = '<h3 class="error">Non-conformités détectées :</h3>';
-      
-      errors.forEach(msg => {
-        const div = document.createElement('div');
-        div.className = 'error';
-        div.textContent = '⚠ ' + msg;
-        errorsList.appendChild(div);
-      });
-      
-      validationDiv.appendChild(errorsList);
-    }
-    
-    if (warnings.length) {
-      const warningsList = document.createElement('div');
-      warningsList.innerHTML = '<h3 class="warning">Avertissements :</h3>';
-      
-      warnings.forEach(msg => {
-        const div = document.createElement('div');
-        div.className = 'warning';
-        div.textContent = '⚠ ' + msg;
-        warningsList.appendChild(div);
-      });
-      
-      validationDiv.appendChild(warningsList);
-    }
-    
-    if (!errors.length && !warnings.length) {
-      const div = document.createElement('div');
-      div.className = 'success';
-      div.innerHTML = '<h3>✓ Conforme aux exigences du CNB 2015</h3>' +
-                      '<p>Toutes les dimensions respectent les exigences du Code National du Bâtiment.</p>';
-      validationDiv.appendChild(div);
-    } else if (!errors.length) {
-      const div = document.createElement('div');
-      div.className = 'success';
-      div.innerHTML = '<h3>✓ Conforme aux exigences obligatoires du CNB 2015</h3>' +
-                      '<p>Les dimensions respectent les exigences obligatoires, mais certaines recommandations pour le confort ne sont pas suivies.</p>';
-      validationDiv.appendChild(div);
-    }
-    
-    resEl.appendChild(validationDiv);
-
-  } catch (e) {
-    const div = document.createElement('div');
-    div.className = 'error';
-    div.textContent = 'Erreur : ' + e.message;
-    resEl.appendChild(div);
-  }
-}
-
-/**
- * Affiche ou masque les options pour les escaliers tournants
- */
-function toggleTurningOptions() {
-  const stairType = document.getElementById('stairType').value;
-  const turningOptions = document.getElementById('turningOptions');
-  
-  if (stairType === 'spiral' || stairType === 'l-shaped' || stairType === 'u-shaped' || stairType === 'winder') {
-    turningOptions.classList.remove('hidden');
-  } else {
-    turningOptions.classList.add('hidden');
-  }
-  
-  // Afficher l'option d'angle personnalisé si nécessaire
-  const turningAngle = document.getElementById('turningAngle').value;
-  const customAngleDiv = document.getElementById('customAngleDiv');
-  
-  if (turningAngle === 'custom') {
-    customAngleDiv.classList.remove('hidden');
-  } else {
-    customAngleDiv.classList.add('hidden');
-  }
-}
-
-/**
- * Initialisation des écouteurs d'événements quand la page est chargée
- */
-document.addEventListener('DOMContentLoaded', function() {
-  // Écouteur pour le changement de type d'escalier
-  document.getElementById('stairType').addEventListener('change', toggleTurningOptions);
-  
-  // Écouteur pour le changement d'angle de rotation
-  document.getElementById('turningAngle').addEventListener('change', function() {
-    const customAngleDiv = document.getElementById('customAngleDiv');
-    if (this.value === 'custom') {
-      customAngleDiv.classList.remove('hidden');
+    if (bType === 'dwelling' && location === 'interior') {
+      guardRequirements += `<li>Hauteur de garde-corps (si applicable) : min. <strong>${formatMeasurement(CNB_LIMITS.GUARD_HEIGHT.RESIDENTIAL_INTERIOR, mSys)}</strong></li>`;
     } else {
-      customAngleDiv.classList.add('hidden');
+      guardRequirements += `<li>Hauteur de garde-corps (si applicable) : min. <strong>${formatMeasurement(CNB_LIMITS.GUARD_HEIGHT.COMMON, mSys)}</strong></li>`;
     }
-  });
+    
+    guardRequirements += `</ul>`;
+    
+    propositionDiv.innerHTML += specificRequirements + guardRequirements;
+    
+    // Ajouter les suggestions d'amélioration
+    if (suggestions.length > 0) {
+      propositionDiv.innerHTML += `
+        <div class="warning">
+          <p>Suggestions pour améliorer le confort :</p>
+          <ul>
+            ${suggestions.map(s => `<li>${s}</li>`).join('')}
+          </ul>
+        </div>
+      `;
+    }
+    
+  } else {
+    // Si l'escalier n'est pas conforme
+    propositionDiv.innerHTML = `
+      <h2>Proposition d'escalier conforme</h2>
+      <div class="error">
+        <p>L'escalier calculé présente des non-conformités :</p>
+        <ul>
+          ${issues.map(issue => `<li>${issue}</li>`).join('')}
+        </ul>
+      </div>
+    `;
+    
+    // Proposer une solution conforme
+    let improvedRiserHeight = riserHeight;
+    let improvedTreadDepth = treadDepth;
+    let improvedStepsCount = stepsCount;
+    
+    // Ajuster la hauteur de contremarche si nécessaire
+    if (riserHeight < riserLimits.MIN) {
+      improvedRiserHeight = riserLimits.MIN;
+    } else if (riserHeight > riserLimits.MAX) {
+      improvedRiserHeight = riserLimits.MAX;
+    }
+    
+    // Ajuster le giron si nécessaire
+    if (treadDepth < treadLimits.MIN) {
+      improvedTreadDepth = treadLimits.MIN;
+    } else if (treadLimits.MAX !== Infinity && treadDepth > treadLimits.MAX) {
+      improvedTreadDepth = treadLimits.MAX;
+    }
+    
+    // Recalculer le nombre de marches si les dimensions ont changé
+    if (improvedRiserHeight !== riserHeight) {
+      improvedStepsCount = Math.round(totalHeight / improvedRiserHeight);
+      improvedRiserHeight = totalHeight / improvedStepsCount;
+    }
+    
+    // Vérifier si la longueur est conforme avec l'espace disponible
+    const improvedRunLength = improvedTreadDepth * (improvedStepsCount - 1);
+    let runLengthOk = true;
+    
+    if (availableRun && improvedRunLength > availableRun) {
+      runLengthOk = false;
+    }
+    
+    if (runLengthOk) {
+      propositionDiv.innerHTML += `
+        <div class="success">
+          <p>Voici une proposition d'escalier conforme :</p>
+          <ul>
+            <li>Nombre de marches : <strong>${improvedStepsCount}</strong></li>
+            <li>Hauteur de contremarche : <strong>${formatMeasurement(improvedRiserHeight, mSys)}</strong></li>
+            <li>Profondeur de giron : <strong>${formatMeasurement(improvedTreadDepth, mSys)}</strong></li>
+            <li>Longueur totale de l'escalier : <strong>${formatMeasurement(improvedRunLength, mSys)}</strong></li>
+          </ul>
+        </div>
+      `;
+    } else {
+      // Si les dimensions proposées dépassent l'espace disponible
+      propositionDiv.innerHTML += `
+        <div class="warning">
+          <p>Il n'est pas possible de concevoir un escalier totalement conforme avec les contraintes d'espace actuelles.</p>
+          <p>Solutions possibles :</p>
+          <ul>
+            <li>Augmenter l'espace horizontal disponible à au moins ${formatMeasurement(improvedRunLength, mSys)}</li>
+            <li>Diviser l'escalier en plusieurs volées avec des paliers intermédiaires</li>
+            <li>Envisager un escalier tournant ou hélicoïdal pour économiser de l'espace</li>
+            <li>Consulter un professionnel pour une solution personnalisée</li>
+          </ul>
+        </div>
+      `;
+    }
+    
+    // Ajouter des recommandations spécifiques selon le type d'escalier
+    if (stairType === 'spiral' && useType === 'exit') {
+      propositionDiv.innerHTML += `
+        <div class="error">
+          <p>Les escaliers hélicoïdaux ne peuvent pas être utilisés comme issues selon le CNB §9.8.4.7.</p>
+          <p>Solution : Utiliser un autre type d'escalier pour les issues.</p>
+        </div>
+      `;
+    }
+  }
   
-  // Initialisation de l'affichage
-  toggleTurningOptions();
-});
+  resEl.appendChild(propositionDiv);
+}

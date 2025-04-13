@@ -1,394 +1,114 @@
-import React, { useState, useEffect } from 'react';
-
-const EscalierCalculator = () => {
-  // État pour les paramètres de l'escalier
-  const [unitesMesure, setUnitesMesure] = useState('imperial'); // 'imperial' ou 'metrique'
-  const [hauteurEscalier, setHauteurEscalier] = useState({ pieds: 9, pouces: 0, fraction: 0 });
-  const [hauteurEscalierCm, setHauteurEscalierCm] = useState(274.32); // 9 pieds en cm
-  const [formeEscalier, setFormeEscalier] = useState('droit'); // droit, L, U
-  const [largeurEscalier, setLargeurEscalier] = useState({ pieds: 3, pouces: 6, fraction: 0 }); // 42 pouces par défaut
-  const [largeurEscalierCm, setLargeurEscalierCm] = useState(106.68); // 42 pouces en cm
-  const [resultat, setResultat] = useState(null);
-
-  // Conversion entre les systèmes métriques et impériaux
-  const cmVersPouces = (cm) => cm / 2.54;
-  const poucesVersCm = (pouces) => pouces * 2.54;
-  
-  // Convertir la hauteur totale en pouces
-  const hauteurTotaleEnPouces = () => {
-    return hauteurEscalier.pieds * 12 + hauteurEscalier.pouces + hauteurEscalier.fraction / 32;
-  };
-  
-  // Convertir la hauteur totale en cm
-  const hauteurTotaleEnCm = () => {
-    return unitesMesure === 'imperial' ? poucesVersCm(hauteurTotaleEnPouces()) : hauteurEscalierCm;
-  };
-  
-  // Convertir la largeur totale en pouces
-  const largeurTotaleEnPouces = () => {
-    return largeurEscalier.pieds * 12 + largeurEscalier.pouces + largeurEscalier.fraction / 32;
-  };
-  
-  // Convertir la largeur totale en cm
-  const largeurTotaleEnCm = () => {
-    return unitesMesure === 'imperial' ? poucesVersCm(largeurTotaleEnPouces()) : largeurEscalierCm;
-  };
-
-  // Mettre à jour la hauteur en cm quand la hauteur impériale change
-  useEffect(() => {
-    if (unitesMesure === 'imperial') {
-      setHauteurEscalierCm(poucesVersCm(hauteurTotaleEnPouces()));
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vérification Conformité Escalier</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
     }
-  }, [hauteurEscalier, unitesMesure]);
-
-  // Mettre à jour la hauteur impériale quand la hauteur en cm change
-  useEffect(() => {
-    if (unitesMesure === 'metrique') {
-      const totalPouces = cmVersPouces(hauteurEscalierCm);
-      const pieds = Math.floor(totalPouces / 12);
-      const pouces = Math.floor(totalPouces % 12);
-      const fractionDecimale = (totalPouces % 1) * 32;
-      const fraction = Math.round(fractionDecimale);
-      
-      setHauteurEscalier({ pieds, pouces, fraction });
+    h1 {
+      text-align: center;
+      margin-bottom: 1em;
     }
-  }, [hauteurEscalierCm, unitesMesure]);
-
-  // Mettre à jour la largeur en cm quand la largeur impériale change
-  useEffect(() => {
-    if (unitesMesure === 'imperial') {
-      setLargeurEscalierCm(poucesVersCm(largeurTotaleEnPouces()));
+    label {
+      display: block;
+      margin-top: 1em;
     }
-  }, [largeurEscalier, unitesMesure]);
-
-  // Mettre à jour la largeur impériale quand la largeur en cm change
-  useEffect(() => {
-    if (unitesMesure === 'metrique') {
-      const totalPouces = cmVersPouces(largeurEscalierCm);
-      const pieds = Math.floor(totalPouces / 12);
-      const pouces = Math.floor(totalPouces % 12);
-      const fractionDecimale = (totalPouces % 1) * 32;
-      const fraction = Math.round(fractionDecimale);
-      
-      setLargeurEscalier({ pieds, pouces, fraction });
+    select, input {
+      width: 100%;
+      padding: 0.5em;
+      margin-top: 0.3em;
+      box-sizing: border-box;
     }
-  }, [largeurEscalierCm, unitesMesure]);
+    input::placeholder {
+      color: #ccc;
+      font-style: italic;
+    }
+    button {
+      margin-top: 1.5em;
+      padding: 0.7em 1.2em;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      background: #007ACC;
+      color: white;
+      font-size: 1em;
+    }
+    #results {
+      margin-top: 1.5em;
+      padding: 1em;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: #f9f9f9;
+    }
+    .error {
+      color: #c00;
+    }
+    .success {
+      color: #090;
+    }
+  </style>
+</head>
+<body>
+  <h1>Vérification Conformité Escalier</h1>
+  <form id="stairForm">
+    <label for="buildingType">Type de bâtiment :</label>
+    <select id="buildingType" name="buildingType">
+      <option value="part9">Maisons et petits bâtiments (Partie 9)</option>
+      <option value="part3">Autres bâtiments (Partie 3)</option>
+    </select>
 
-  // Calculer l'escalier
-  const calculerEscalier = () => {
-    let hauteur, nombreContreMarches, hauteurContreMarche, giron, longueurEscalier;
-    
-    // Conversion en unités appropriées
-    hauteur = unitesMesure === 'imperial' ? hauteurTotaleEnPouces() : hauteurEscalierCm;
-    
-    // Déterminer le nombre de contremarches
-    // Hauteur max de CM: 7.87" (impérial) ou 200mm (métrique)
-    const hauteurMaxCM = unitesMesure === 'imperial' ? 7.87 : 20;
-    nombreContreMarches = Math.ceil(hauteur / hauteurMaxCM);
-    
-    // Calculer la hauteur des contremarches
-    hauteurContreMarche = hauteur / nombreContreMarches;
-    
-    // Définir le giron (profondeur de marche)
-    // Giron min: 10" (impérial) ou 255mm (métrique)
-    const gironMin = unitesMesure === 'imperial' ? 10 : 25.5;
-    giron = gironMin;
-    
-    // Vérifier les règles du pas
-    const estRegle1Respectee = (giron + hauteurContreMarche >= 17 && giron + hauteurContreMarche <= 18);
-    const estRegle2Respectee = (giron * hauteurContreMarche >= 71 && giron * hauteurContreMarche <= 74);
-    const estRegle3Respectee = (giron + (2 * hauteurContreMarche) >= 22 && giron + (2 * hauteurContreMarche) <= 25);
-    
-    // Calculer la longueur horizontale de l'escalier
-    // Nombre de marches = nombre de contremarches - 1
-    const nombreMarches = nombreContreMarches - 1;
-    longueurEscalier = giron * nombreMarches;
-    
-    // Préparer les résultats dans les bonnes unités
-    const resultats = {
-      unitesMesure,
-      hauteurEscalier: unitesMesure === 'imperial' ? 
-        `${hauteurEscalier.pieds}'-${hauteurEscalier.pouces} ${hauteurEscalier.fraction}/32"` : 
-        `${hauteurEscalierCm.toFixed(2)} cm`,
-      nombreContreMarches,
-      hauteurContreMarche: unitesMesure === 'imperial' ? 
-        `${(hauteurContreMarche).toFixed(2)}"` : 
-        `${(hauteurContreMarche).toFixed(2)} cm`,
-      giron: unitesMesure === 'imperial' ? 
-        `${giron.toFixed(2)}"` : 
-        `${(giron * 2.54).toFixed(2)} cm`,
-      longueurEscalier: unitesMesure === 'imperial' ? 
-        `${Math.floor(longueurEscalier/12)}'-${(longueurEscalier%12).toFixed(2)}"` : 
-        `${(longueurEscalier * 2.54).toFixed(2)} cm`,
-      largeurEscalier: unitesMesure === 'imperial' ? 
-        `${largeurEscalier.pieds}'-${largeurEscalier.pouces} ${largeurEscalier.fraction}/32"` : 
-        `${largeurEscalierCm.toFixed(2)} cm`,
-      reglesPasRespectees: {
-        regle1: estRegle1Respectee,
-        regle2: estRegle2Respectee,
-        regle3: estRegle3Respectee
-      },
-      formeEscalier
-    };
-    
-    setResultat(resultats);
-  };
+    <label for="measurementSystem">Système de mesure :</label>
+    <select id="measurementSystem" name="measurementSystem">
+      <option value="metric">Métrique (mm)</option>
+      <option value="imperial">Impérial (pieds‑pouces)</option>
+    </select>
 
-  // Générer les options pour les fractions (1/32 à 31/32)
-  const optionsFractions = Array.from({ length: 32 }, (_, i) => (
-    <option key={i} value={i}>{i > 0 ? `${i}/32` : '0'}</option>
-  ));
+    <div id="inputs">
+      <label for="riserHeight">Hauteur de contremarche :</label>
+      <input
+        type="text"
+        id="riserHeight"
+        name="riserHeight"
+        placeholder="Ex : 7‑3 15/32&quot; ou 190 mm"
+      />
 
-  return (
-    <div className="p-4 max-w-4xl mx-auto bg-white rounded-lg shadow">
-      <h1 className="text-2xl font-bold mb-6 text-center">Calculateur d'Escalier</h1>
-      
-      {/* Sélection du système de mesure */}
-      <div className="mb-6">
-        <label className="block text-gray-700 font-bold mb-2">Système de mesure</label>
-        <div className="flex">
-          <button 
-            className={`px-4 py-2 rounded-l-lg ${unitesMesure === 'imperial' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-            onClick={() => setUnitesMesure('imperial')}
-          >
-            Impérial (pieds/pouces)
-          </button>
-          <button 
-            className={`px-4 py-2 rounded-r-lg ${unitesMesure === 'metrique' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-            onClick={() => setUnitesMesure('metrique')}
-          >
-            Métrique (cm)
-          </button>
-        </div>
-      </div>
-      
-      {/* Forme de l'escalier */}
-      <div className="mb-6">
-        <label className="block text-gray-700 font-bold mb-2">Forme de l'escalier</label>
-        <select 
-          className="w-full px-3 py-2 border rounded"
-          value={formeEscalier}
-          onChange={(e) => setFormeEscalier(e.target.value)}
-        >
-          <option value="droit">Droit</option>
-          <option value="L">En L</option>
-          <option value="U">En U</option>
-        </select>
-      </div>
-      
-      {/* Hauteur de l'escalier */}
-      <div className="mb-6">
-        <label className="block text-gray-700 font-bold mb-2">Hauteur de l'escalier</label>
-        {unitesMesure === 'imperial' ? (
-          <div className="flex space-x-2">
-            <div className="w-1/3">
-              <label className="block text-gray-600 text-sm mb-1">Pieds</label>
-              <input 
-                type="number" 
-                min="0"
-                className="w-full px-3 py-2 border rounded"
-                value={hauteurEscalier.pieds}
-                onChange={(e) => setHauteurEscalier({...hauteurEscalier, pieds: parseInt(e.target.value) || 0})}
-              />
-            </div>
-            <div className="w-1/3">
-              <label className="block text-gray-600 text-sm mb-1">Pouces</label>
-              <input 
-                type="number" 
-                min="0" 
-                max="11"
-                className="w-full px-3 py-2 border rounded"
-                value={hauteurEscalier.pouces}
-                onChange={(e) => setHauteurEscalier({...hauteurEscalier, pouces: parseInt(e.target.value) || 0})}
-              />
-            </div>
-            <div className="w-1/3">
-              <label className="block text-gray-600 text-sm mb-1">Fraction</label>
-              <select 
-                className="w-full px-3 py-2 border rounded"
-                value={hauteurEscalier.fraction}
-                onChange={(e) => setHauteurEscalier({...hauteurEscalier, fraction: parseInt(e.target.value)})}
-              >
-                {optionsFractions}
-              </select>
-            </div>
-          </div>
-        ) : (
-          <div>
-            <input 
-              type="number" 
-              step="0.1"
-              min="0"
-              className="w-full px-3 py-2 border rounded"
-              value={hauteurEscalierCm}
-              onChange={(e) => setHauteurEscalierCm(parseFloat(e.target.value) || 0)}
-            />
-            <span className="text-sm text-gray-500">cm</span>
-          </div>
-        )}
-      </div>
-      
-      {/* Largeur de l'escalier */}
-      <div className="mb-6">
-        <label className="block text-gray-700 font-bold mb-2">Largeur de l'escalier</label>
-        {unitesMesure === 'imperial' ? (
-          <div className="flex space-x-2">
-            <div className="w-1/3">
-              <label className="block text-gray-600 text-sm mb-1">Pieds</label>
-              <input 
-                type="number" 
-                min="0"
-                className="w-full px-3 py-2 border rounded"
-                value={largeurEscalier.pieds}
-                onChange={(e) => setLargeurEscalier({...largeurEscalier, pieds: parseInt(e.target.value) || 0})}
-              />
-            </div>
-            <div className="w-1/3">
-              <label className="block text-gray-600 text-sm mb-1">Pouces</label>
-              <input 
-                type="number" 
-                min="0" 
-                max="11"
-                className="w-full px-3 py-2 border rounded"
-                value={largeurEscalier.pouces}
-                onChange={(e) => setLargeurEscalier({...largeurEscalier, pouces: parseInt(e.target.value) || 0})}
-              />
-            </div>
-            <div className="w-1/3">
-              <label className="block text-gray-600 text-sm mb-1">Fraction</label>
-              <select 
-                className="w-full px-3 py-2 border rounded"
-                value={largeurEscalier.fraction}
-                onChange={(e) => setLargeurEscalier({...largeurEscalier, fraction: parseInt(e.target.value)})}
-              >
-                {optionsFractions}
-              </select>
-            </div>
-          </div>
-        ) : (
-          <div>
-            <input 
-              type="number" 
-              step="0.1"
-              min="0"
-              className="w-full px-3 py-2 border rounded"
-              value={largeurEscalierCm}
-              onChange={(e) => setLargeurEscalierCm(parseFloat(e.target.value) || 0)}
-            />
-            <span className="text-sm text-gray-500">cm</span>
-          </div>
-        )}
-      </div>
-      
-      {/* Bouton de calcul */}
-      <div className="mb-6">
-        <button 
-          className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
-          onClick={calculerEscalier}
-        >
-          Calculer l'escalier
-        </button>
-      </div>
-      
-      {/* Affichage des résultats */}
-      {resultat && (
-        <div className="mt-8 p-4 border rounded bg-gray-50">
-          <h2 className="text-xl font-bold mb-4">Résultats du calcul</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="font-semibold">Forme de l'escalier:</p>
-              <p>{resultat.formeEscalier === 'droit' ? 'Droit' : resultat.formeEscalier === 'L' ? 'En L' : 'En U'}</p>
-            </div>
-            <div>
-              <p className="font-semibold">Hauteur totale:</p>
-              <p>{resultat.hauteurEscalier}</p>
-            </div>
-            <div>
-              <p className="font-semibold">Nombre de contremarches:</p>
-              <p>{resultat.nombreContreMarches}</p>
-            </div>
-            <div>
-              <p className="font-semibold">Hauteur d'une contremarche:</p>
-              <p>{resultat.hauteurContreMarche}</p>
-            </div>
-            <div>
-              <p className="font-semibold">Giron (profondeur de marche):</p>
-              <p>{resultat.giron}</p>
-            </div>
-            <div>
-              <p className="font-semibold">Longueur horizontale:</p>
-              <p>{resultat.longueurEscalier}</p>
-            </div>
-            <div>
-              <p className="font-semibold">Largeur:</p>
-              <p>{resultat.largeurEscalier}</p>
-            </div>
-            <div>
-              <p className="font-semibold">Validation des règles du pas:</p>
-              <ul className="list-disc pl-5">
-                <li className={resultat.reglesPasRespectees.regle1 ? "text-green-600" : "text-red-600"}>
-                  {resultat.reglesPasRespectees.regle1 ? "✓" : "✗"} Règle 1: Giron + CM = 17" à 18"
-                </li>
-                <li className={resultat.reglesPasRespectees.regle2 ? "text-green-600" : "text-red-600"}>
-                  {resultat.reglesPasRespectees.regle2 ? "✓" : "✗"} Règle 2: Giron × CM = 71" à 74"
-                </li>
-                <li className={resultat.reglesPasRespectees.regle3 ? "text-green-600" : "text-red-600"}>
-                  {resultat.reglesPasRespectees.regle3 ? "✓" : "✗"} Règle 3: Giron + 2(CM) = 22" à 25"
-                </li>
-              </ul>
-            </div>
-          </div>
-          
-          {/* Section schéma visuel simplifiée */}
-          <div className="mt-6">
-            <h3 className="font-bold mb-2">Représentation schématique:</h3>
-            <div className="border p-4 bg-white">
-              {resultat.formeEscalier === 'droit' && (
-                <div className="h-64 flex justify-center items-center">
-                  <div className="relative w-4/5 h-40 border border-gray-400">
-                    {/* Représentation simplifiée de l'escalier droit */}
-                    {Array.from({ length: resultat.nombreContreMarches }).map((_, i) => (
-                      <div 
-                        key={i}
-                        className="absolute bg-gray-300 border border-gray-400"
-                        style={{
-                          width: `${100 / resultat.nombreContreMarches}%`,
-                          height: '40%', 
-                          bottom: `${(i / resultat.nombreContreMarches) * 100}%`,
-                          left: `${(i / resultat.nombreContreMarches) * 100}%`
-                        }}
-                      ></div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {resultat.formeEscalier === 'L' && (
-                <div className="h-64 flex justify-center items-center">
-                  <div className="relative w-4/5 h-40 border border-gray-400">
-                    {/* Représentation simplifiée de l'escalier en L */}
-                    <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-gray-200 border border-gray-400"></div>
-                    <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gray-200 border border-gray-400"></div>
-                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl">L</div>
-                  </div>
-                </div>
-              )}
-              {resultat.formeEscalier === 'U' && (
-                <div className="h-64 flex justify-center items-center">
-                  <div className="relative w-4/5 h-40 border border-gray-400">
-                    {/* Représentation simplifiée de l'escalier en U */}
-                    <div className="absolute top-0 left-0 w-1/3 h-full bg-gray-200 border border-gray-400"></div>
-                    <div className="absolute top-0 right-0 w-1/3 h-full bg-gray-200 border border-gray-400"></div>
-                    <div className="absolute top-0 left-1/3 w-1/3 h-1/5 bg-gray-200 border border-gray-400"></div>
-                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl">U</div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <label for="treadDepth">Profondeur de giron :</label>
+      <input
+        type="text"
+        id="treadDepth"
+        name="treadDepth"
+        placeholder="Ex : 10‑0 0/32&quot; ou 255 mm"
+      />
+
+      <label for="stairWidth">Largeur de l’escalier :</label>
+      <input
+        type="text"
+        id="stairWidth"
+        name="stairWidth"
+        placeholder="Ex : 3‑0 0/32&quot; ou 860 mm"
+      />
+
+      <label for="headroom">Hauteur libre (échappée) :</label>
+      <input
+        type="text"
+        id="headroom"
+        name="headroom"
+        placeholder="Ex : 6‑6 0/32&quot; ou 2050 mm"
+      />
     </div>
-  );
-};
 
-export default EscalierCalculator;
+    <button type="button" onclick="validateStair()">Vérifier la conformité</button>
+  </form>
+
+  <div id="results"></div>
+
+  <!-- Partie 2: inclure ensuite ce script en bas de page -->
+  <script src="stairCheck.js"></script>
+</body>
+</html>

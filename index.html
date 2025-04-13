@@ -1,0 +1,749 @@
+import React, { useState, useEffect } from 'react';
+
+const CalculateurEscalier = () => {
+  // Fonction pour convertir une fraction en nombre décimal
+  const fractionToDecimal = (fraction) => {
+    if (fraction === '0') return 0;
+    const [numerator, denominator] = fraction.split('/').map(Number);
+    return numerator / denominator;
+  };
+
+  // Options pour les fractions impériales
+  const fractionOptions = [
+    { value: '0', label: '0' },
+    { value: '1/32', label: '1/32' },
+    { value: '1/16', label: '1/16' },
+    { value: '3/32', label: '3/32' },
+    { value: '1/8', label: '1/8' },
+    { value: '5/32', label: '5/32' },
+    { value: '3/16', label: '3/16' },
+    { value: '7/32', label: '7/32' },
+    { value: '1/4', label: '1/4' },
+    { value: '9/32', label: '9/32' },
+    { value: '5/16', label: '5/16' },
+    { value: '11/32', label: '11/32' },
+    { value: '3/8', label: '3/8' },
+    { value: '13/32', label: '13/32' },
+    { value: '7/16', label: '7/16' },
+    { value: '15/32', label: '15/32' },
+    { value: '1/2', label: '1/2' },
+    { value: '17/32', label: '17/32' },
+    { value: '9/16', label: '9/16' },
+    { value: '19/32', label: '19/32' },
+    { value: '5/8', label: '5/8' },
+    { value: '21/32', label: '21/32' },
+    { value: '11/16', label: '11/16' },
+    { value: '23/32', label: '23/32' },
+    { value: '3/4', label: '3/4' },
+    { value: '25/32', label: '25/32' },
+    { value: '13/16', label: '13/16' },
+    { value: '27/32', label: '27/32' },
+    { value: '7/8', label: '7/8' },
+    { value: '29/32', label: '29/32' },
+    { value: '15/16', label: '15/16' },
+    { value: '31/32', label: '31/32' }
+  ];
+
+  // États pour stocker les paramètres de l'escalier
+  const [formeEscalier, setFormeEscalier] = useState('droit');
+  const [systemeUnites, setSystemeUnites] = useState('imperial');
+  
+  // Système impérial
+  const [hauteurPPPieds, setHauteurPPPieds] = useState(8); // en pieds
+  const [hauteurPPPouces, setHauteurPPPouces] = useState(0); // en pouces 
+  const [hauteurPPFractions, setHauteurPPFractions] = useState('0'); // fractions de pouce
+  
+  const [epaisseurPlancherPieds, setEpaisseurPlancherPieds] = useState(0); // en pieds
+  const [epaisseurPlancherPouces, setEpaisseurPlancherPouces] = useState(12); // en pouces
+  const [epaisseurPlancherFractions, setEpaisseurPlancherFractions] = useState('0'); // fractions de pouce
+  
+  const [hauteurEscalier, setHauteurEscalier] = useState(108); // en pouces
+  const [nombreCM, setNombreCM] = useState(14);
+  
+  const [hauteurCMPouces, setHauteurCMPouces] = useState(7); // en pouces
+  const [hauteurCMFractions, setHauteurCMFractions] = useState('3/4'); // fractions de pouce
+  
+  const [gironPouces, setGironPouces] = useState(10); // en pouces
+  const [gironFractions, setGironFractions] = useState('0'); // fractions de pouce
+  
+  const [largeurEscalierPouces, setLargeurEscalierPouces] = useState(42); // en pouces
+  const [largeurEscalierFractions, setLargeurEscalierFractions] = useState('0'); // fractions de pouce
+  
+  // Système métrique
+  const [hauteurPP, setHauteurPP] = useState(250); // en cm
+  const [epaisseurPlancher, setEpaisseurPlancher] = useState(30); // en cm
+  const [hauteurCM, setHauteurCM] = useState(180); // en mm
+  const [giron, setGiron] = useState(255); // en mm
+  const [largeurEscalier, setLargeurEscalier] = useState(1070); // en mm
+  
+  const [reglesPas, setReglesPas] = useState({
+    regle1: false,
+    regle2: false,
+    regle3: false
+  });
+  const [longueurEscalier, setLongueurEscalier] = useState(0);
+  
+  // Limites selon le code (en unités impériales et métriques)
+  const HAUTEUR_CM_MAX_IMPERIAL = 7.87; // pouces
+  const HAUTEUR_CM_MIN_IMPERIAL = 4.92; // pouces
+  const GIRON_MAX_IMPERIAL = 13.97; // pouces
+  const GIRON_MIN_IMPERIAL = 10; // pouces
+  
+  const HAUTEUR_CM_MAX_METRIQUE = 200; // mm
+  const HAUTEUR_CM_MIN_METRIQUE = 125; // mm
+  const GIRON_MAX_METRIQUE = 355; // mm
+  const GIRON_MIN_METRIQUE = 255; // mm
+
+  // Calculer la hauteur totale de l'escalier
+  useEffect(() => {
+    if (systemeUnites === 'imperial') {
+      // Convertir la hauteur plancher-plafond en pouces
+      const hauteurPPEnPouces = (hauteurPPPieds * 12) + hauteurPPPouces + fractionToDecimal(hauteurPPFractions);
+      
+      // Convertir l'épaisseur du plancher en pouces
+      const epaisseurPlancherEnPouces = (epaisseurPlancherPieds * 12) + epaisseurPlancherPouces + fractionToDecimal(epaisseurPlancherFractions);
+      
+      // Calculer la hauteur totale en pouces
+      const hauteurTotale = hauteurPPEnPouces + epaisseurPlancherEnPouces;
+      setHauteurEscalier(hauteurTotale);
+    } else {
+      // En métrique (mm)
+      const hauteurTotale = (hauteurPP * 10) + epaisseurPlancher;
+      setHauteurEscalier(hauteurTotale);
+    }
+  }, [
+    systemeUnites,
+    hauteurPPPieds, hauteurPPPouces, hauteurPPFractions,
+    epaisseurPlancherPieds, epaisseurPlancherPouces, epaisseurPlancherFractions,
+    hauteurPP, epaisseurPlancher
+  ]);
+
+  // Calculer le nombre de contremarches
+  useEffect(() => {
+    if (hauteurEscalier > 0) {
+      const nombreCalcule = Math.ceil(hauteurEscalier / 
+        (systemeUnites === 'imperial' ? HAUTEUR_CM_MAX_IMPERIAL : HAUTEUR_CM_MAX_METRIQUE));
+      setNombreCM(nombreCalcule);
+    }
+  }, [hauteurEscalier, systemeUnites, HAUTEUR_CM_MAX_IMPERIAL, HAUTEUR_CM_MAX_METRIQUE]);
+
+  // Calculer la hauteur des contremarches
+  useEffect(() => {
+    if (nombreCM > 0) {
+      const hauteurCalculee = hauteurEscalier / nombreCM;
+      
+      if (systemeUnites === 'imperial') {
+        // Arrondir à la fraction de pouce près
+        const poucesEntiers = Math.floor(hauteurCalculee);
+        const partieDecimale = hauteurCalculee - poucesEntiers;
+        
+        // Trouver la fraction la plus proche
+        let fractionLaPlusProche = '0';
+        let differenceMinimale = 1;
+        
+        fractionOptions.forEach(option => {
+          const valeurFraction = fractionToDecimal(option.value);
+          const difference = Math.abs(partieDecimale - valeurFraction);
+          
+          if (difference < differenceMinimale) {
+            differenceMinimale = difference;
+            fractionLaPlusProche = option.value;
+          }
+        });
+        
+        setHauteurCMPouces(poucesEntiers);
+        setHauteurCMFractions(fractionLaPlusProche);
+      } else {
+        // En métrique, arrondir au mm près
+        setHauteurCM(Math.round(hauteurCalculee));
+      }
+    }
+  }, [hauteurEscalier, nombreCM, systemeUnites]);
+
+  // Gérer les changements d'unités
+  useEffect(() => {
+    if (systemeUnites === 'imperial') {
+      // Convertir de métrique à impérial
+      // Hauteur plancher-plafond de cm à pieds et pouces
+      const hauteurPPEnPouces = hauteurPP * 10 / 25.4;
+      setHauteurPPPieds(Math.floor(hauteurPPEnPouces / 12));
+      setHauteurPPPouces(Math.floor(hauteurPPEnPouces % 12));
+      setHauteurPPFractions('0');
+      
+      // Épaisseur du plancher de mm à pieds et pouces
+      const epaisseurPlancherEnPouces = epaisseurPlancher / 25.4;
+      setEpaisseurPlancherPieds(Math.floor(epaisseurPlancherEnPouces / 12));
+      setEpaisseurPlancherPouces(Math.floor(epaisseurPlancherEnPouces % 12));
+      setEpaisseurPlancherFractions('0');
+      
+      // Hauteur des contremarches de mm à pouces et fractions
+      const hauteurCMEnPouces = hauteurCM / 25.4;
+      setHauteurCMPouces(Math.floor(hauteurCMEnPouces));
+      
+      // Trouver la fraction la plus proche pour la hauteur CM
+      const partieDecimale = hauteurCMEnPouces - Math.floor(hauteurCMEnPouces);
+      let fractionLaPlusProche = '0';
+      let differenceMinimale = 1;
+      
+      fractionOptions.forEach(option => {
+        const valeurFraction = fractionToDecimal(option.value);
+        const difference = Math.abs(partieDecimale - valeurFraction);
+        
+        if (difference < differenceMinimale) {
+          differenceMinimale = difference;
+          fractionLaPlusProche = option.value;
+        }
+      });
+      
+      setHauteurCMFractions(fractionLaPlusProche);
+      
+      // Giron de mm à pouces et fractions
+      const gironEnPouces = giron / 25.4;
+      setGironPouces(Math.floor(gironEnPouces));
+      
+      // Trouver la fraction la plus proche pour le giron
+      const partieDecimaleGiron = gironEnPouces - Math.floor(gironEnPouces);
+      let fractionLaPlusProcheGiron = '0';
+      let differenceMinimaleGiron = 1;
+      
+      fractionOptions.forEach(option => {
+        const valeurFraction = fractionToDecimal(option.value);
+        const difference = Math.abs(partieDecimaleGiron - valeurFraction);
+        
+        if (difference < differenceMinimaleGiron) {
+          differenceMinimaleGiron = difference;
+          fractionLaPlusProcheGiron = option.value;
+        }
+      });
+      
+      setGironFractions(fractionLaPlusProcheGiron);
+      
+      // Largeur de l'escalier de mm à pouces et fractions
+      const largeurEnPouces = largeurEscalier / 25.4;
+      setLargeurEscalierPouces(Math.floor(largeurEnPouces));
+      
+      // Trouver la fraction la plus proche pour la largeur
+      const partieDecimaleLargeur = largeurEnPouces - Math.floor(largeurEnPouces);
+      let fractionLaPlusProcheLargeur = '0';
+      let differenceMinimaleLargeur = 1;
+      
+      fractionOptions.forEach(option => {
+        const valeurFraction = fractionToDecimal(option.value);
+        const difference = Math.abs(partieDecimaleLargeur - valeurFraction);
+        
+        if (difference < differenceMinimaleLargeur) {
+          differenceMinimaleLargeur = difference;
+          fractionLaPlusProcheLargeur = option.value;
+        }
+      });
+      
+      setLargeurEscalierFractions(fractionLaPlusProcheLargeur);
+      
+    } else {
+      // Convertir d'impérial à métrique
+      // Hauteur plancher-plafond de pieds/pouces à cm
+      const hauteurPPEnPouces = (hauteurPPPieds * 12) + hauteurPPPouces + fractionToDecimal(hauteurPPFractions);
+      setHauteurPP(Math.round(hauteurPPEnPouces * 25.4 / 10));
+      
+      // Épaisseur du plancher de pieds/pouces à mm
+      const epaisseurPlancherEnPouces = (epaisseurPlancherPieds * 12) + epaisseurPlancherPouces + fractionToDecimal(epaisseurPlancherFractions);
+      setEpaisseurPlancher(Math.round(epaisseurPlancherEnPouces * 25.4));
+      
+      // Hauteur des contremarches de pouces/fractions à mm
+      const hauteurCMEnPouces = hauteurCMPouces + fractionToDecimal(hauteurCMFractions);
+      setHauteurCM(Math.round(hauteurCMEnPouces * 25.4));
+      
+      // Giron de pouces/fractions à mm
+      const gironEnPouces = gironPouces + fractionToDecimal(gironFractions);
+      setGiron(Math.round(gironEnPouces * 25.4));
+      
+      // Largeur de l'escalier de pouces/fractions à mm
+      const largeurEnPouces = largeurEscalierPouces + fractionToDecimal(largeurEscalierFractions);
+      setLargeurEscalier(Math.round(largeurEnPouces * 25.4));
+    }
+  }, [systemeUnites]);
+
+  // Vérifier le rapport hauteur/profondeur (règle du pas) en tenant compte des unités
+  useEffect(() => {
+    if (systemeUnites === 'imperial') {
+      const hauteurCMTotal = hauteurCMPouces + fractionToDecimal(hauteurCMFractions);
+      const gironTotal = gironPouces + fractionToDecimal(gironFractions);
+      
+      const regle1 = gironTotal + hauteurCMTotal >= 17 && gironTotal + hauteurCMTotal <= 18;
+      const regle2 = gironTotal * hauteurCMTotal >= 71 && gironTotal * hauteurCMTotal <= 74;
+      const regle3 = gironTotal + (2 * hauteurCMTotal) >= 22.7 && gironTotal + (2 * hauteurCMTotal) <= 25;
+      
+      setReglesPas({ regle1, regle2, regle3 });
+    } else {
+      // Convertir les règles en mm
+      const regle1 = giron + hauteurCM >= 432 && giron + hauteurCM <= 457; // 17-18 pouces
+      const regle2 = giron * hauteurCM >= 1803 && giron * hauteurCM <= 1880; // 71-74 pouces²
+      const regle3 = giron + (2 * hauteurCM) >= 577 && giron + (2 * hauteurCM) <= 635; // 22.7-25 pouces
+      
+      setReglesPas({ regle1, regle2, regle3 });
+    }
+  }, [
+    systemeUnites, 
+    hauteurCMPouces, hauteurCMFractions, 
+    gironPouces, gironFractions,
+    hauteurCM, giron
+  ]);
+
+  // Calculer la longueur horizontale de l'escalier
+  useEffect(() => {
+    const nombreMarches = nombreCM - 1; // Une contremarche de moins que le nombre de marches
+    
+    if (systemeUnites === 'imperial') {
+      const gironTotal = gironPouces + fractionToDecimal(gironFractions);
+      setLongueurEscalier(gironTotal * nombreMarches);
+    } else {
+      setLongueurEscalier(giron * nombreMarches);
+    }
+  }, [nombreCM, gironPouces, gironFractions, giron, systemeUnites]);
+
+  // Validation des valeurs selon le code
+  const estHauteurCMValide = systemeUnites === 'imperial' 
+    ? (hauteurCMPouces + fractionToDecimal(hauteurCMFractions)) >= HAUTEUR_CM_MIN_IMPERIAL && 
+      (hauteurCMPouces + fractionToDecimal(hauteurCMFractions)) <= HAUTEUR_CM_MAX_IMPERIAL
+    : hauteurCM >= HAUTEUR_CM_MIN_METRIQUE && hauteurCM <= HAUTEUR_CM_MAX_METRIQUE;
+    
+  const estGironValide = systemeUnites === 'imperial'
+    ? (gironPouces + fractionToDecimal(gironFractions)) >= GIRON_MIN_IMPERIAL && 
+      (gironPouces + fractionToDecimal(gironFractions)) <= GIRON_MAX_IMPERIAL
+    : giron >= GIRON_MIN_METRIQUE && giron <= GIRON_MAX_METRIQUE;
+    
+  const reglesRespectees = Object.values(reglesPas).filter(Boolean).length >= 2;
+
+  return (
+    <div className="p-4 max-w-4xl mx-auto bg-gray-50 rounded-lg shadow">
+      <h1 className="text-2xl font-bold text-center mb-6">Calculateur d'Escalier</h1>
+      
+      <div className="mb-4 bg-white p-4 rounded shadow">
+        <h2 className="text-xl font-semibold mb-2">Système d'unités</h2>
+        <div className="flex items-center space-x-4">
+          <label className="inline-flex items-center">
+            <input
+              type="radio"
+              value="imperial"
+              checked={systemeUnites === 'imperial'}
+              onChange={() => setSystemeUnites('imperial')}
+              className="form-radio h-4 w-4 text-blue-600"
+            />
+            <span className="ml-2">Impérial (po/pi)</span>
+          </label>
+          <label className="inline-flex items-center">
+            <input
+              type="radio"
+              value="metrique"
+              checked={systemeUnites === 'metrique'}
+              onChange={() => setSystemeUnites('metrique')}
+              className="form-radio h-4 w-4 text-blue-600"
+            />
+            <span className="ml-2">Métrique (mm/m)</span>
+          </label>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-white p-4 rounded shadow">
+          <h2 className="text-xl font-semibold mb-4">1. Définir la forme globale</h2>
+          <div className="mb-4">
+            <label className="block mb-2">Forme de l'escalier :</label>
+            <select 
+              value={formeEscalier} 
+              onChange={(e) => setFormeEscalier(e.target.value)}
+              className="w-full p-2 border rounded"
+            >
+              <option value="droit">Droit</option>
+              <option value="L">En "L"</option>
+              <option value="U">En "U"</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded shadow">
+          <h2 className="text-xl font-semibold mb-4">2. Définir la hauteur de l'escalier</h2>
+          {systemeUnites === 'imperial' ? (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block mb-2">Hauteur plancher à plafond :</label>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center">
+                    <input 
+                      type="number" 
+                      value={hauteurPPPieds} 
+                      onChange={(e) => setHauteurPPPieds(Number(e.target.value))}
+                      min="7"
+                      max="12"
+                      className="w-full p-2 border rounded"
+                    />
+                    <span className="ml-1">pi</span>
+                  </div>
+                  <div className="flex items-center">
+                    <input 
+                      type="number" 
+                      value={hauteurPPPouces} 
+                      onChange={(e) => setHauteurPPPouces(Number(e.target.value))}
+                      min="0"
+                      max="11"
+                      className="w-full p-2 border rounded"
+                    />
+                    <span className="ml-1">po</span>
+                  </div>
+                  <select 
+                    value={hauteurPPFractions} 
+                    onChange={(e) => setHauteurPPFractions(e.target.value)}
+                    className="p-2 border rounded"
+                  >
+                    {fractionOptions.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block mb-2">Épaisseur du plancher :</label>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center">
+                    <input 
+                      type="number" 
+                      value={epaisseurPlancherPieds} 
+                      onChange={(e) => setEpaisseurPlancherPieds(Number(e.target.value))}
+                      min="0"
+                      max="2"
+                      className="w-full p-2 border rounded"
+                    />
+                    <span className="ml-1">pi</span>
+                  </div>
+                  <div className="flex items-center">
+                    <input 
+                      type="number" 
+                      value={epaisseurPlancherPouces} 
+                      onChange={(e) => setEpaisseurPlancherPouces(Number(e.target.value))}
+                      min="0"
+                      max="11"
+                      className="w-full p-2 border rounded"
+                    />
+                    <span className="ml-1">po</span>
+                  </div>
+                  <select 
+                    value={epaisseurPlancherFractions} 
+                    onChange={(e) => setEpaisseurPlancherFractions(e.target.value)}
+                    className="p-2 border rounded"
+                  >
+                    {fractionOptions.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block mb-2">Hauteur plancher à plafond (cm) :</label>
+                <input 
+                  type="number" 
+                  value={hauteurPP} 
+                  onChange={(e) => setHauteurPP(Number(e.target.value))}
+                  min="200"
+                  max="400"
+                  step="1"
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block mb-2">Épaisseur du plancher (mm) :</label>
+                <input 
+                  type="number" 
+                  value={epaisseurPlancher} 
+                  onChange={(e) => setEpaisseurPlancher(Number(e.target.value))}
+                  min="100"
+                  max="500"
+                  step="1"
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+            </div>
+          )}
+          <div className="mt-4">
+            {systemeUnites === 'imperial' ? (
+              <p><strong>Hauteur totale de l'escalier :</strong> {hauteurEscalier.toFixed(3)} pouces ({(hauteurEscalier / 12).toFixed(3)} pieds)</p>
+            ) : (
+              <p><strong>Hauteur totale de l'escalier :</strong> {hauteurEscalier} mm ({(hauteurEscalier / 1000).toFixed(3)} m)</p>
+            )}
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded shadow">
+          <h2 className="text-xl font-semibold mb-4">3. Définir la hauteur des contremarches</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block mb-2">Nombre de contremarches :</label>
+              <input 
+                type="number" 
+                value={nombreCM} 
+                onChange={(e) => setNombreCM(Number(e.target.value))}
+                min="1"
+                className="w-full p-2 border rounded"
+              />
+            </div>
+            <div>
+              <label className="block mb-2">
+                Hauteur des contremarches {systemeUnites === 'imperial' ? '(pouces)' : '(mm)'} :
+              </label>
+              {systemeUnites === 'imperial' ? (
+                <div className="flex items-center gap-2">
+                  <input 
+                    type="number" 
+                    value={hauteurCMPouces} 
+                    onChange={(e) => setHauteurCMPouces(Number(e.target.value))}
+                    min="4"
+                    max="8"
+                    step="0.01"
+                    className={`p-2 border rounded w-20 ${!estHauteurCMValide ? 'border-red-500' : ''}`}
+                  />
+                  <span>po</span>
+                  <select 
+                    value={hauteurCMFractions} 
+                    onChange={(e) => setHauteurCMFractions(e.target.value)}
+                    className="p-2 border rounded"
+                  >
+                    {fractionOptions.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                  {!estHauteurCMValide && (
+                    <span className="ml-2 text-red-500">!</span>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center">
+                  <input 
+                    type="number" 
+                    value={hauteurCM} 
+                    onChange={(e) => setHauteurCM(Number(e.target.value))}
+                    min={HAUTEUR_CM_MIN_METRIQUE}
+                    max={HAUTEUR_CM_MAX_METRIQUE}
+                    step="1"
+                    className={`w-full p-2 border rounded ${!estHauteurCMValide ? 'border-red-500' : ''}`}
+                  />
+                  {!estHauteurCMValide && (
+                    <span className="ml-2 text-red-500">!</span>
+                  )}
+                </div>
+              )}
+              <div className="text-xs mt-1">
+                {systemeUnites === 'imperial' ? (
+                  <>Min: {HAUTEUR_CM_MIN_IMPERIAL}" | Max: {HAUTEUR_CM_MAX_IMPERIAL}"</>
+                ) : (
+                  <>Min: {HAUTEUR_CM_MIN_METRIQUE} mm | Max: {HAUTEUR_CM_MAX_METRIQUE} mm</>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded shadow">
+          <h2 className="text-xl font-semibold mb-4">4. Définir la profondeur du giron</h2>
+          <div>
+            <label className="block mb-2">
+              Giron {systemeUnites === 'imperial' ? '(pouces)' : '(mm)'} :
+            </label>
+            {systemeUnites === 'imperial' ? (
+              <div className="flex items-center gap-2">
+                <input 
+                  type="number" 
+                  value={gironPouces} 
+                  onChange={(e) => setGironPouces(Number(e.target.value))}
+                  min="9"
+                  max="14"
+                  step="0.01"
+                  className={`p-2 border rounded w-20 ${!estGironValide ? 'border-red-500' : ''}`}
+                />
+                <span>po</span>
+                <select 
+                  value={gironFractions} 
+                  onChange={(e) => setGironFractions(e.target.value)}
+                  className="p-2 border rounded"
+                >
+                  {fractionOptions.map(option => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+                {!estGironValide && (
+                  <span className="ml-2 text-red-500">!</span>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center">
+                <input 
+                  type="number" 
+                  value={giron} 
+                  onChange={(e) => setGiron(Number(e.target.value))}
+                  min={GIRON_MIN_METRIQUE}
+                  max={GIRON_MAX_METRIQUE}
+                  step="1"
+                  className={`w-full p-2 border rounded ${!estGironValide ? 'border-red-500' : ''}`}
+                />
+                {!estGironValide && (
+                  <span className="ml-2 text-red-500">!</span>
+                )}
+              </div>
+            )}
+            <div className="text-xs mt-1">
+              {systemeUnites === 'imperial' ? (
+                <>Min: {GIRON_MIN_IMPERIAL}" | Max: {GIRON_MAX_IMPERIAL}"</>
+              ) : (
+                <>Min: {GIRON_MIN_METRIQUE} mm | Max: {GIRON_MAX_METRIQUE} mm</>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded shadow">
+          <h2 className="text-xl font-semibold mb-4">5. Vérifier le rapport hauteur et profondeur</h2>
+          <div>
+            {systemeUnites === 'imperial' ? (
+              <>
+                <p className={`mb-2 ${reglesPas.regle1 ? 'text-green-600' : 'text-gray-600'}`}>
+                  ✓ Giron + CM = {(gironPouces + fractionToDecimal(gironFractions) + hauteurCMPouces + fractionToDecimal(hauteurCMFractions)).toFixed(3)}" 
+                  (devrait être entre 17" et 18")
+                </p>
+                <p className={`mb-2 ${reglesPas.regle2 ? 'text-green-600' : 'text-gray-600'}`}>
+                  ✓ Giron × CM = {((gironPouces + fractionToDecimal(gironFractions)) * (hauteurCMPouces + fractionToDecimal(hauteurCMFractions))).toFixed(3)}" 
+                  (devrait être entre 71" et 74")
+                </p>
+                <p className={`mb-2 ${reglesPas.regle3 ? 'text-green-600' : 'text-gray-600'}`}>
+                  ✓ Giron + 2(CM) = {(gironPouces + fractionToDecimal(gironFractions) + 2 * (hauteurCMPouces + fractionToDecimal(hauteurCMFractions))).toFixed(3)}" 
+                  (devrait être entre 22.7" et 25")
+                </p>
+              </>
+            ) : (
+              <>
+                <p className={`mb-2 ${reglesPas.regle1 ? 'text-green-600' : 'text-gray-600'}`}>
+                  ✓ Giron + CM = {(giron + hauteurCM).toFixed(0)} mm 
+                  (devrait être entre 432 mm et 457 mm)
+                </p>
+                <p className={`mb-2 ${reglesPas.regle2 ? 'text-green-600' : 'text-gray-600'}`}>
+                  ✓ Giron × CM = {(giron * hauteurCM).toFixed(0)} mm² 
+                  (devrait être entre 1803 mm² et 1880 mm²)
+                </p>
+                <p className={`mb-2 ${reglesPas.regle3 ? 'text-green-600' : 'text-gray-600'}`}>
+                  ✓ Giron + 2(CM) = {(giron + 2 * hauteurCM).toFixed(0)} mm 
+                  (devrait être entre 577 mm et 635 mm)
+                </p>
+              </>
+            )}
+            <div className="mt-4">
+              <p className={`font-bold ${reglesRespectees ? 'text-green-600' : 'text-red-500'}`}>
+                {reglesRespectees ? 'Au moins 2 règles respectées ✓' : 'Moins de 2 règles respectées ✗'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded shadow">
+          <h2 className="text-xl font-semibold mb-4">6. Longueur horizontale de l'escalier</h2>
+          <div>
+            <p><strong>Nombre de marches :</strong> {nombreCM - 1}</p>
+            {systemeUnites === 'imperial' ? (
+              <p><strong>Longueur totale :</strong> {longueurEscalier.toFixed(3)} pouces ({(longueurEscalier / 12).toFixed(3)} pieds)</p>
+            ) : (
+              <p><strong>Longueur totale :</strong> {longueurEscalier.toFixed(0)} mm ({(longueurEscalier / 1000).toFixed(3)} m)</p>
+            )}
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded shadow">
+          <h2 className="text-xl font-semibold mb-4">11. Définir la largeur de l'escalier</h2>
+          <div>
+            <label className="block mb-2">
+              Largeur de l'escalier {systemeUnites === 'imperial' ? '(pouces)' : '(mm)'} :
+            </label>
+            {systemeUnites === 'imperial' ? (
+              <div className="flex items-center gap-2">
+                <input 
+                  type="number" 
+                  value={largeurEscalierPouces} 
+                  onChange={(e) => setLargeurEscalierPouces(Number(e.target.value))}
+                  min="36"
+                  max="60"
+                  step="0.5"
+                  className="p-2 border rounded w-20"
+                />
+                <span>po</span>
+                <select 
+                  value={largeurEscalierFractions} 
+                  onChange={(e) => setLargeurEscalierFractions(e.target.value)}
+                  className="p-2 border rounded"
+                >
+                  {fractionOptions.map(option => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <input 
+                type="number" 
+                value={largeurEscalier} 
+                onChange={(e) => setLargeurEscalier(Number(e.target.value))}
+                min="900"
+                max="1500"
+                step="10"
+                className="w-full p-2 border rounded"
+              />
+            )}
+            <p className="text-xs mt-1">
+              {systemeUnites === 'imperial' ? 'Recommandé: 42" pour un escalier résidentiel' : 'Recommandé: 1067 mm pour un escalier résidentiel'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6 bg-white p-4 rounded shadow">
+        <h2 className="text-xl font-semibold mb-4">Résumé des calculs</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <p><strong>Forme de l'escalier :</strong> {formeEscalier === 'droit' ? 'Droit' : formeEscalier === 'L' ? 'En "L"' : 'En "U"'}</p>
+            {systemeUnites === 'imperial' ? (
+              <>
+                <p><strong>Hauteur totale :</strong> {hauteurEscalier.toFixed(3)} pouces ({(hauteurEscalier / 12).toFixed(3)} pieds)</p>
+                <p><strong>Nombre de contremarches :</strong> {nombreCM}</p>
+                <p><strong>Hauteur des contremarches :</strong> {hauteurCMPouces} {hauteurCMFractions !== '0' ? ` ${hauteurCMFractions}` : ''}" ({((hauteurCMPouces + fractionToDecimal(hauteurCMFractions)) * 25.4).toFixed(1)} mm)</p>
+              </>
+            ) : (
+              <>
+                <p><strong>Hauteur totale :</strong> {hauteurEscalier} mm ({(hauteurEscalier / 1000).toFixed(3)} m)</p>
+                <p><strong>Nombre de contremarches :</strong> {nombreCM}</p>
+                <p><strong>Hauteur des contremarches :</strong> {hauteurCM.toFixed(1)} mm ({(hauteurCM / 25.4).toFixed(3)} pouces)</p>
+              </>
+            )}
+            <p className={!estHauteurCMValide ? 'text-red-500' : ''}>{!estHauteurCMValide ? '⚠️ Hauteur de contremarche non conforme' : ''}</p>
+          </div>
+          <div>
+            {systemeUnites === 'imperial' ? (
+              <>
+                <p><strong>Giron :</strong> {gironPouces} {gironFractions !== '0' ? ` ${gironFractions}` : ''}" ({((gironPouces + fractionToDecimal(gironFractions)) * 25.4).toFixed(1)} mm)</p>
+                <p className={!estGironValide ? 'text-red-500' : ''}>{!estGironValide ? '⚠️ Giron non conforme' : ''}</p>
+                <p><strong>Nombre de marches :</strong> {nombreCM - 1}</p>
+                <p><strong>Longueur totale :</strong> {longueurEscalier.toFixed(3)} pouces ({(longueurEscalier / 12).toFixed(3)} pieds)</p>
+                <p><strong>Largeur de l'escalier :</strong> {largeurEscalierPouces} {largeurEscalierFractions !== '0' ? ` ${largeurEscalierFractions}` : ''}" ({((largeurEscalierPouces + fractionToDecimal(largeurEscalierFractions)) * 25.4).toFixed(1)} mm)</p>
+              </>
+            ) : (
+              <>
+                <p><strong>Giron :</strong> {giron.toFixed(1)} mm ({(giron / 25.4).toFixed(3)} pouces)</p>
+                <p className={!estGironValide ? 'text-red-500' : ''}>{!estGironValide ? '⚠️ Giron non conforme' : ''}</p>
+                <p><strong>Nombre de marches :</strong> {nombreCM - 1}</p>
+                <p><strong>Longueur totale :</strong> {longueurEscalier.toFixed(0)} mm ({(longueurEscalier / 1000).toFixed(3)} m)</p>
+                <p><strong>Largeur de l'escalier :</strong> {largeurEscalier.toFixed(0)} mm ({(largeurEscalier / 25.4).toFixed(3)} pouces)</p>
+              </>
+            )}
+            <p className={!reglesRespectees ? 'text-red-500 font-bold' : 'text-green-600 font-bold'}>
+              {reglesRespectees ? '✓ Escalier conforme aux règles' : '⚠️ Escalier non conforme aux règles'}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );

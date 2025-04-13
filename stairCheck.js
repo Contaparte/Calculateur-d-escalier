@@ -122,6 +122,37 @@ function parseMeasurement(input, system) {
 }
 
 /**
+ * Calcule le PGCD (plus grand commun diviseur) de deux nombres
+ */
+function gcd(a, b) {
+  a = Math.abs(a);
+  b = Math.abs(b);
+  
+  if (b > a) {
+    [a, b] = [b, a];
+  }
+  
+  while (b) {
+    [a, b] = [b, a % b];
+  }
+  
+  return a;
+}
+
+/**
+ * Simplifie une fraction
+ */
+function simplifyFraction(numerator, denominator) {
+  if (numerator === 0 || denominator === 0) return { numerator: 0, denominator: 1 };
+  
+  const g = gcd(numerator, denominator);
+  return {
+    numerator: numerator / g,
+    denominator: denominator / g
+  };
+}
+
+/**
  * Formatage d'une valeur en mm pour affichage
  */
 function formatMeasurement(value, system) {
@@ -140,27 +171,26 @@ function formatMeasurement(value, system) {
     const wholePart = Math.floor(fraction);
     const fractionalPart = fraction - wholePart;
     
+    // Simplifier la fraction
+    let fractionString = '';
+    if (fractionalPart > 0) {
+      const { numerator, denominator } = simplifyFraction(Math.round(fractionalPart * 8), 8);
+      fractionString = ` ${numerator}/${denominator}`;
+    }
+    
     if (feet === 0) {
-      if (fractionalPart === 0) {
-        return `${wholePart}"`;
+      if (wholePart === 0) {
+        return fractionString ? `${fractionString}"` : '0"';
       } else {
-        const numerator = fractionalPart * 8;
-        return `${wholePart} ${numerator}/8"`;
+        return `${wholePart}${fractionString}"`;
       }
     } else {
-      if (fractionalPart === 0) {
-        if (wholePart === 0) {
-          return `${feet}'`;
-        } else {
-          return `${feet}'-${wholePart}"`;
-        }
+      if (wholePart === 0 && fractionalPart === 0) {
+        return `${feet}'`;
+      } else if (wholePart === 0) {
+        return `${feet}'-${fractionString}"`;
       } else {
-        const numerator = fractionalPart * 8;
-        if (wholePart === 0) {
-          return `${feet}'-${numerator}/8"`;
-        } else {
-          return `${feet}'-${wholePart} ${numerator}/8"`;
-        }
+        return `${feet}'-${wholePart}${fractionString}"`;
       }
     }
   }
@@ -345,6 +375,24 @@ function calculateStair() {
     // Calcul de la longueur totale de l'escalier
     totalRunLength = bestTreadDepth * (stepsCount - 1);
     
+    // Calculs pour les règles de confort en pouces
+    const riserInInches = bestRiserHeight / 25.4;
+    const treadInInches = bestTreadDepth / 25.4;
+    const comfortRplusT = riserInInches + treadInInches;
+    const comfortRtimesT = riserInInches * treadInInches;
+    const comfort2RplusT = 2 * riserInInches + treadInInches;
+    
+    // Vérification des règles de confort
+    const comfortRplusTOk = comfortRplusT >= CNB_LIMITS.COMFORT_RULES.RISER_PLUS_TREAD.MIN && 
+                           comfortRplusT <= CNB_LIMITS.COMFORT_RULES.RISER_PLUS_TREAD.MAX;
+    const comfortRtimesTOk = comfortRtimesT >= CNB_LIMITS.COMFORT_RULES.RISER_TIMES_TREAD.MIN && 
+                            comfortRtimesT <= CNB_LIMITS.COMFORT_RULES.RISER_TIMES_TREAD.MAX;
+    const comfort2RplusTOk = comfort2RplusT >= CNB_LIMITS.COMFORT_RULES.RISER_TIMES_2_PLUS_TREAD.MIN && 
+                            comfort2RplusT <= CNB_LIMITS.COMFORT_RULES.RISER_TIMES_2_PLUS_TREAD.MAX;
+    
+    // Nombre de règles de confort respectées
+    const comfortRulesOk = [comfortRplusTOk, comfortRtimesTOk, comfort2RplusTOk].filter(Boolean).length;
+    
     // Préparation de l'affichage des résultats
     const calculationDiv = document.createElement('div');
     calculationDiv.className = 'calculation-result';
@@ -379,14 +427,16 @@ function calculateStair() {
           <td>${availableRun ? '≤ ' + formatMeasurement(availableRun, mSys) : 'Non spécifié'}</td>
         </tr>
         <tr>
-          <td>Rapport 2R+G</td>
-          <td>${Math.round(2 * bestRiserHeight + bestTreadDepth)} mm</td>
-          <td>≈ 630 mm (idéal)</td>
-        </tr>
-        <tr>
-          <td>Indice de confort (R+G)</td>
-          <td>${((bestRiserHeight + bestTreadDepth)/25.4).toFixed(2)} pouces</td>
-          <td>17 à 18 pouces (idéal)</td>
+          <td>Règles du pas</td>
+          <td>
+            <span class="${comfortRulesOk >= 2 ? 'success' : 'warning'}">${comfortRulesOk} sur 3 règles respectées</span>
+            <span class="info" style="margin-left: 0.5em; cursor: help;" title="R+G=${comfortRplusT.toFixed(2)}″ (idéal: 17-18″)
+R×G=${comfortRtimesT.toFixed(2)}″ (idéal: 71-74″)
+2R+G=${comfort2RplusT.toFixed(2)}″ (idéal: 22-25″)">ℹ️</span>
+          </td>
+          <td>
+            <em>Recommandé mais non obligatoire</em>
+          </td>
         </tr>
       </table>
       

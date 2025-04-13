@@ -28,8 +28,7 @@ function parseMeasurement(input, system) {
     // 3) A'
     m = s.match(/^(\d+)['’]$/);
     if (m) {
-      const ft = parseInt(m[1], 10);
-      return ft*12*25.4;
+      return parseInt(m[1],10) * 12 * 25.4;
     }
     // 4) B C/G
     m = s.match(/^(\d+)\s+(\d+)\/(\d+)$/);
@@ -46,24 +45,44 @@ function parseMeasurement(input, system) {
     // 6) B (pouces seuls)
     m = s.match(/^(\d+)$/);
     if (m) {
-      const in_ = parseInt(m[1], 10);
-      return in_ * 25.4;
+      return parseInt(m[1],10) * 25.4;
     }
     throw new Error('Format impérial invalide (ex: 7\'-3 15/32", 7\', 3 15/32", 15/32")');
   }
 }
 
 /**
+ * Convertit des mm en pouces décimales.
+ */
+function mmToInches(mm) {
+  return mm / 25.4;
+}
+
+/**
+ * Vérifie la règle du pas (confort de marche).
+ * Retourne le nombre de formules respectées (sur 3) et un tableau de booléens.
+ */
+function checkStepRule(riserMm, treadMm) {
+  const r = mmToInches(riserMm);
+  const g = mmToInches(treadMm);
+  const ok1 = (g + r) >= 17 && (g + r) <= 18;       // G + CM = 17"–18"
+  const ok2 = (g * r) >= 71 && (g * r) <= 74;      // G × CM = 71–74
+  const ok3 = (g + 2*r) >= 22 && (g + 2*r) <= 25;  // G + 2·CM = 22"–25"
+  const count = [ok1, ok2, ok3].filter(x => x).length;
+  return { count, rules: [ok1, ok2, ok3] };
+}
+
+/**
  * Fonction principale appelée au clic du bouton "Vérifier la conformité".
  */
 function validateStair() {
-  const bType = document.getElementById('buildingType').value;       // 'part9' ou 'part3'
-  const mSys  = document.getElementById('measurementSystem').value;  // 'metric' ou 'imperial'
+  const bType = document.getElementById('buildingType').value;
+  const mSys  = document.getElementById('measurementSystem').value;
   const resEl = document.getElementById('results');
   resEl.innerHTML = '';
 
   try {
-    // 1) Récupération et conversion
+    // 1) Conversion
     const riser    = parseMeasurement(document.getElementById('riserHeight').value, mSys);
     const tread    = parseMeasurement(document.getElementById('treadDepth').value, mSys);
     const width    = parseMeasurement(document.getElementById('stairWidth').value, mSys);
@@ -72,79 +91,62 @@ function validateStair() {
     // 2) Seuils CNB
     let riserMin, riserMax, treadMin, treadMax, widthMin, headMin;
     if (bType === 'part9') {
-      riserMin = 125;   riserMax = 200;   // §9.8.4.1
-      treadMin = 255;   treadMax = 355;   // §9.8.4.2
-      widthMin = 860;                      // §9.8.2.1
-      headMin  = 1950;                     // §9.8.2.2
+      // Partie 9 – "privé"
+      riserMin = 125;   riserMax = 200;
+      treadMin = 255;   treadMax = 355;
+      widthMin = 860;   headMin = 1950;
     } else {
-      riserMin = 125;   riserMax = 180;   // §9.8.4.1
-      treadMin = 280;   treadMax = Infinity; // §9.8.4.2
-      widthMin = 900;                      // §9.8.2.1
-      headMin  = 2050;                     // §9.8.2.2
+      // Partie 3 – "commun"
+      riserMin = 125;   riserMax = 180;
+      treadMin = 280;   treadMax = Infinity;
+      widthMin = 900;   headMin = 2050;
     }
 
     // 3) Validation CNB
     const errors = [];
     if (riser < riserMin || riser > riserMax) {
-      errors.push(`Hauteur de contremarche (${riser.toFixed(1)} mm) doit être entre ${riserMin} et ${riserMax} mm (CNB 2015 §9.8.4.1).`);
+      errors.push(`⚠ CNB : contremarche ${riser.toFixed(1)} mm hors plage [${riserMin}–${riserMax}] mm.`);
     }
     if (tread < treadMin || tread > treadMax) {
-      const maxTxt = (treadMax === Infinity) ? '∞' : treadMax;
-      errors.push(`Profondeur de giron (${tread.toFixed(1)} mm) doit être ≥ ${treadMin} mm et ≤ ${maxTxt} mm (CNB 2015 §9.8.4.2).`);
+      const maxTxt = (treadMax===Infinity)? '∞' : treadMax;
+      errors.push(`⚠ CNB : giron ${tread.toFixed(1)} mm hors plage [${treadMin}–${maxTxt}] mm.`);
     }
     if (width < widthMin) {
-      errors.push(`Largeur de l'escalier (${width.toFixed(1)} mm) doit être ≥ ${widthMin} mm (CNB 2015 §9.8.2.1).`);
+      errors.push(`⚠ CNB : largeur ${width.toFixed(1)} mm < ${widthMin} mm.`);
     }
     if (headroom < headMin) {
-      errors.push(`Hauteur libre (${headroom.toFixed(1)} mm) doit être ≥ ${headMin} mm (CNB 2015 §9.8.2.2).`);
+      errors.push(`⚠ CNB : hauteur libre ${headroom.toFixed(1)} mm < ${headMin} mm.`);
     }
 
-    // 4) Affichage résultats CNB
+    // 4) Règle du pas (confort)
+    const step = checkStepRule(riser, tread);
+    if (step.count < 2) {
+      errors.push(
+        `⚠ Règle du pas non respectée : seulement ${step.count}/3 formules valides. ` +
+        `Pour plus de confort, respectez au moins deux des trois : ` +
+        `G+CM=17–18", G×CM=71–74, G+2·CM=22–25".`
+      );
+    }
+
+    // 5) Affichage
     if (errors.length) {
       errors.forEach(msg => {
         const div = document.createElement('div');
         div.className = 'error';
-        div.textContent = '⚠ ' + msg;
+        div.textContent = msg;
         resEl.appendChild(div);
       });
     } else {
       const div = document.createElement('div');
       div.className = 'success';
-      div.textContent = '✓ Conforme aux exigences du CNB.';
-      resEl.appendChild(div);
-    }
-
-    // 5) Vérification de la règle du pas (confort)
-    const riserIn = riser / 25.4;
-    const treadIn = tread / 25.4;
-    const rules = [
-      { name: 'Giron + CM',     value: treadIn + riserIn,      min: 17, max: 18 },
-      { name: 'Giron × CM',     value: treadIn * riserIn,      min: 71, max: 74 },
-      { name: 'Giron + 2×CM',   value: treadIn + 2*riserIn,    min: 22, max: 25 },
-    ];
-    let okCount = 0;
-    rules.forEach(r => {
-      if (r.value >= r.min && r.value <= r.max) {
-        okCount++;
-      } else {
-        const div = document.createElement('div');
-        div.className = 'error';
-        div.textContent = `⚠ Règle du pas « ${r.name} » = ${r.value.toFixed(2)}" (devrait être entre ${r.min}" et ${r.max}") – recommandé (CNB 2015 §9.8.4.2).`;
-        resEl.appendChild(div);
-      }
-    });
-    if (okCount < 2) {
-      const div = document.createElement('div');
-      div.className = 'error';
-      div.textContent = '⚠ Confort de marche non optimal : seules ' +
-        `${okCount} règle(s) sur 3 respectée(s). Il est recommandé d’en respecter au moins 2 pour un pas équilibré.`;
+      div.textContent = '✓ Conforme aux exigences CNB et règle du pas.';
       resEl.appendChild(div);
     }
 
   } catch (e) {
     const div = document.createElement('div');
     div.className = 'error';
-    div.textContent = 'Erreur : ' + e.message;
+    div.textContent = 'Erreur : ' + e.message;
     resEl.appendChild(div);
   }
 }

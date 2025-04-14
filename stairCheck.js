@@ -76,49 +76,79 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Convertir des pieds-pouces en millimètres
-    function imperialToMetric(imperialValue) {
-        if (!imperialValue) return null;
-        
-        // Formats possibles: "6'2", "6' 2", "6 2", "6-2", "6 ft 2 in", "6'2\"", etc.
-        imperialValue = imperialValue.toString().trim();
-        
-        // Pour les valeurs simples en pouces (comme "10" ou "10 in")
-        if (/^(\d+(?:\.\d+)?)(?:\s*(?:in|inch|inches|"))?$/.test(imperialValue)) {
-            const inches = parseFloat(imperialValue);
-            return Math.round(inches * 25.4);
-        }
-        
-        // Pour les valeurs en pieds-pouces
-        const patterns = [
-            /^(\d+(?:\.\d+)?)'(?:\s*)(\d+(?:\.\d+)?)?(?:\s*(?:"|in|inch|inches))?$/,  // 6'2" or 6'2
-            /^(\d+(?:\.\d+)?)(?:\s*(?:ft|feet|foot))(?:\s*)(\d+(?:\.\d+)?)?(?:\s*(?:"|in|inch|inches))?$/,  // 6 ft 2 in or 6 ft 2
-            /^(\d+(?:\.\d+)?)-(\d+(?:\.\d+)?)$/,  // 6-2
-            /^(\d+(?:\.\d+)?)(?:\s+)(\d+(?:\.\d+)?)$/  // 6 2
-        ];
-        
-        for (let pattern of patterns) {
-            const match = imperialValue.match(pattern);
-            if (match) {
-                const feet = parseFloat(match[1]) || 0;
-                const inches = match[2] ? parseFloat(match[2]) : 0;
-                const totalInches = feet * 12 + inches;
-                return Math.round(totalInches * 25.4);
-            }
-        }
-        
-        // Pour les fractions (par exemple, "6 1/2")
-        const fractionMatch = imperialValue.match(/^(\d+(?:\.\d+)?)(?:\s*)(\d+)\/(\d+)(?:\s*(?:"|in|inch|inches))?$/);
-        if (fractionMatch) {
-            const wholeNumber = parseFloat(fractionMatch[1]) || 0;
-            const numerator = parseFloat(fractionMatch[2]);
-            const denominator = parseFloat(fractionMatch[3]);
-            const inches = wholeNumber + (numerator / denominator);
-            return Math.round(inches * 25.4);
-        }
-        
-        // Si aucun format ne correspond
-        return null;
+function imperialToMetric(imperialValue) {
+    if (!imperialValue) return null;
+    
+    // Formats possibles: "6'2", "6' 2", "6 2", "6-2", "6 ft 2 in", "6'2\"", "6'-2", "6'-2 1/4", etc.
+    imperialValue = imperialValue.toString().trim();
+    
+    // Pour les valeurs simples en pouces (comme "10" ou "10 in")
+    if (/^(\d+(?:\.\d+)?)(?:\s*(?:in|inch|inches|"))?$/.test(imperialValue)) {
+        const inches = parseFloat(imperialValue);
+        return Math.round(inches * 25.4);
     }
+    
+    // Pour les fractions simples en pouces
+    const simpleFractionMatch = imperialValue.match(/^(\d+)\/(\d+)(?:\s*(?:"|in|inch|inches))?$/);
+    if (simpleFractionMatch) {
+        const numerator = parseFloat(simpleFractionMatch[1]);
+        const denominator = parseFloat(simpleFractionMatch[2]);
+        const inches = numerator / denominator;
+        return Math.round(inches * 25.4);
+    }
+    
+    // Pour les valeurs en pieds-pouces avec trait d'union et fractions
+    const dashFractionMatch = imperialValue.match(/^(\d+(?:\.\d+)?)'[-\s]*(\d+(?:\.\d+)?)(?:\s+(\d+)\/(\d+))?(?:\s*(?:"|in|inch|inches))?$/);
+    if (dashFractionMatch) {
+        const feet = parseFloat(dashFractionMatch[1]) || 0;
+        const inches = parseFloat(dashFractionMatch[2]) || 0;
+        const fraction = dashFractionMatch[3] && dashFractionMatch[4] ? 
+            parseFloat(dashFractionMatch[3]) / parseFloat(dashFractionMatch[4]) : 0;
+        const totalInches = feet * 12 + inches + fraction;
+        return Math.round(totalInches * 25.4);
+    }
+    
+    // Pour les valeurs en pieds-pouces
+    const patterns = [
+        /^(\d+(?:\.\d+)?)'(?:\s*)(\d+(?:\.\d+)?)?(?:\s*(?:"|in|inch|inches))?$/,  // 6'2" or 6'2
+        /^(\d+(?:\.\d+)?)(?:\s*(?:ft|feet|foot))(?:\s*)(\d+(?:\.\d+)?)?(?:\s*(?:"|in|inch|inches))?$/,  // 6 ft 2 in or 6 ft 2
+        /^(\d+(?:\.\d+)?)-(\d+(?:\.\d+)?)$/,  // 6-2
+        /^(\d+(?:\.\d+)?)(?:\s+)(\d+(?:\.\d+)?)$/  // 6 2
+    ];
+    
+    for (let pattern of patterns) {
+        const match = imperialValue.match(pattern);
+        if (match) {
+            const feet = parseFloat(match[1]) || 0;
+            const inches = match[2] ? parseFloat(match[2]) : 0;
+            const totalInches = feet * 12 + inches;
+            return Math.round(totalInches * 25.4);
+        }
+    }
+    
+    // Pour les fractions (par exemple, "6 1/2")
+    const fractionMatch = imperialValue.match(/^(\d+(?:\.\d+)?)(?:\s*)(\d+)\/(\d+)(?:\s*(?:"|in|inch|inches))?$/);
+    if (fractionMatch) {
+        const wholeNumber = parseFloat(fractionMatch[1]) || 0;
+        const numerator = parseFloat(fractionMatch[2]);
+        const denominator = parseFloat(fractionMatch[3]);
+        const inches = wholeNumber + (numerator / denominator);
+        return Math.round(inches * 25.4);
+    }
+    
+    // Pour les pieds avec fractions de pouce (par exemple "6' 1/2")
+    const feetWithFractionMatch = imperialValue.match(/^(\d+(?:\.\d+)?)'(?:\s*)(\d+)\/(\d+)(?:\s*(?:"|in|inch|inches))?$/);
+    if (feetWithFractionMatch) {
+        const feet = parseFloat(feetWithFractionMatch[1]) || 0;
+        const numerator = parseFloat(feetWithFractionMatch[2]);
+        const denominator = parseFloat(feetWithFractionMatch[3]);
+        const totalInches = feet * 12 + (numerator / denominator);
+        return Math.round(totalInches * 25.4);
+    }
+    
+    // Si aucun format ne correspond
+    return null;
+}
 
     // Vérification de la conformité
     checkButton.addEventListener('click', function() {

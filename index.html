@@ -1,324 +1,242 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Vérification Conformité Escalier</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      max-width: 800px;
-      margin: auto;
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 1em;
-    }
-    h2 {
-      margin-top: 1.5em;
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 0.5em;
-    }
-    label {
-      display: block;
-      margin-top: 1em;
-    }
-    select, input {
-      width: 100%;
-      padding: 0.5em;
-      margin-top: 0.3em;
-      box-sizing: border-box;
-    }
-    input::placeholder {
-      color: #ccc;
-      font-style: italic;
-    }
-    button {
-      margin-top: 1.5em;
-      padding: 0.7em 1.2em;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      background: #007ACC;
-      color: white;
-      font-size: 1em;
-    }
-    #results {
-      margin-top: 1.5em;
-      padding: 1em;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      background: #f9f9f9;
-    }
-    .error {
-      color: #c00;
-    }
-    .success {
-      color: #090;
-    }
-    .warning {
-      color: #f90;
-    }
-    .info {
-      color: #007ACC;
-    }
-    .section {
-      padding: 1em;
-      margin-bottom: 1em;
-      background: #f5f5f5;
-      border-radius: 4px;
-    }
-    .flex-row {
-      display: flex;
-      gap: 1em;
-    }
-    .flex-row > div {
-      flex: 1;
-    }
-    .hidden {
-      display: none;
-    }
-    .calculation-result {
-      margin-top: 2em;
-      padding: 1em;
-      background: #e9f5ff;
-      border-radius: 4px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1em;
-    }
-    table, th, td {
-      border: 1px solid #ddd;
-    }
-    th, td {
-      padding: 0.5em;
-      text-align: left;
-    }
-    th {
-      background-color: #f2f2f2;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vérification de l'escalier</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #444;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            padding-top: 0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        input[type="text"]::placeholder, input[type="number"]::placeholder {
+            color: #aaa;
+            font-style: italic;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            display: none;
+        }
+        .error {
+            color: #d9534f;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .success {
+            color: #5cb85c;
+            font-weight: bold;
+        }
+        .compliant {
+            background-color: #dff0d8;
+            border-color: #d6e9c6;
+        }
+        .non-compliant {
+            background-color: #f2dede;
+            border-color: #ebccd1;
+        }
+        .dimensions-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .dimensions-column {
+            flex: 1;
+            min-width: 300px;
+        }
+        .info-icon {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 16px;
+            font-size: 12px;
+            cursor: help;
+            margin-left: 5px;
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 250px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -125px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-weight: normal;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        @media (max-width: 768px) {
+            .dimensions-container {
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
 <body>
-  <h1>Vérification Conformité Escalier</h1>
-  <form id="stairForm">
-    <div class="section">
-      <h2>Caractéristiques du bâtiment</h2>
-      <div class="flex-row">
-        <div>
-          <label for="buildingType">Type de bâtiment :</label>
-          <select id="buildingType" name="buildingType">
-            <option value="dwelling">Logement individuel ou maison avec logement accessoire</option>
-            <option value="residential">Bâtiment résidentiel (habitation)</option>
-            <option value="industrial">Établissement industriel</option>
-            <option value="other">Autres bâtiments</option>
-          </select>
-        </div>
-        <div>
-          <label for="useType">Usage de l'escalier :</label>
-          <select id="useType" name="useType">
-            <option value="private">Privé (desservant un seul logement)</option>
-            <option value="common">Commun (desservant plusieurs logements)</option>
-            <option value="exit">Issue de secours</option>
-            <option value="service">Service (local technique)</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="flex-row">
-        <div>
-          <label for="location">Emplacement :</label>
-          <select id="location" name="location">
-            <option value="interior">Intérieur</option>
-            <option value="exterior">Extérieur</option>
-          </select>
-        </div>
-        <div>
-          <label for="accessible">Parcours sans obstacles :</label>
-          <select id="accessible" name="accessible">
-            <option value="no">Non</option>
-            <option value="yes">Oui</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <div class="section">
-      <h2>Configuration de l'escalier</h2>
-      <div class="flex-row">
-        <div>
-          <label for="stairType">Type d'escalier :</label>
-          <select id="stairType" name="stairType">
-            <option value="straight">Droit</option>
-            <option value="l-shaped">En L (tournant)</option>
-            <option value="u-shaped">En U (tournant)</option>
-            <option value="spiral">Hélicoïdal</option>
-            <option value="winder">Avec marches rayonnantes</option>
-          </select>
-        </div>
-        <div>
-          <label for="measurementSystem">Système de mesure :</label>
-          <select id="measurementSystem" name="measurementSystem">
+    <h1>Vérificateur de conformité d'escalier</h1>
+    
+    <div class="form-group">
+        <label for="measurementSystem">Système de mesure :</label>
+        <select id="measurementSystem">
             <option value="metric">Métrique (mm)</option>
             <option value="imperial">Impérial (pieds‑pouces)</option>
-          </select>
-        </div>
-      </div>
+        </select>
     </div>
 
-    <div class="section">
-      <h2>Dimensions générales</h2>
-      <div class="flex-row">
-        <div>
-          <label for="totalRise">Hauteur totale à gravir :</label>
-          <input
-            type="text"
-            id="totalRise"
-            name="totalRise"
-            placeholder="Ex : 2850 mm ou 9'-4&quot;"
-          />
+    <div class="dimensions-container">
+        <div class="dimensions-column">
+            <h2>Caractéristiques de l'escalier</h2>
+            
+            <div class="form-group">
+                <label for="stairType">Type d'escalier :</label>
+                <select id="stairType">
+                    <option value="private">Privé (desservant un seul logement)</option>
+                    <option value="common">Commun (desservant plus d'un logement)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="stairConfig">Configuration de l'escalier :</label>
+                <select id="stairConfig">
+                    <option value="straight">Volée droite</option>
+                    <option value="turning">Volée tournante</option>
+                    <option value="spiral">Escalier hélicoïdal</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="riserHeight">Hauteur de contremarche :
+                    <span class="tooltip"><span class="info-icon">i</span>
+                        <span class="tooltiptext">Mesurée verticalement de nez à nez des marches.</span>
+                    </span>
+                </label>
+                <input type="text" id="riserHeight" placeholder="Ex: 180" class="metric-input">
+                <input type="text" id="riserHeightImperial" placeholder="Ex: 7 1/4" class="imperial-input" style="display: none;">
+                <div id="riserHeightError" class="error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="treadDepth">Giron :
+                    <span class="tooltip"><span class="info-icon">i</span>
+                        <span class="tooltiptext">Mesuré horizontalement, de nez à nez des marches.</span>
+                    </span>
+                </label>
+                <input type="text" id="treadDepth" placeholder="Ex: 255" class="metric-input">
+                <input type="text" id="treadDepthImperial" placeholder="Ex: 10 1/2" class="imperial-input" style="display: none;">
+                <div id="treadDepthError" class="error"></div>
+            </div>
+            
+            <div class="form-group" id="minimumWidthTurningStair" style="display: none;">
+                <label for="narrowSide">Largeur minimale côté étroit (marche tournante) :
+                    <span class="tooltip"><span class="info-icon">i</span>
+                        <span class="tooltiptext">Mesuré à l'extrémité étroite de la marche.</span>
+                    </span>
+                </label>
+                <input type="text" id="narrowSide" placeholder="Ex: 150" class="metric-input">
+                <input type="text" id="narrowSideImperial" placeholder="Ex: 6" class="imperial-input" style="display: none;">
+                <div id="narrowSideError" class="error"></div>
+            </div>
         </div>
-        <div>
-          <label for="availableRunLength">Longueur horizontale disponible :</label>
-          <input
-            type="text"
-            id="availableRunLength"
-            name="availableRunLength"
-            placeholder="Ex : 3660 mm ou 12'-0&quot;"
-          />
-        </div>
-      </div>
 
-      <div class="flex-row">
-        <div>
-          <label for="stairWidth">Largeur de l'escalier :</label>
-          <input
-            type="text"
-            id="stairWidth"
-            name="stairWidth"
-            placeholder="Ex : 915 mm ou 3'-0&quot;"
-          />
+        <div class="dimensions-column">
+            <h2>Dimensions de l'escalier</h2>
+            
+            <div class="form-group">
+                <label for="stairWidth">Largeur de l'escalier :</label>
+                <input type="text" id="stairWidth" placeholder="Ex: 900" class="metric-input">
+                <input type="text" id="stairWidthImperial" placeholder="Ex: 3" class="imperial-input" style="display: none;">
+                <div id="stairWidthError" class="error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="headroom">Hauteur libre (échappée) :
+                    <span class="tooltip"><span class="info-icon">i</span>
+                        <span class="tooltiptext">Mesurée verticalement au-dessus de la largeur de passage, à partir d'une tangente au nez des marches.</span>
+                    </span>
+                </label>
+                <input type="text" id="headroom" placeholder="Ex: 2050" class="metric-input">
+                <input type="text" id="headroomImperial" placeholder="Ex: 6' 9" class="imperial-input" style="display: none;">
+                <div id="headroomError" class="error"></div>
+            </div>
+            
+            <div class="form-group" id="spiralWidthField" style="display: none;">
+                <label for="spiralWidth">Largeur libre entre mains courantes :</label>
+                <input type="text" id="spiralWidth" placeholder="Ex: 660" class="metric-input">
+                <input type="text" id="spiralWidthImperial" placeholder="Ex: 2' 2" class="imperial-input" style="display: none;">
+                <div id="spiralWidthError" class="error"></div>
+            </div>
         </div>
-        <div>
-          <label for="headroom">Hauteur libre (échappée) :</label>
-          <input
-            type="text"
-            id="headroom"
-            name="headroom"
-            placeholder="Ex : 1980 mm ou 6'-6&quot;"
-          />
-        </div>
-      </div>
-
-      <div id="customDimensions" class="flex-row">
-        <div>
-          <label for="riserHeight">Hauteur de contremarche souhaitée :</label>
-          <input
-            type="text"
-            id="riserHeight"
-            name="riserHeight"
-            placeholder="Ex : 190 mm ou 7 1/2&quot;" 
-          />
-        </div>
-        <div>
-          <label for="treadDepth">Profondeur de giron souhaitée :</label>
-          <input
-            type="text"
-            id="treadDepth"
-            name="treadDepth"
-            placeholder="Ex : 255 mm ou 10&quot;"
-          />
-        </div>
-      </div>
-
-      <!-- Options supplémentaires pour les escaliers tournants -->
-      <div id="turningOptions" class="hidden">
-        <div class="flex-row">
-          <div>
-            <label for="innerWidth">Largeur côté intérieur (escalier tournant) :</label>
-            <input
-              type="text"
-              id="innerWidth"
-              name="innerWidth"
-              placeholder="Ex : 300 mm ou 12&quot;"
-            />
-          </div>
-          <div>
-            <label for="turningAngle">Angle de rotation (degrés) :</label>
-            <select id="turningAngle" name="turningAngle">
-              <option value="90">90° (quart de tour)</option>
-              <option value="180">180° (demi-tour)</option>
-              <option value="custom">Autre angle</option>
-            </select>
-          </div>
-        </div>
-        <div id="customAngleDiv" class="hidden">
-          <label for="customAngle">Angle personnalisé (degrés) :</label>
-          <input
-            type="number"
-            id="customAngle"
-            name="customAngle"
-            min="0"
-            max="360"
-            placeholder="Ex : 45"
-          />
-        </div>
-      </div>
     </div>
 
-    <div class="section">
-      <h2>Caractéristiques additionnelles</h2>
-      <div class="flex-row">
-        <div>
-          <label for="hasRiser">Contremarches fermées :</label>
-          <select id="hasRiser" name="hasRiser">
-            <option value="yes">Oui</option>
-            <option value="no">Non</option>
-          </select>
-        </div>
-        <div>
-          <label for="handrailsCount">Nombre de mains courantes :</label>
-          <select id="handrailsCount" name="handrailsCount">
-            <option value="1">1 (un côté)</option>
-            <option value="2">2 (deux côtés)</option>
-          </select>
-        </div>
-      </div>
-      
-      <div class="flex-row">
-        <div>
-          <label for="guardHeight">Hauteur de garde-corps (si applicable) :</label>
-          <input
-            type="text"
-            id="guardHeight"
-            name="guardHeight"
-            placeholder="Ex : 1070 mm ou 3'-6&quot;"
-          />
-        </div>
-        <div>
-          <label for="handrailHeight">Hauteur de main courante :</label>
-          <input
-            type="text"
-            id="handrailHeight"
-            name="handrailHeight"
-            placeholder="Ex : 915 mm ou 3'-0&quot;"
-          />
-        </div>
-      </div>
+    <button id="checkCompliance">Vérifier la conformité</button>
+
+    <div id="result" class="result">
+        <h2>Résultat de l'analyse</h2>
+        <div id="resultContent"></div>
     </div>
 
-    <div class="flex-row">
-      <button type="button" onclick="calculateStair()">Calculer les dimensions</button>
-      <button type="button" onclick="validateStair()">Vérifier la conformité</button>
-    </div>
-  </form>
-
-  <div id="results"></div>
-
-  <!-- Script -->
-  <script src="stairCheck.js"></script>
+    <script src="stairCheck.js"></script>
 </body>
 </html>

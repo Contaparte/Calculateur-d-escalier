@@ -144,6 +144,7 @@
             font-size: 16px;
             margin-right: 5px;
             border-radius: 4px 4px 0 0;
+            color: #777;
         }
         
         .tab-button.active {
@@ -202,247 +203,255 @@
 <body>
     <h1>Vérificateur de conformité d'escalier</h1>
     
-    <div class="tab-container">
-        <button class="tab-button" data-tab="calculator-tab">Calcul d'escalier</button>
-        <button class="tab-button active" data-tab="compliance-tab">Vérification de conformité</button>
+<div class="tab-container">
+    <button class="tab-button active" data-tab="calculator-tab">Calcul d'escalier</button>
+    <button class="tab-button" data-tab="compliance-tab">Vérification de conformité</button>
+</div>
+
+<div id="calculator-tab" class="tab-content active">
+    <div class="form-group">
+        <label for="calcMeasurementSystem">Système de mesure :</label>
+        <select id="calcMeasurementSystem">
+            <option value="metric">Métrique (mm)</option>
+            <option value="imperial">Impérial (pieds‑pouces)</option>
+        </select>
     </div>
 
-    <div id="compliance-tab" class="tab-content active">
-        <div class="form-group">
-            <label for="measurementSystem">Système de mesure :</label>
-            <select id="measurementSystem">
-                <option value="metric">Métrique (mm)</option>
-                <option value="imperial">Impérial (pieds‑pouces)</option>
-            </select>
-        </div>
-
-        <div class="dimensions-container">
-            <div class="dimensions-column">
-                <h2>Type de bâtiment et usage</h2>
-                
-                <div class="form-group">
-                    <label for="buildingType">Type de bâtiment :</label>
-                    <select id="buildingType">
-                        <option value="part9">Partie 9 - Maisons et petits bâtiments</option>
-                        <option value="part3">Partie 3 - Bâtiments de grande hauteur et à usage principal</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="buildingUse">Usage du bâtiment :</label>
-                    <select id="buildingUse">
-                        <option value="residential">Habitation (Groupe C)</option>
-                        <option value="business">Établissements d'affaires (Groupe D)</option>
-                        <option value="mercantile">Établissements commerciaux (Groupe E)</option>
-                        <option value="industrial">Établissements industriels (Groupe F)</option>
-                    </select>
-                </div>
-                
-                <h2>Caractéristiques de l'escalier</h2>
-                
-                <div class="form-group">
-                    <label for="stairType">Type d'escalier :</label>
-                    <select id="stairType">
-                        <option value="private">Privé (desservant un seul logement)</option>
-                        <option value="common">Commun (desservant plus d'un logement)</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="stairUse">Usage de l'escalier :</label>
-                    <select id="stairUse">
-                        <option value="normal">Usage normal</option>
-                        <option value="exit">Issue de secours</option>
-                        <option value="service">Escalier de service</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="stairConfig">Configuration de l'escalier :</label>
-                    <select id="stairConfig">
-                        <option value="straight">Volée droite</option>
-                        <option value="turning">Volée tournante</option>
-                        <option value="spiral">Escalier hélicoïdal</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="riserHeight">Hauteur de contremarche :
-                        <span class="tooltip"><span class="info-icon">i</span>
-                            <span class="tooltiptext">Mesurée verticalement de nez à nez des marches.</span>
-                        </span>
-                    </label>
-                    <input type="text" id="riserHeight" placeholder="Ex: 180" class="metric-input">
-                    <input type="text" id="riserHeightImperial" placeholder="Ex: 7 1/4&quot;" class="imperial-input" style="display: none;">
-                    <div id="riserHeightError" class="error"></div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="treadDepth">Giron :
-                        <span class="tooltip"><span class="info-icon">i</span>
-                            <span class="tooltiptext">Mesuré horizontalement, de nez à nez des marches.</span>
-                        </span>
-                    </label>
-                    <input type="text" id="treadDepth" placeholder="Ex: 255" class="metric-input">
-                    <input type="text" id="treadDepthImperial" placeholder="Ex: 10 1/2&quot;" class="imperial-input" style="display: none;">
-                    <div id="treadDepthError" class="error"></div>
-                </div>
-                
-                <div class="form-group" id="minimumWidthTurningStair" style="display: none;">
-                    <label for="narrowSide">Largeur minimale côté étroit (marche tournante) :
-                        <span class="tooltip"><span class="info-icon">i</span>
-                            <span class="tooltiptext">Mesuré à l'extrémité étroite de la marche.</span>
-                        </span>
-                    </label>
-                    <input type="text" id="narrowSide" placeholder="Ex: 150" class="metric-input">
-                    <input type="text" id="narrowSideImperial" placeholder="Ex: 6&quot;" class="imperial-input" style="display: none;">
-                    <div id="narrowSideError" class="error"></div>
-                </div>
+    <div class="dimensions-container">
+        <div class="dimensions-column">
+            <h2>Type d'escalier</h2>
+            
+            <div class="form-group">
+                <label for="calcBuildingType">Type de bâtiment :</label>
+                <select id="calcBuildingType">
+                    <option value="part9">Partie 9 - Maisons et petits bâtiments</option>
+                    <option value="part3">Partie 3 - Bâtiments de grande hauteur et à usage principal</option>
+                </select>
             </div>
-
-            <div class="dimensions-column">
-                <h2>Dimensions de l'escalier</h2>
-                
-                <div class="form-group">
-                    <label for="stairWidth">Largeur de l'escalier :</label>
-                    <input type="text" id="stairWidth" placeholder="Ex: 900" class="metric-input">
-                    <input type="text" id="stairWidthImperial" placeholder="Ex: 3'" class="imperial-input" style="display: none;">
-                    <div id="stairWidthError" class="error"></div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="headroom">Hauteur libre (échappée) :
-                        <span class="tooltip"><span class="info-icon">i</span>
-                            <span class="tooltiptext">Mesurée verticalement au-dessus de la largeur de passage, à partir d'une tangente au nez des marches.</span>
-                        </span>
-                    </label>
-                    <input type="text" id="headroom" placeholder="Ex: 2050" class="metric-input">
-                    <input type="text" id="headroomImperial" placeholder="Ex: 6'-9&quot;" class="imperial-input" style="display: none;">
-                    <div id="headroomError" class="error"></div>
-                </div>
-                
-                <div class="form-group" id="spiralWidthField" style="display: none;">
-                    <label for="spiralWidth">Largeur libre entre mains courantes :</label>
-                    <input type="text" id="spiralWidth" placeholder="Ex: 660" class="metric-input">
-                    <input type="text" id="spiralWidthImperial" placeholder="Ex: 2' 2" class="imperial-input" style="display: none;">
-                    <div id="spiralWidthError" class="error"></div>
-                </div>
+            
+            <div class="form-group">
+                <label for="calcStairType">Type d'escalier :</label>
+                <select id="calcStairType">
+                    <option value="private">Privé (desservant un seul logement)</option>
+                    <option value="common">Commun (desservant plus d'un logement)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="calcStairConfig">Configuration de l'escalier :</label>
+                <select id="calcStairConfig">
+                    <option value="straight">Volée droite</option>
+                    <option value="turning">Volée tournante</option>
+                    <option value="spiral">Escalier hélicoïdal</option>
+                </select>
+            </div>
+            
+            <h2>Dimensions souhaitées</h2>
+            
+            <div class="form-group">
+                <label for="totalRun">Longueur totale disponible :
+                    <span class="tooltip"><span class="info-icon">i</span>
+                        <span class="tooltiptext">Longueur horizontale totale disponible pour l'escalier.</span>
+                    </span>
+                </label>
+                <input type="text" id="totalRun" placeholder="Ex: 3000" class="metric-input">
+                <input type="text" id="totalRunImperial" placeholder="Ex: 10'" class="imperial-input" style="display: none;">
+                <div id="totalRunError" class="error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="totalRise">Hauteur totale à gravir :
+                    <span class="tooltip"><span class="info-icon">i</span>
+                        <span class="tooltiptext">Hauteur verticale entre les deux niveaux.</span>
+                    </span>
+                </label>
+                <input type="text" id="totalRise" placeholder="Ex: 2700" class="metric-input">
+                <input type="text" id="totalRiseImperial" placeholder="Ex: 8' 10"" class="imperial-input" style="display: none;">
+                <div id="totalRiseError" class="error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="stairDesiredWidth">Largeur souhaitée :
+                    <span class="tooltip"><span class="info-icon">i</span>
+                        <span class="tooltiptext">Largeur souhaitée pour l'escalier.</span>
+                    </span>
+                </label>
+                <input type="text" id="stairDesiredWidth" placeholder="Ex: 900" class="metric-input">
+                <input type="text" id="stairDesiredWidthImperial" placeholder="Ex: 3'" class="imperial-input" style="display: none;">
+                <div id="stairDesiredWidthError" class="error"></div>
             </div>
         </div>
 
-        <button id="checkCompliance">Vérifier la conformité</button>
+        <div class="dimensions-column">
+            <h2>Préférences (optionnelles)</h2>
+            
+            <div class="form-group">
+                <label for="idealRiser">Hauteur de contremarche idéale (optionnel) :
+                    <span class="tooltip"><span class="info-icon">i</span>
+                        <span class="tooltiptext">Si vous avez une préférence pour la hauteur de contremarche.</span>
+                    </span>
+                </label>
+                <input type="text" id="idealRiser" placeholder="Ex: 175" class="metric-input">
+                <input type="text" id="idealRiserImperial" placeholder="Ex: 7"" class="imperial-input" style="display: none;">
+            </div>
+            
+            <div class="form-group">
+                <label for="idealTread">Giron idéal (optionnel) :
+                    <span class="tooltip"><span class="info-icon">i</span>
+                        <span class="tooltiptext">Si vous avez une préférence pour la profondeur du giron.</span>
+                    </span>
+                </label>
+                <input type="text" id="idealTread" placeholder="Ex: 280" class="metric-input">
+                <input type="text" id="idealTreadImperial" placeholder="Ex: 11"" class="imperial-input" style="display: none;">
+            </div>
+            
+            <div class="form-group">
+                <label>Priorité de calcul :</label>
+                <div>
+                    <input type="radio" id="priorityComfort" name="priority" value="comfort" checked>
+                    <label for="priorityComfort">Confort (privilégier la règle du pas)</label>
+                </div>
+                <div>
+                    <input type="radio" id="prioritySpace" name="priority" value="space">
+                    <label for="prioritySpace">Espace (utiliser tout l'espace disponible)</label>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div id="calculator-tab" class="tab-content">
-        <div class="form-group">
-            <label for="calcMeasurementSystem">Système de mesure :</label>
-            <select id="calcMeasurementSystem">
-                <option value="metric">Métrique (mm)</option>
-                <option value="imperial">Impérial (pieds‑pouces)</option>
-            </select>
-        </div>
+    <button id="calculateStair">Calculer l'escalier</button>
 
-        <div class="dimensions-container">
-            <div class="dimensions-column">
-                <h2>Type d'escalier</h2>
-                
-                <div class="form-group">
-                    <label for="calcBuildingType">Type de bâtiment :</label>
-                    <select id="calcBuildingType">
-                        <option value="part9">Partie 9 - Maisons et petits bâtiments</option>
-                        <option value="part3">Partie 3 - Bâtiments de grande hauteur et à usage principal</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="calcStairType">Type d'escalier :</label>
-                    <select id="calcStairType">
-                        <option value="private">Privé (desservant un seul logement)</option>
-                        <option value="common">Commun (desservant plus d'un logement)</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="calcStairConfig">Configuration de l'escalier :</label>
-                    <select id="calcStairConfig">
-                        <option value="straight">Volée droite</option>
-                        <option value="turning">Volée tournante</option>
-                        <option value="spiral">Escalier hélicoïdal</option>
-                    </select>
-                </div>
-                
-                <h2>Dimensions souhaitées</h2>
-                
-                <div class="form-group">
-                    <label for="totalRun">Longueur totale disponible :
-                        <span class="tooltip"><span class="info-icon">i</span>
-                            <span class="tooltiptext">Longueur horizontale totale disponible pour l'escalier.</span>
-                        </span>
-                    </label>
-                    <input type="text" id="totalRun" placeholder="Ex: 3000" class="metric-input">
-                    <input type="text" id="totalRunImperial" placeholder="Ex: 10'" class="imperial-input" style="display: none;">
-                    <div id="totalRunError" class="error"></div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="totalRise">Hauteur totale à gravir :
-                        <span class="tooltip"><span class="info-icon">i</span>
-                            <span class="tooltiptext">Hauteur verticale entre les deux niveaux.</span>
-                        </span>
-                    </label>
-                    <input type="text" id="totalRise" placeholder="Ex: 2700" class="metric-input">
-                    <input type="text" id="totalRiseImperial" placeholder="Ex: 8' 10"" class="imperial-input" style="display: none;">
-                    <div id="totalRiseError" class="error"></div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="stairDesiredWidth">Largeur souhaitée :
-                        <span class="tooltip"><span class="info-icon">i</span>
-                            <span class="tooltiptext">Largeur souhaitée pour l'escalier.</span>
-                        </span>
-                    </label>
-                    <input type="text" id="stairDesiredWidth" placeholder="Ex: 900" class="metric-input">
-                    <input type="text" id="stairDesiredWidthImperial" placeholder="Ex: 3'" class="imperial-input" style="display: none;">
-                    <div id="stairDesiredWidthError" class="error"></div>
-                </div>
+    <div id="calculatorResult" class="result">
+        <h2>Résultats du calcul</h2>
+        <div id="calculatorResultContent"></div>
+    </div>
+</div>
+
+<div id="compliance-tab" class="tab-content">
+    <div class="form-group">
+        <label for="measurementSystem">Système de mesure :</label>
+        <select id="measurementSystem">
+            <option value="metric">Métrique (mm)</option>
+            <option value="imperial">Impérial (pieds‑pouces)</option>
+        </select>
+    </div>
+
+    <div class="dimensions-container">
+        <div class="dimensions-column">
+            <h2>Type de bâtiment et usage</h2>
+            
+            <div class="form-group">
+                <label for="buildingType">Type de bâtiment :</label>
+                <select id="buildingType">
+                    <option value="part9">Partie 9 - Maisons et petits bâtiments</option>
+                    <option value="part3">Partie 3 - Bâtiments de grande hauteur et à usage principal</option>
+                </select>
             </div>
-
-            <div class="dimensions-column">
-                <h2>Préférences (optionnelles)</h2>
-                
-                <div class="form-group">
-                    <label for="idealRiser">Hauteur de contremarche idéale (optionnel) :
-                        <span class="tooltip"><span class="info-icon">i</span>
-                            <span class="tooltiptext">Si vous avez une préférence pour la hauteur de contremarche.</span>
-                        </span>
-                    </label>
-                    <input type="text" id="idealRiser" placeholder="Ex: 175" class="metric-input">
-                    <input type="text" id="idealRiserImperial" placeholder="Ex: 7"" class="imperial-input" style="display: none;">
-                </div>
-                
-                <div class="form-group">
-                    <label for="idealTread">Giron idéal (optionnel) :
-                        <span class="tooltip"><span class="info-icon">i</span>
-                            <span class="tooltiptext">Si vous avez une préférence pour la profondeur du giron.</span>
-                        </span>
-                    </label>
-                    <input type="text" id="idealTread" placeholder="Ex: 280" class="metric-input">
-                    <input type="text" id="idealTreadImperial" placeholder="Ex: 11"" class="imperial-input" style="display: none;">
-                </div>
-                
-                <div class="form-group">
-                    <label>Priorité de calcul :</label>
-                    <div>
-                        <input type="radio" id="priorityComfort" name="priority" value="comfort" checked>
-                        <label for="priorityComfort">Confort (privilégier la règle du pas)</label>
-                    </div>
-                    <div>
-                        <input type="radio" id="prioritySpace" name="priority" value="space">
-                        <label for="prioritySpace">Espace (utiliser tout l'espace disponible)</label>
-                    </div>
-                </div>
+            
+            <div class="form-group">
+                <label for="buildingUse">Usage du bâtiment :</label>
+                <select id="buildingUse">
+                    <option value="residential">Habitation (Groupe C)</option>
+                    <option value="business">Établissements d'affaires (Groupe D)</option>
+                    <option value="mercantile">Établissements commerciaux (Groupe E)</option>
+                    <option value="industrial">Établissements industriels (Groupe F)</option>
+                </select>
+            </div>
+            
+            <h2>Caractéristiques de l'escalier</h2>
+            
+            <div class="form-group">
+                <label for="stairType">Type d'escalier :</label>
+                <select id="stairType">
+                    <option value="private">Privé (desservant un seul logement)</option>
+                    <option value="common">Commun (desservant plus d'un logement)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="stairUse">Usage de l'escalier :</label>
+                <select id="stairUse">
+                    <option value="normal">Usage normal</option>
+                    <option value="exit">Issue de secours</option>
+                    <option value="service">Escalier de service</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="stairConfig">Configuration de l'escalier :</label>
+                <select id="stairConfig">
+                    <option value="straight">Volée droite</option>
+                    <option value="turning">Volée tournante</option>
+                    <option value="spiral">Escalier hélicoïdal</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="riserHeight">Hauteur de contremarche :
+                    <span class="tooltip"><span class="info-icon">i</span>
+                        <span class="tooltiptext">Mesurée verticalement de nez à nez des marches.</span>
+                    </span>
+                </label>
+                <input type="text" id="riserHeight" placeholder="Ex: 180" class="metric-input">
+                <input type="text" id="riserHeightImperial" placeholder="Ex: 7 1/4&quot;" class="imperial-input" style="display: none;">
+                <div id="riserHeightError" class="error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="treadDepth">Giron :
+                    <span class="tooltip"><span class="info-icon">i</span>
+                        <span class="tooltiptext">Mesuré horizontalement, de nez à nez des marches.</span>
+                    </span>
+                </label>
+                <input type="text" id="treadDepth" placeholder="Ex: 255" class="metric-input">
+                <input type="text" id="treadDepthImperial" placeholder="Ex: 10 1/2&quot;" class="imperial-input" style="display: none;">
+                <div id="treadDepthError" class="error"></div>
+            </div>
+            
+            <div class="form-group" id="minimumWidthTurningStair" style="display: none;">
+                <label for="narrowSide">Largeur minimale côté étroit (marche tournante) :
+                    <span class="tooltip"><span class="info-icon">i</span>
+                        <span class="tooltiptext">Mesuré à l'extrémité étroite de la marche.</span>
+                    </span>
+                </label>
+                <input type="text" id="narrowSide" placeholder="Ex: 150" class="metric-input">
+                <input type="text" id="narrowSideImperial" placeholder="Ex: 6&quot;" class="imperial-input" style="display: none;">
+                <div id="narrowSideError" class="error"></div>
             </div>
         </div>
+
+        <div class="dimensions-column">
+            <h2>Dimensions de l'escalier</h2>
+            
+            <div class="form-group">
+                <label for="stairWidth">Largeur de l'escalier :</label>
+                <input type="text" id="stairWidth" placeholder="Ex: 900" class="metric-input">
+                <input type="text" id="stairWidthImperial" placeholder="Ex: 3'" class="imperial-input" style="display: none;">
+                <div id="stairWidthError" class="error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="headroom">Hauteur libre (échappée) :
+                    <span class="tooltip"><span class="info-icon">i</span>
+                        <span class="tooltiptext">Mesurée verticalement au-dessus de la largeur de passage, à partir d'une tangente au nez des marches.</span>
+                    </span>
+                </label>
+                <input type="text" id="headroom" placeholder="Ex: 2050" class="metric-input">
+                <input type="text" id="headroomImperial" placeholder="Ex: 6'-9&quot;" class="imperial-input" style="display: none;">
+                <div id="headroomError" class="error"></div>
+            </div>
+            
+            <div class="form-group" id="spiralWidthField" style="display: none;">
+                <label for="spiralWidth">Largeur libre entre mains courantes :</label>
+                <input type="text" id="spiralWidth" placeholder="Ex: 660" class="metric-input">
+                <input type="text" id="spiralWidthImperial" placeholder="Ex: 2' 2" class="imperial-input" style="display: none;">
+                <div id="spiralWidthError" class="error"></div>
+            </div>
+        </div>
+    </div>
+
+    <button id="checkCompliance">Vérifier la conformité</button>
+</div>
 
         <button id="calculateStair">Calculer l'escalier</button>
 

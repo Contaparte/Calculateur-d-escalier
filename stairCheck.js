@@ -1,7 +1,10 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Éléments du formulaire
     const measurementSystem = document.getElementById('measurementSystem');
+    const buildingType = document.getElementById('buildingType');
+    const buildingUse = document.getElementById('buildingUse');
     const stairType = document.getElementById('stairType');
+    const stairUse = document.getElementById('stairUse');
     const stairConfig = document.getElementById('stairConfig');
     const riserHeight = document.getElementById('riserHeight');
     const riserHeightImperial = document.getElementById('riserHeightImperial');
@@ -48,6 +51,29 @@ document.addEventListener('DOMContentLoaded', function() {
             imperialInputs.forEach(input => input.style.display = 'none');
         }
     });
+
+    // Gestion du changement de type de bâtiment et d'usage
+    buildingType.addEventListener('change', updateRequirements);
+    buildingUse.addEventListener('change', updateRequirements);
+    stairType.addEventListener('change', updateRequirements);
+    stairUse.addEventListener('change', updateRequirements);
+
+    function updateRequirements() {
+        // Cette fonction sera utilisée pour ajuster les exigences en fonction
+        // du type de bâtiment et de l'usage sélectionnés
+        const isBuildingPart3 = buildingType.value === 'part3';
+        const isExitStair = stairUse.value === 'exit';
+        
+        // Ajustement des champs en fonction du type de bâtiment et de l'usage
+        if (isBuildingPart3) {
+            // Afficher un message ou ajuster des valeurs pour la partie 3
+            // Pour l'instant, nous nous concentrons sur la partie 9
+        }
+        
+        if (isExitStair) {
+            // Ajuster les exigences pour les escaliers d'issue
+        }
+    }
 
     // Convertir des pieds-pouces en millimètres
     function imperialToMetric(imperialValue) {
@@ -101,7 +127,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Récupérer les valeurs du formulaire
         const isMetric = measurementSystem.value === 'metric';
+        const isBuildingPart3 = buildingType.value === 'part3';
+        const buildingUseValue = buildingUse.value;
         const type = stairType.value;
+        const stairUseValue = stairUse.value;
         const config = stairConfig.value;
         
         // Conversion des valeurs en métrique si nécessaire
@@ -160,48 +189,91 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Définir les limites selon le CNB 2015
         let minRiser, maxRiser, minTread, maxTread, minNarrowSide, minWidth, minHeadroom, minSpiralWidth;
+        let codeReference = 'CNB 2015'; // Référence par défaut
         
-        // Hauteur de contremarche (9.8.4.1)
-        if (type === 'private') {
-            minRiser = 125; // 125 mm
-            maxRiser = 200; // 200 mm
-        } else { // common
+        if (isBuildingPart3) {
+            // Règles pour les bâtiments régis par la partie 3
+            codeReference = 'CNB 2015 Partie 3';
+            
+            // Hauteur de contremarche (3.4.6.8)
             minRiser = 125; // 125 mm
             maxRiser = 180; // 180 mm
-        }
-        
-        // Giron (9.8.4.2)
-        if (type === 'private') {
-            minTread = 255; // 255 mm
-            maxTread = 355; // 355 mm
-        } else { // common
+            
+            // Giron (3.4.6.8)
             minTread = 280; // 280 mm
             maxTread = Infinity; // pas de limite maximale
-        }
-        
-        // Largeur minimale côté étroit (9.8.4.3)
-        if (config === 'turning') {
-            minNarrowSide = 150; // 150 mm
-        }
-        
-        // Largeur de l'escalier (9.8.2.1)
-        if (type === 'private') {
-            minWidth = 860; // 860 mm
-        } else { // common
-            minWidth = 900; // 900 mm
-        }
-        
-        // Hauteur libre (9.8.2.2)
-        if (type === 'private') {
-            minHeadroom = 1950; // 1950 mm
-        } else { // common
+            
+            // Largeur minimale côté étroit (3.4.6.9)
+            if (config === 'turning') {
+                minNarrowSide = 240; // 240 mm pour une issue
+            }
+            
+            // Largeur de l'escalier (3.4.3.2)
+            minWidth = 1100; // 1100 mm pour une issue standard
+            
+            // Hauteur libre (3.4.3.4)
             minHeadroom = 2050; // 2050 mm
+        } else {
+            // Règles pour les bâtiments régis par la partie 9
+            codeReference = 'CNB 2015 Partie 9';
+            
+            // Hauteur de contremarche (9.8.4.1)
+            if (type === 'private') {
+                minRiser = 125; // 125 mm
+                maxRiser = 200; // 200 mm
+            } else { // common
+                minRiser = 125; // 125 mm
+                maxRiser = 180; // 180 mm
+            }
+            
+            // Giron (9.8.4.2)
+            if (type === 'private') {
+                minTread = 255; // 255 mm
+                maxTread = 355; // 355 mm
+            } else { // common
+                minTread = 280; // 280 mm
+                maxTread = Infinity; // pas de limite maximale
+            }
+            
+            // Largeur minimale côté étroit (9.8.4.3)
+            if (config === 'turning') {
+                minNarrowSide = 150; // 150 mm
+            }
+            
+            // Largeur de l'escalier (9.8.2.1)
+            if (type === 'private') {
+                minWidth = 860; // 860 mm
+            } else { // common
+                minWidth = 900; // 900 mm
+            }
+            
+            // Hauteur libre (9.8.2.2)
+            if (type === 'private') {
+                minHeadroom = 1950; // 1950 mm
+            } else { // common
+                minHeadroom = 2050; // 2050 mm
+            }
+            
+            // Largeur libre entre mains courantes (escalier hélicoïdal) (9.8.4.7)
+            if (config === 'spiral') {
+                minSpiralWidth = 660; // 660 mm
+                maxRiser = 240; // 240 mm pour escalier hélicoïdal
+            }
         }
         
-        // Largeur libre entre mains courantes (escalier hélicoïdal) (9.8.4.7)
-        if (config === 'spiral') {
-            minSpiralWidth = 660; // 660 mm
-            maxRiser = 240; // 240 mm pour escalier hélicoïdal
+        // Ajustement supplémentaire pour les escaliers d'issue
+        if (stairUseValue === 'exit') {
+            if (isBuildingPart3) {
+                // Ajustements spécifiques aux issues de la partie 3
+                minWidth = 1100; // 1100 mm minimum pour une issue
+                
+                if (config === 'turning') {
+                    minNarrowSide = 240; // 240 mm pour une issue
+                }
+            } else {
+                // Ajustements spécifiques aux issues de la partie 9
+                minWidth = 900; // 900 mm minimum pour une issue dans la partie 9
+            }
         }
         
         // Vérifier la conformité
@@ -256,10 +328,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (isCompliant) {
             result.classList.add('compliant');
-            resultContent.innerHTML = '<p class="success">✓ Conforme au Code national du bâtiment (CNB) 2015.</p>';
+            resultContent.innerHTML = `<p class="success">✓ Conforme au ${codeReference}.</p>`;
         } else {
             result.classList.add('non-compliant');
-            let issuesList = '<p>⚠ Non conforme au Code national du bâtiment (CNB) 2015.</p><p>Problèmes détectés:</p><ul>';
+            let issuesList = `<p>⚠ Non conforme au ${codeReference}.</p><p>Problèmes détectés:</p><ul>`;
             issues.forEach(issue => {
                 issuesList += `<li>${issue}</li>`;
             });
@@ -269,4 +341,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         result.style.display = 'block';
     });
+    
+    // Initialiser l'affichage en fonction des sélections initiales
+    stairConfig.dispatchEvent(new Event('change'));
+    measurementSystem.dispatchEvent(new Event('change'));
 });

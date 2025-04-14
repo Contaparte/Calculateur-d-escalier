@@ -430,9 +430,9 @@ function calculateStair() {
           <td>Règles du pas</td>
           <td>
             <span class="${comfortRulesOk >= 2 ? 'success' : 'warning'}">${comfortRulesOk} sur 3 règles respectées</span>
-            <span class="info" style="margin-left: 0.5em; cursor: help;" title="R+G=${comfortRplusT.toFixed(2)}″ (idéal: 17-18″)
-R×G=${comfortRtimesT.toFixed(2)}″ (idéal: 71-74″)
-2R+G=${comfort2RplusT.toFixed(2)}″ (idéal: 22-25″)">ℹ️</span>
+            <span class="info" style="margin-left: 0.5em; cursor: help;" title="R+G=${comfortRplusT.toFixed(2)}″ (idéal: 17″ @ 18″)
+R×G=${comfortRtimesT.toFixed(2)}″ (idéal: 71″ @ 74″)
+2R+G=${comfort2RplusT.toFixed(2)}″ (idéal: 22″ @ 25″)">ℹ️</span>
           </td>
           <td>
             <em>Recommandé mais non obligatoire</em>

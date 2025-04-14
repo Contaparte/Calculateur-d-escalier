@@ -147,6 +147,26 @@
 
     <div class="dimensions-container">
         <div class="dimensions-column">
+            <h2>Type de bâtiment et usage</h2>
+            
+            <div class="form-group">
+                <label for="buildingType">Type de bâtiment :</label>
+                <select id="buildingType">
+                    <option value="part9">Partie 9 - Maisons et petits bâtiments</option>
+                    <option value="part3">Partie 3 - Bâtiments de grande hauteur et à usage principal</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="buildingUse">Usage du bâtiment :</label>
+                <select id="buildingUse">
+                    <option value="residential">Habitation (Groupe C)</option>
+                    <option value="business">Établissements d'affaires (Groupe D)</option>
+                    <option value="mercantile">Établissements commerciaux (Groupe E)</option>
+                    <option value="industrial">Établissements industriels (Groupe F)</option>
+                </select>
+            </div>
+            
             <h2>Caractéristiques de l'escalier</h2>
             
             <div class="form-group">
@@ -154,6 +174,15 @@
                 <select id="stairType">
                     <option value="private">Privé (desservant un seul logement)</option>
                     <option value="common">Commun (desservant plus d'un logement)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="stairUse">Usage de l'escalier :</label>
+                <select id="stairUse">
+                    <option value="normal">Usage normal</option>
+                    <option value="exit">Issue de secours</option>
+                    <option value="service">Escalier de service</option>
                 </select>
             </div>
             

@@ -467,5 +467,41 @@
     </div>
 
     <script src="stairCheck.js"></script>
+    <script>
+// Fonction pour mettre à jour les placeholders des champs de saisie en fonction du système de mesure (onglet Calcul d'escalier)
+function updateCalculatorPlaceholders(system) {
+    const metricInputs = document.querySelectorAll('#calculator-tab .metric-input');
+    const imperialInputs = document.querySelectorAll('#calculator-tab .imperial-input');
+
+    metricInputs.forEach(input => input.style.display = system === 'metric' ? 'block' : 'none');
+    imperialInputs.forEach(input => input.style.display = system === 'imperial' ? 'block' : 'none');
+}
+
+// Fonction pour mettre à jour les placeholders des champs de saisie en fonction du système de mesure (onglet Vérification de conformité)
+function updateCompliancePlaceholders(system) {
+    const metricInputs = document.querySelectorAll('#compliance-tab .metric-input');
+    const imperialInputs = document.querySelectorAll('#compliance-tab .imperial-input');
+
+    metricInputs.forEach(input => input.style.display = system === 'metric' ? 'block' : 'none');
+    imperialInputs.forEach(input => input.style.display = system === 'imperial' ? 'block' : 'none');
+}
+
+// Ajout des événements de changement pour les deux sélecteurs de système de mesure
+
+document.getElementById('calcMeasurementSystem').addEventListener('change', function () {
+    updateCalculatorPlaceholders(this.value);
+});
+
+document.getElementById('measurementSystem').addEventListener('change', function () {
+    updateCompliancePlaceholders(this.value);
+});
+
+// Initialisation des placeholders au chargement de la page
+window.addEventListener('DOMContentLoaded', function () {
+    updateCalculatorPlaceholders(document.getElementById('calcMeasurementSystem').value);
+    updateCompliancePlaceholders(document.getElementById('measurementSystem').value);
+});
+</script>
+
 </body>
 </html>

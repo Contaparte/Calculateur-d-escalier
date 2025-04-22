@@ -14,6 +14,7 @@
         .tab-nav button.active { background-color: #4CAF50; color: white; }
         .tab-content { display: none; padding: 20px; }
         .tab-content.active { display: block; }
+        .tab-description { margin-bottom: 20px; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #4CAF50; font-style: italic; color: #555; }
         .form-section { margin-bottom: 30px; }
         .form-section h2 { margin-top: 0; color: #555; font-size: 1.5em; border-bottom: 1px solid #eee; padding-bottom: 10px; }
         .form-row { margin-bottom: 15px; display: flex; flex-wrap: wrap; }
@@ -29,6 +30,7 @@
         .radio-group { margin-bottom: 10px; }
         .hidden { display: none; }
         .sub-options { margin-left: 20px; margin-top: 10px; padding-left: 10px; border-left: 2px solid #eee; }
+        ::placeholder { color: #999; font-style: italic; }
     </style>
 </head>
 <body>
@@ -41,14 +43,18 @@
         </div>
         
         <div id="calcul" class="tab-content active">
+            <div class="tab-description">
+                Utilisez cet onglet pour la conception d'un nouvel escalier.
+            </div>
+            
             <div class="form-section">
                 <h2>Système de mesure</h2>
                 <div class="form-row">
                     <div class="form-col">
                         <label for="systeme-mesure-calcul">Système de mesure :</label>
-                        <select id="systeme-mesure-calcul">
+                        <select id="systeme-mesure-calcul" onchange="updatePlaceholders('calcul')">
                             <option value="imperial">Impérial (pieds-pouces)</option>
-                            <option value="metrique">Métrique (mètres)</option>
+                            <option value="metrique">Métrique (mm)</option>
                         </select>
                     </div>
                 </div>
@@ -152,14 +158,18 @@
         </div>
         
         <div id="verification" class="tab-content">
+            <div class="tab-description">
+                Utilisez cet onglet pour vérifier les paramètres de conception d'un escalier existant.
+            </div>
+            
             <div class="form-section">
                 <h2>Système de mesure</h2>
                 <div class="form-row">
                     <div class="form-col">
                         <label for="systeme-mesure-verif">Système de mesure :</label>
-                        <select id="systeme-mesure-verif">
+                        <select id="systeme-mesure-verif" onchange="updatePlaceholders('verification')">
                             <option value="imperial">Impérial (pieds-pouces)</option>
-                            <option value="metrique">Métrique (mètres)</option>
+                            <option value="metrique">Métrique (mm)</option>
                         </select>
                     </div>
                 </div>
@@ -262,6 +272,52 @@
     </div>
     
     <script>
+        // Placeholders pour les systèmes de mesure
+        const placeholders = {
+            imperial: {
+                // Onglet Calcul
+                "hauteur-contremarche-ideale": "Ex: 7 pouces",
+                "giron-ideal": "Ex: 11 pouces",
+                "longueur-totale": "Ex: 15 pieds",
+                "hauteur-totale": "Ex: 120 pouces",
+                "largeur-souhaitee": "Ex: 36 pouces",
+                
+                // Onglet Vérification
+                "largeur-escalier": "Ex: 36 pouces",
+                "hauteur-libre": "Ex: 80 pouces",
+                "hauteur-contremarche": "Ex: 7 1/8 pouces",
+                "giron": "Ex: 10 1/4 pouces"
+            },
+            metrique: {
+                // Onglet Calcul
+                "hauteur-contremarche-ideale": "Ex: 180 mm",
+                "giron-ideal": "Ex: 280 mm",
+                "longueur-totale": "Ex: 4500 mm",
+                "hauteur-totale": "Ex: 3000 mm",
+                "largeur-souhaitee": "Ex: 900 mm",
+                
+                // Onglet Vérification
+                "largeur-escalier": "Ex: 900 mm",
+                "hauteur-libre": "Ex: 2050 mm",
+                "hauteur-contremarche": "Ex: 180 mm",
+                "giron": "Ex: 280 mm"
+            }
+        };
+        
+        // Fonction pour mettre à jour les placeholders selon le système de mesure
+        function updatePlaceholders(tab) {
+            const systeme = document.getElementById(`systeme-mesure-${tab}`).value;
+            const placeholdersData = placeholders[systeme === "imperial" ? "imperial" : "metrique"];
+            
+            // Mettre à jour les placeholders pour l'onglet actif
+            for (const [id, placeholder] of Object.entries(placeholdersData)) {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.placeholder = placeholder;
+                }
+            }
+        }
+        
         // Fonction pour changer d'onglet
         function openTab(tabName) {
             var tabContents = document.getElementsByClassName("tab-content");
@@ -283,6 +339,9 @@
                     tabButtons[i].classList.add("active");
                 }
             }
+            
+            // Mettre à jour les placeholders pour le nouvel onglet
+            updatePlaceholders(tabName);
         }
         
         // Afficher/masquer les options de marches rayonnantes
@@ -309,6 +368,38 @@
             }
         }
         
+        // Fonction pour convertir les unités impériales en mm
+        function convertToMm(value, system) {
+            if (system === "imperial") {
+                // Gérer les formats comme "7 1/8"
+                if (value.includes(" ")) {
+                    const parts = value.split(" ");
+                    const whole = parseFloat(parts[0]);
+                    let fraction = 0;
+                    
+                    if (parts[1].includes("/")) {
+                        const fracParts = parts[1].split("/");
+                        fraction = parseFloat(fracParts[0]) / parseFloat(fracParts[1]);
+                    } else {
+                        fraction = parseFloat(parts[1]);
+                    }
+                    
+                    return (whole + fraction) * 25.4; // 1 pouce = 25.4 mm
+                } else if (value.includes("'")) {
+                    // Format pied-pouce: 5'10"
+                    value = value.replace('"', '');
+                    const parts = value.split("'");
+                    const feet = parseFloat(parts[0]);
+                    const inches = parts.length > 1 ? parseFloat(parts[1]) : 0;
+                    return (feet * 12 + inches) * 25.4; // 1 pied = 12 pouces, 1 pouce = 25.4 mm
+                } else {
+                    return parseFloat(value) * 25.4;
+                }
+            } else {
+                return parseFloat(value);
+            }
+        }
+        
         // Fonction de calcul d'escalier
         function calculerEscalier() {
             // Code pour calculer l'escalier selon les paramètres saisis
@@ -325,24 +416,138 @@
                 return;
             }
             
-            // Logique de calcul de l'escalier
-            // À compléter selon les règles du CNB
+            // Conversion en mm pour les calculs
+            var longueurTotale_mm = convertToMm(longueurTotale, systemeMesure);
+            var hauteurTotale_mm = convertToMm(hauteurTotale, systemeMesure);
+            var largeurSouhaitee_mm = convertToMm(largeurSouhaitee, systemeMesure);
+            
+            // Calcul du nombre de marches et de la hauteur des contremarches
+            // Basé sur les limites du CNB (125-200 mm pour contremarches privées)
+            var nombreMarches = Math.round(hauteurTotale_mm / 175); // valeur moyenne comme point de départ
+            var hauteurContremarche_mm = hauteurTotale_mm / nombreMarches;
+            
+            // Ajuster si hors limites
+            if (hauteurContremarche_mm < 125) {
+                nombreMarches = Math.floor(hauteurTotale_mm / 125);
+                hauteurContremarche_mm = hauteurTotale_mm / nombreMarches;
+            } else if (hauteurContremarche_mm > 200 && typeEscalier === "prive") {
+                nombreMarches = Math.ceil(hauteurTotale_mm / 200);
+                hauteurContremarche_mm = hauteurTotale_mm / nombreMarches;
+            } else if (hauteurContremarche_mm > 180 && typeEscalier !== "prive") {
+                nombreMarches = Math.ceil(hauteurTotale_mm / 180);
+                hauteurContremarche_mm = hauteurTotale_mm / nombreMarches;
+            }
+            
+            // Calcul du giron basé sur la longueur disponible
+            var nombreGirons = nombreMarches - 1;
+            var giron_mm = longueurTotale_mm / nombreGirons;
+            
+            // Ajuster le giron selon les limites du CNB
+            var minGiron = typeEscalier === "prive" ? 255 : 280;
+            var maxGiron = typeEscalier === "prive" ? 355 : 355; // pas de max pour commun, mais on met une valeur raisonnable
+            
+            if (giron_mm < minGiron) {
+                // Réduire le nombre de marches si le giron est trop petit
+                nombreMarches = Math.floor(longueurTotale_mm / minGiron) + 1;
+                nombreGirons = nombreMarches - 1;
+                giron_mm = longueurTotale_mm / nombreGirons;
+                hauteurContremarche_mm = hauteurTotale_mm / nombreMarches;
+            } else if (giron_mm > maxGiron) {
+                // Augmenter le nombre de marches si le giron est trop grand
+                nombreMarches = Math.ceil(longueurTotale_mm / maxGiron) + 1;
+                nombreGirons = nombreMarches - 1;
+                giron_mm = longueurTotale_mm / nombreGirons;
+                hauteurContremarche_mm = hauteurTotale_mm / nombreMarches;
+            }
+            
+            // Vérification de la règle du pas (confort)
+            var reglePas1 = giron_mm + hauteurContremarche_mm; // 432-457 mm (17-18")
+            var reglePas2 = giron_mm * hauteurContremarche_mm; // 45800-47700 mm² (71-74 po²)
+            var reglePas3 = giron_mm + (2 * hauteurContremarche_mm); // 559-635 mm (22-25")
+            
+            var conforme1 = (reglePas1 >= 432 && reglePas1 <= 457);
+            var conforme2 = (reglePas2 >= 45800 && reglePas2 <= 47700);
+            var conforme3 = (reglePas3 >= 559 && reglePas3 <= 635);
+            
+            var reglesConformes = (conforme1 ? 1 : 0) + (conforme2 ? 1 : 0) + (conforme3 ? 1 : 0);
+            var confortEscalier = reglesConformes >= 2 ? "Confortable" : "Moins confortable";
+            
+            // Convertir les résultats pour l'affichage
+            var hauteurContremarche_display, giron_display, longueurHorizontale_display;
+            if (systemeMesure === "imperial") {
+                // Convertir mm en pouces avec fractions
+                var hauteurContremarche_pouces = hauteurContremarche_mm / 25.4;
+                var giron_pouces = giron_mm / 25.4;
+                var longueurHorizontale_pouces = longueurTotale_mm / 25.4;
+                
+                hauteurContremarche_display = convertirEnFractionImperiale(hauteurContremarche_pouces);
+                giron_display = convertirEnFractionImperiale(giron_pouces);
+                longueurHorizontale_display = convertirEnPiedsEtPouces(longueurHorizontale_pouces);
+            } else {
+                hauteurContremarche_display = hauteurContremarche_mm.toFixed(0) + " mm";
+                giron_display = giron_mm.toFixed(0) + " mm";
+                longueurHorizontale_display = (longueurTotale_mm / 1000).toFixed(2) + " m";
+            }
+            
+            // Vérification de la conformité au CNB
+            var conforme = hauteurContremarche_mm >= 125 && 
+                        (typeEscalier === "prive" ? hauteurContremarche_mm <= 200 : hauteurContremarche_mm <= 180) &&
+                        giron_mm >= minGiron &&
+                        (typeEscalier === "prive" ? giron_mm <= maxGiron : true) &&
+                        largeurSouhaitee_mm >= (typeEscalier === "prive" ? 860 : 900);
             
             // Afficher les résultats
             var resultatsDiv = document.getElementById("resultats-calcul");
             resultatsDiv.innerHTML = `
                 <h3>Résultats du calcul</h3>
-                <p><strong>Nombre de marches calculé:</strong> 14</p>
-                <p><strong>Hauteur de contremarche:</strong> 7 1/4 pouces</p>
-                <p><strong>Giron:</strong> 10 1/2 pouces</p>
-                <p><strong>Pente de l'escalier:</strong> 34.7 degrés</p>
+                <p><strong>Nombre de marches calculé:</strong> ${nombreMarches}</p>
+                <p><strong>Hauteur de contremarche:</strong> ${hauteurContremarche_display}</p>
+                <p><strong>Giron:</strong> ${giron_display}</p>
+                <p><strong>Pente de l'escalier:</strong> ${Math.atan(hauteurContremarche_mm/giron_mm) * (180/Math.PI).toFixed(1)} degrés</p>
                 <p><strong>Largeur de l'escalier:</strong> ${largeurSouhaitee}</p>
-                <p><strong>Longueur horizontale totale:</strong> 12 pieds 3 pouces</p>
-                <p><strong>Formule du pas:</strong> 2 × 7 1/4 + 10 1/2 = 25 pouces ✓</p>
+                <p><strong>Longueur horizontale totale:</strong> ${longueurHorizontale_display}</p>
+                
+                <h4>Vérification de la règle du pas (confort)</h4>
+                <p>1. Giron + Contremarche = ${systemeMesure === "imperial" ? (reglePas1/25.4).toFixed(2) + " pouces" : reglePas1.toFixed(0) + " mm"} ${conforme1 ? "✓" : "✗"}</p>
+                <p>2. Giron × Contremarche = ${systemeMesure === "imperial" ? (reglePas2/25.4/25.4).toFixed(2) + " po²" : reglePas2.toFixed(0) + " mm²"} ${conforme2 ? "✓" : "✗"}</p>
+                <p>3. Giron + 2(Contremarche) = ${systemeMesure === "imperial" ? (reglePas3/25.4).toFixed(2) + " pouces" : reglePas3.toFixed(0) + " mm"} ${conforme3 ? "✓" : "✗"}</p>
+                <p><strong>Résultat:</strong> ${reglesConformes}/3 règles respectées - Escalier ${confortEscalier}</p>
+                
                 <hr>
-                <p><strong>Conformité:</strong> L'escalier calculé est conforme au Code National du Bâtiment 2015, section 9.8.</p>
+                <p><strong>Conformité:</strong> ${conforme ? "✓ L'escalier calculé est conforme au Code National du Bâtiment 2015, section 9.8." : "✗ L'escalier n'est pas conforme au Code National du Bâtiment 2015, section 9.8."}</p>
             `;
             resultatsDiv.classList.remove("hidden");
+        }
+        
+        // Fonction pour convertir un nombre décimal en fraction impériale
+        function convertirEnFractionImperiale(pouces) {
+            const entier = Math.floor(pouces);
+            const decimal = pouces - entier;
+            
+            // Arrondir à la fraction de pouce la plus proche
+            if (decimal < 0.0625) return entier + " pouces";
+            if (decimal < 0.1875) return entier + " 1/8 pouces";
+            if (decimal < 0.3125) return entier + " 1/4 pouces";
+            if (decimal < 0.4375) return entier + " 3/8 pouces";
+            if (decimal < 0.5625) return entier + " 1/2 pouces";
+            if (decimal < 0.6875) return entier + " 5/8 pouces";
+            if (decimal < 0.8125) return entier + " 3/4 pouces";
+            if (decimal < 0.9375) return entier + " 7/8 pouces";
+            return (entier + 1) + " pouces";
+        }
+        
+        // Fonction pour convertir des pouces en pieds et pouces
+        function convertirEnPiedsEtPouces(pouces) {
+            const pieds = Math.floor(pouces / 12);
+            const poucesRestants = pouces % 12;
+            
+            if (pieds === 0) {
+                return convertirEnFractionImperiale(poucesRestants);
+            } else if (poucesRestants < 0.0625) {
+                return pieds + " pieds";
+            } else {
+                return pieds + " pieds " + convertirEnFractionImperiale(poucesRestants);
+            }
         }
         
         // Fonction de vérification de conformité
@@ -362,8 +567,11 @@
                 return;
             }
             
-            // Logique de vérification de conformité
-            // À compléter selon les règles du CNB 2015, section 9.8
+            // Conversion en mm pour les calculs
+            var largeurEscalier_mm = convertToMm(largeurEscalier, systemeMesure);
+            var hauteurLibre_mm = convertToMm(hauteurLibre, systemeMesure);
+            var hauteurContremarche_mm = convertToMm(hauteurContremarche, systemeMesure);
+            var giron_mm = convertToMm(giron, systemeMesure);
             
             // Exemples de valeurs limites selon CNB 2015, section 9.8
             var minGiron, maxGiron, minHauteur, maxHauteur, minLargeur, minHauteurLibre;
@@ -384,42 +592,58 @@
                 minHauteurLibre = 2050; // mm (6 pi 8 11/16 po)
             }
             
-            // Convertir les valeurs pour les comparer (si nécessaire)
-            var giron_mm, hauteur_mm, largeur_mm, hauteurlibre_mm;
+            // Vérifier la conformité
+            var gironConforme = giron_mm >= minGiron && (maxGiron === Infinity || giron_mm <= maxGiron);
+            var hauteurConforme = hauteurContremarche_mm >= minHauteur && hauteurContremarche_mm <= maxHauteur;
+            var largeurConforme = largeurEscalier_mm >= minLargeur;
+            var hauteurLibreConforme = hauteurLibre_mm >= minHauteurLibre;
+            
+            // Vérification de la règle du pas (confort)
+            var reglePas1 = giron_mm + hauteurContremarche_mm; // 432-457 mm (17-18")
+            var reglePas2 = giron_mm * hauteurContremarche_mm; // 45800-47700 mm² (71-74 po²)
+            var reglePas3 = giron_mm + (2 * hauteurContremarche_mm); // 559-635 mm (22-25")
+            
+            var conforme1 = (reglePas1 >= 432 && reglePas1 <= 457);
+            var conforme2 = (reglePas2 >= 45800 && reglePas2 <= 47700);
+            var conforme3 = (reglePas3 >= 559 && reglePas3 <= 635);
+            
+            var reglesConformes = (conforme1 ? 1 : 0) + (conforme2 ? 1 : 0) + (conforme3 ? 1 : 0);
+            var confortEscalier = reglesConformes >= 2 ? "Confortable" : "Moins confortable";
+            
+            // Formater l'affichage selon le système de mesure
+            var minGiron_display, maxGiron_display, minHauteur_display, maxHauteur_display, minLargeur_display, minHauteurLibre_display;
             
             if (systemeMesure === "imperial") {
-                // Conversion de pouces à mm (simple approximation pour l'exemple)
-                // Dans une version complète, il faudrait parser les fractions comme "7 1/8" correctement
-                giron_mm = parseFloat(giron) * 25.4;
-                hauteur_mm = parseFloat(hauteurContremarche) * 25.4;
-                largeur_mm = parseFloat(largeurEscalier) * 25.4;
-                hauteurlibre_mm = parseFloat(hauteurLibre) * 25.4;
+                minGiron_display = (minGiron / 25.4).toFixed(2) + " po";
+                maxGiron_display = maxGiron === Infinity ? "Aucune limite" : (maxGiron / 25.4).toFixed(2) + " po";
+                minHauteur_display = (minHauteur / 25.4).toFixed(2) + " po";
+                maxHauteur_display = (maxHauteur / 25.4).toFixed(2) + " po";
+                minLargeur_display = (minLargeur / 25.4).toFixed(2) + " po";
+                minHauteurLibre_display = (minHauteurLibre / 25.4 / 12).toFixed(2) + " pi";
             } else {
-                giron_mm = parseFloat(giron);
-                hauteur_mm = parseFloat(hauteurContremarche);
-                largeur_mm = parseFloat(largeurEscalier);
-                hauteurlibre_mm = parseFloat(hauteurLibre);
+                minGiron_display = minGiron + " mm";
+                maxGiron_display = maxGiron === Infinity ? "Aucune limite" : maxGiron + " mm";
+                minHauteur_display = minHauteur + " mm";
+                maxHauteur_display = maxHauteur + " mm";
+                minLargeur_display = minLargeur + " mm";
+                minHauteurLibre_display = minHauteurLibre + " mm";
             }
-            
-            // Vérifier la conformité
-            var gironConforme = giron_mm >= minGiron && giron_mm <= maxGiron;
-            var hauteurConforme = hauteur_mm >= minHauteur && hauteur_mm <= maxHauteur;
-            var largeurConforme = largeur_mm >= minLargeur;
-            var hauteurLibreConforme = hauteurlibre_mm >= minHauteurLibre;
-            
-            // Calcul de la formule du pas pour vérifier le confort
-            var formulePas = 2 * hauteur_mm + giron_mm;
-            var formulePasConforme = formulePas >= 550 && formulePas <= 700; // mm (environ 22-27.5 po)
             
             // Afficher les résultats
             var resultatsDiv = document.getElementById("resultats-verification");
             resultatsDiv.innerHTML = `
                 <h3>Résultats de la vérification</h3>
-                <p><strong>Giron:</strong> ${gironConforme ? "✓ Conforme" : "✗ Non conforme"} (Min: ${minGiron} mm, Max: ${maxGiron === Infinity ? "Aucune limite" : maxGiron + " mm"})</p>
-                <p><strong>Hauteur de contremarche:</strong> ${hauteurConforme ? "✓ Conforme" : "✗ Non conforme"} (Min: ${minHauteur} mm, Max: ${maxHauteur} mm)</p>
-                <p><strong>Largeur de l'escalier:</strong> ${largeurConforme ? "✓ Conforme" : "✗ Non conforme"} (Min: ${minLargeur} mm)</p>
-                <p><strong>Hauteur libre:</strong> ${hauteurLibreConforme ? "✓ Conforme" : "✗ Non conforme"} (Min: ${minHauteurLibre} mm)</p>
-                <p><strong>Formule du pas:</strong> 2 × ${hauteur_mm.toFixed(1)} + ${giron_mm.toFixed(1)} = ${formulePas.toFixed(1)} mm ${formulePasConforme ? "✓ Confortable" : "✗ Moins confortable"}</p>
+                <p><strong>Giron:</strong> ${gironConforme ? "✓ Conforme" : "✗ Non conforme"} (Min: ${minGiron_display}, Max: ${maxGiron_display})</p>
+                <p><strong>Hauteur de contremarche:</strong> ${hauteurConforme ? "✓ Conforme" : "✗ Non conforme"} (Min: ${minHauteur_display}, Max: ${maxHauteur_display})</p>
+                <p><strong>Largeur de l'escalier:</strong> ${largeurConforme ? "✓ Conforme" : "✗ Non conforme"} (Min: ${minLargeur_display})</p>
+                <p><strong>Hauteur libre:</strong> ${hauteurLibreConforme ? "✓ Conforme" : "✗ Non conforme"} (Min: ${minHauteurLibre_display})</p>
+                
+                <h4>Vérification de la règle du pas (confort)</h4>
+                <p>1. Giron + Contremarche = ${systemeMesure === "imperial" ? (reglePas1/25.4).toFixed(2) + " pouces" : reglePas1.toFixed(0) + " mm"} ${conforme1 ? "✓" : "✗"} (Idéal: 17-18 pouces / 432-457 mm)</p>
+                <p>2. Giron × Contremarche = ${systemeMesure === "imperial" ? (reglePas2/25.4/25.4).toFixed(2) + " po²" : reglePas2.toFixed(0) + " mm²"} ${conforme2 ? "✓" : "✗"} (Idéal: 71-74 po² / 45800-47700 mm²)</p>
+                <p>3. Giron + 2(Contremarche) = ${systemeMesure === "imperial" ? (reglePas3/25.4).toFixed(2) + " pouces" : reglePas3.toFixed(0) + " mm"} ${conforme3 ? "✓" : "✗"} (Idéal: 22-25 pouces / 559-635 mm)</p>
+                <p><strong>Résultat:</strong> ${reglesConformes}/3 règles respectées - ${reglesConformes >= 2 ? "✓" : "✗"} Escalier ${confortEscalier}</p>
+                
                 <hr>
                 <p><strong>Conformité globale:</strong> ${gironConforme && hauteurConforme && largeurConforme && hauteurLibreConforme ? "✓ L'escalier est conforme au Code National du Bâtiment 2015, section 9.8." : "✗ L'escalier n'est pas conforme au Code National du Bâtiment 2015, section 9.8."}</p>
             `;
@@ -428,6 +652,9 @@
         
         // Initialiser les écouteurs d'événements au chargement
         document.addEventListener("DOMContentLoaded", function() {
+            // Initialiser les placeholders
+            updatePlaceholders('calcul');
+            
             // Vérifier la configuration initiale
             toggleRayonnanteOptions();
             toggleRayonnanteOptionsVerif();

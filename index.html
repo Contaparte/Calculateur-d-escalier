@@ -31,6 +31,19 @@
         .hidden { display: none; }
         .sub-options { margin-left: 20px; margin-top: 10px; padding-left: 10px; border-left: 2px solid #eee; }
         ::placeholder { color: #999; font-style: italic; }
+        .metric-input, .imperial-input { transition: display 0.3s; }
+        .error { color: #e53935; font-size: 0.9em; margin-top: 5px; }
+        .result { display: none; margin-top: 20px; padding: 15px; border-radius: 5px; }
+        .compliant { background-color: #e8f5e9; border-left: 4px solid #4caf50; }
+        .non-compliant { background-color: #ffebee; border-left: 4px solid #e53935; }
+        .success { color: #2e7d32; font-weight: bold; }
+        .warning { background-color: #fff8e1; padding: 10px; margin: 10px 0; border-left: 4px solid #ffc107; }
+        .result-section { margin: 15px 0; }
+        .result-table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        .result-table th, .result-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .result-table th { background-color: #f5f5f5; }
+        .optimal-solution { background-color: #e8f5e9; }
+        .step-formula { background-color: #f5f5f5; padding: 10px; margin: 10px 0; font-weight: bold; text-align: center; border-left: 4px solid #2196f3; }
     </style>
 </head>
 <body>
@@ -38,23 +51,23 @@
         <h1>Vérificateur de conformité d'escalier</h1>
         
         <div class="tab-nav">
-            <button class="tab-button active" onclick="openTab('calcul')">Calcul d'escalier</button>
-            <button class="tab-button" onclick="openTab('verification')">Vérification de conformité</button>
+            <button class="tab-button active" data-tab="calculator">Calcul d'escalier</button>
+            <button class="tab-button" data-tab="verification">Vérification de conformité</button>
         </div>
         
-        <div id="calcul" class="tab-content active">
+        <div id="calculator" class="tab-content active">
             <div class="tab-description">
-                Utilisez cet onglet pour la conception d'un nouvel escalier.
+                Utilisez cet onglet pour la conception d'un nouvel escalier selon les normes du Code National du Bâtiment.
             </div>
             
             <div class="form-section">
                 <h2>Système de mesure</h2>
                 <div class="form-row">
                     <div class="form-col">
-                        <label for="systeme-mesure-calcul">Système de mesure :</label>
-                        <select id="systeme-mesure-calcul" onchange="updatePlaceholders('calcul')">
+                        <label for="calcMeasurementSystem">Système de mesure :</label>
+                        <select id="calcMeasurementSystem">
+                            <option value="metric">Métrique (mm)</option>
                             <option value="imperial">Impérial (pieds-pouces)</option>
-                            <option value="metrique">Métrique (mm)</option>
                         </select>
                     </div>
                 </div>
@@ -64,41 +77,28 @@
                 <h2>Type d'escalier</h2>
                 <div class="form-row">
                     <div class="form-col">
-                        <label for="type-batiment-calcul">Type de bâtiment :</label>
-                        <select id="type-batiment-calcul">
-                            <option value="partie9">Partie 9 - Maisons et petits bâtiments</option>
-                            <option value="partie3">Partie 3 - Bâtiments de grande hauteur</option>
+                        <label for="calcBuildingType">Type de bâtiment :</label>
+                        <select id="calcBuildingType">
+                            <option value="part9">Partie 9 - Maisons et petits bâtiments</option>
+                            <option value="part3">Partie 3 - Bâtiments de grande hauteur</option>
                         </select>
                     </div>
                     <div class="form-col">
-                        <label for="type-escalier-calcul">Type d'escalier :</label>
-                        <select id="type-escalier-calcul">
-                            <option value="prive">Privé (desservant un seul logement)</option>
-                            <option value="commun">Commun</option>
-                            <option value="service">Service</option>
+                        <label for="calcStairType">Type d'escalier :</label>
+                        <select id="calcStairType">
+                            <option value="private">Privé (desservant un seul logement)</option>
+                            <option value="common">Commun</option>
                         </select>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-col">
-                        <label for="configuration-escalier-calcul">Configuration de l'escalier :</label>
-                        <select id="configuration-escalier-calcul" onchange="toggleRayonnanteOptions()">
-                            <option value="droite">Volée droite</option>
-                            <option value="l">En L</option>
-                            <option value="u">En U</option>
+                        <label for="calcStairConfig">Configuration de l'escalier :</label>
+                        <select id="calcStairConfig">
+                            <option value="straight">Volée droite</option>
+                            <option value="turning">Tournant</option>
+                            <option value="spiral">Hélicoïdal</option>
                         </select>
-                    </div>
-                    <div class="form-col">
-                        <div id="options-rayonnantes" class="hidden sub-options">
-                            <label for="marches-rayonnantes">Marches rayonnantes :</label>
-                            <select id="marches-rayonnantes">
-                                <option value="sans">Sans marches rayonnantes</option>
-                                <option value="30-1">Une marche rayonnante à 30°</option>
-                                <option value="45-1">Une marche rayonnante à 45°</option>
-                                <option value="30-2">Deux marches rayonnantes à 30°</option>
-                                <option value="30-3">Trois marches rayonnantes à 30°</option>
-                            </select>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -107,24 +107,28 @@
                 <h2>Préférences (optionnelles)</h2>
                 <div class="form-row">
                     <div class="form-col">
-                        <label for="hauteur-contremarche-ideale">Hauteur de contremarche idéale (optionnel) : <span class="info-icon" title="Laissez vide pour utiliser la valeur calculée">i</span></label>
-                        <input type="text" id="hauteur-contremarche-ideale" placeholder="Ex: 7&quot;">
+                        <label for="idealRiser">Hauteur de contremarche idéale (optionnel) : <span class="info-icon" title="Laissez vide pour utiliser la valeur calculée">i</span></label>
+                        <input type="text" id="idealRiser" class="metric-input" placeholder="Ex: 180 mm">
+                        <input type="text" id="idealRiserImperial" class="imperial-input" placeholder="Ex: 7\"" style="display: none;">
+                        <div class="error" id="idealRiserError"></div>
                     </div>
                     <div class="form-col">
-                        <label for="giron-ideal">Giron idéal (optionnel) : <span class="info-icon" title="Laissez vide pour utiliser la valeur calculée">i</span></label>
-                        <input type="text" id="giron-ideal" placeholder="Ex: 11&quot;">
+                        <label for="idealTread">Giron idéal (optionnel) : <span class="info-icon" title="Laissez vide pour utiliser la valeur calculée">i</span></label>
+                        <input type="text" id="idealTread" class="metric-input" placeholder="Ex: 280 mm">
+                        <input type="text" id="idealTreadImperial" class="imperial-input" placeholder="Ex: 11\"" style="display: none;">
+                        <div class="error" id="idealTreadError"></div>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-col">
                         <label>Priorité de calcul :</label>
                         <div class="radio-group">
-                            <input type="radio" id="priorite-confort" name="priorite" value="confort" checked>
-                            <label for="priorite-confort">Confort (privilégier la règle du pas)</label>
+                            <input type="radio" id="priorityComfort" name="priority" value="comfort" checked>
+                            <label for="priorityComfort">Confort (privilégier la règle du pas)</label>
                         </div>
                         <div class="radio-group">
-                            <input type="radio" id="priorite-espace" name="priorite" value="espace">
-                            <label for="priorite-espace">Espace (utiliser tout l'espace disponible)</label>
+                            <input type="radio" id="prioritySpace" name="priority" value="space">
+                            <label for="prioritySpace">Espace (utiliser tout l'espace disponible)</label>
                         </div>
                     </div>
                 </div>
@@ -134,42 +138,48 @@
                 <h2>Dimensions souhaitées</h2>
                 <div class="form-row">
                     <div class="form-col">
-                        <label for="longueur-totale">Longueur totale disponible : <span class="info-icon" title="Espace horizontal disponible pour l'escalier">i</span></label>
-                        <input type="text" id="longueur-totale" placeholder="Ex: 15' - 6 1/4&quot;">
+                        <label for="totalRun">Longueur totale disponible : <span class="info-icon" title="Espace horizontal disponible pour l'escalier">i</span></label>
+                        <input type="text" id="totalRun" class="metric-input" placeholder="Ex: 4500 mm">
+                        <input type="text" id="totalRunImperial" class="imperial-input" placeholder="Ex: 15'-2\"" style="display: none;">
+                        <div class="error" id="totalRunError"></div>
                     </div>
                     <div class="form-col">
-                        <label for="hauteur-totale">Hauteur totale à gravir : <span class="info-icon" title="Hauteur entre les deux niveaux">i</span></label>
-                        <input type="text" id="hauteur-totale" placeholder="Ex: 10'-2&quot;">
+                        <label for="totalRise">Hauteur totale à gravir : <span class="info-icon" title="Hauteur entre les deux niveaux">i</span></label>
+                        <input type="text" id="totalRise" class="metric-input" placeholder="Ex: 3000 mm">
+                        <input type="text" id="totalRiseImperial" class="imperial-input" placeholder="Ex: 10'-2\"" style="display: none;">
+                        <div class="error" id="totalRiseError"></div>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-col">
-                        <label for="largeur-souhaitee">Largeur souhaitée : <span class="info-icon" title="Largeur de l'escalier">i</span></label>
-                        <input type="text" id="largeur-souhaitee" placeholder="Ex: 36 3/8&quot;">
+                        <label for="stairDesiredWidth">Largeur souhaitée : <span class="info-icon" title="Largeur de l'escalier">i</span></label>
+                        <input type="text" id="stairDesiredWidth" class="metric-input" placeholder="Ex: 900 mm">
+                        <input type="text" id="stairDesiredWidthImperial" class="imperial-input" placeholder="Ex: 36\"" style="display: none;">
+                        <div class="error" id="stairDesiredWidthError"></div>
                     </div>
                 </div>
             </div>
             
-            <button id="calculer-escalier" onclick="calculerEscalier()">Calculer l'escalier</button>
+            <button id="calculateStair">Calculer l'escalier</button>
             
-            <div id="resultats-calcul" class="results hidden">
-                <!-- Les résultats seront affichés ici -->
+            <div id="calculatorResult" class="result">
+                <div id="calculatorResultContent"></div>
             </div>
         </div>
         
         <div id="verification" class="tab-content">
             <div class="tab-description">
-                Utilisez cet onglet pour vérifier les paramètres de conception d'un escalier existant.
+                Utilisez cet onglet pour vérifier la conformité d'un escalier existant selon les normes du Code National du Bâtiment.
             </div>
             
             <div class="form-section">
                 <h2>Système de mesure</h2>
                 <div class="form-row">
                     <div class="form-col">
-                        <label for="systeme-mesure-verif">Système de mesure :</label>
-                        <select id="systeme-mesure-verif" onchange="updatePlaceholders('verification')">
+                        <label for="measurementSystem">Système de mesure :</label>
+                        <select id="measurementSystem">
+                            <option value="metric">Métrique (mm)</option>
                             <option value="imperial">Impérial (pieds-pouces)</option>
-                            <option value="metrique">Métrique (mm)</option>
                         </select>
                     </div>
                 </div>
@@ -179,15 +189,15 @@
                 <h2>Type de bâtiment et usage</h2>
                 <div class="form-row">
                     <div class="form-col">
-                        <label for="type-batiment-verif">Type de bâtiment :</label>
-                        <select id="type-batiment-verif">
-                            <option value="partie9">Partie 9 - Maisons et petits bâtiments</option>
-                            <option value="partie3">Partie 3 - Bâtiments de grande hauteur</option>
+                        <label for="buildingType">Type de bâtiment :</label>
+                        <select id="buildingType">
+                            <option value="part9">Partie 9 - Maisons et petits bâtiments</option>
+                            <option value="part3">Partie 3 - Bâtiments de grande hauteur</option>
                         </select>
                     </div>
                     <div class="form-col">
-                        <label for="usage-batiment">Usage du bâtiment :</label>
-                        <select id="usage-batiment">
+                        <label for="buildingUse">Usage du bâtiment :</label>
+                        <select id="buildingUse">
                             <option value="habitation">Habitation (Groupe C)</option>
                             <option value="commercial">Commercial (Groupe E)</option>
                             <option value="industriel">Industriel (Groupe F)</option>
@@ -200,41 +210,29 @@
                 <h2>Caractéristiques de l'escalier</h2>
                 <div class="form-row">
                     <div class="form-col">
-                        <label for="type-escalier-verif">Type d'escalier :</label>
-                        <select id="type-escalier-verif">
-                            <option value="prive">Privé (desservant un seul logement)</option>
-                            <option value="commun">Commun</option>
+                        <label for="stairType">Type d'escalier :</label>
+                        <select id="stairType">
+                            <option value="private">Privé (desservant un seul logement)</option>
+                            <option value="common">Commun</option>
                             <option value="service">Service</option>
                         </select>
                     </div>
                     <div class="form-col">
-                        <label for="usage-escalier">Usage de l'escalier :</label>
-                        <select id="usage-escalier">
+                        <label for="stairUse">Usage de l'escalier :</label>
+                        <select id="stairUse">
                             <option value="normal">Usage normal</option>
-                            <option value="issue">Issue</option>
+                            <option value="exit">Issue</option>
                         </select>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-col">
-                        <label for="configuration-escalier-verif">Configuration de l'escalier :</label>
-                        <select id="configuration-escalier-verif" onchange="toggleRayonnanteOptionsVerif()">
-                            <option value="droite">Volée droite</option>
-                            <option value="l">En L</option>
-                            <option value="u">En U</option>
+                        <label for="stairConfig">Configuration de l'escalier :</label>
+                        <select id="stairConfig">
+                            <option value="straight">Volée droite</option>
+                            <option value="turning">Tournant</option>
+                            <option value="spiral">Hélicoïdal</option>
                         </select>
-                    </div>
-                    <div class="form-col">
-                        <div id="options-rayonnantes-verif" class="hidden sub-options">
-                            <label for="marches-rayonnantes-verif">Marches rayonnantes :</label>
-                            <select id="marches-rayonnantes-verif">
-                                <option value="sans">Sans marches rayonnantes</option>
-                                <option value="30-1">Une marche rayonnante à 30°</option>
-                                <option value="45-1">Une marche rayonnante à 45°</option>
-                                <option value="30-2">Deux marches rayonnantes à 30°</option>
-                                <option value="30-3">Trois marches rayonnantes à 30°</option>
-                            </select>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -243,422 +241,58 @@
                 <h2>Dimensions de l'escalier</h2>
                 <div class="form-row">
                     <div class="form-col">
-                        <label for="largeur-escalier">Largeur de l'escalier :</label>
-                        <input type="text" id="largeur-escalier" placeholder="Ex: 36 3/8&quot;">
+                        <label for="stairWidth">Largeur de l'escalier :</label>
+                        <input type="text" id="stairWidth" class="metric-input" placeholder="Ex: 900 mm">
+                        <input type="text" id="stairWidthImperial" class="imperial-input" placeholder="Ex: 36\"" style="display: none;">
+                        <div class="error" id="stairWidthError"></div>
                     </div>
                     <div class="form-col">
-                        <label for="hauteur-libre">Hauteur libre (échappée) : <span class="info-icon" title="Hauteur libre au-dessus de l'escalier">i</span></label>
-                        <input type="text" id="hauteur-libre" placeholder="Ex: 80 pouces">
+                        <label for="headroom">Hauteur libre (échappée) : <span class="info-icon" title="Hauteur libre au-dessus de l'escalier">i</span></label>
+                        <input type="text" id="headroom" class="metric-input" placeholder="Ex: 2050 mm">
+                        <input type="text" id="headroomImperial" class="imperial-input" placeholder="Ex: 6'-8\"" style="display: none;">
+                        <div class="error" id="headroomError"></div>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-col">
-                        <label for="hauteur-contremarche">Hauteur de contremarche :</label>
-                        <input type="text" id="hauteur-contremarche" placeholder="Ex: 7 1/8 pouces">
+                        <label for="riserHeight">Hauteur de contremarche :</label>
+                        <input type="text" id="riserHeight" class="metric-input" placeholder="Ex: 180 mm">
+                        <input type="text" id="riserHeightImperial" class="imperial-input" placeholder="Ex: 7 1/4\"" style="display: none;">
+                        <div class="error" id="riserHeightError"></div>
                     </div>
                     <div class="form-col">
-                        <label for="giron">Giron :</label>
-                        <input type="text" id="giron" placeholder="Ex: 10 1/4 pouces">
+                        <label for="treadDepth">Giron :</label>
+                        <input type="text" id="treadDepth" class="metric-input" placeholder="Ex: 280 mm">
+                        <input type="text" id="treadDepthImperial" class="imperial-input" placeholder="Ex: 10 1/4\"" style="display: none;">
+                        <div class="error" id="treadDepthError"></div>
+                    </div>
+                </div>
+                <div id="minimumWidthTurningStair" class="form-row" style="display: none;">
+                    <div class="form-col">
+                        <label for="narrowSide">Largeur minimale côté étroit : <span class="info-icon" title="Largeur du giron du côté étroit d'une marche dansante">i</span></label>
+                        <input type="text" id="narrowSide" class="metric-input" placeholder="Ex: 150 mm">
+                        <input type="text" id="narrowSideImperial" class="imperial-input" placeholder="Ex: 6\"" style="display: none;">
+                        <div class="error" id="narrowSideError"></div>
+                    </div>
+                </div>
+                <div id="spiralWidthField" class="form-row" style="display: none;">
+                    <div class="form-col">
+                        <label for="spiralWidth">Largeur libre entre mains courantes : <span class="info-icon" title="Largeur minimale d'un escalier hélicoïdal">i</span></label>
+                        <input type="text" id="spiralWidth" class="metric-input" placeholder="Ex: 660 mm">
+                        <input type="text" id="spiralWidthImperial" class="imperial-input" placeholder="Ex: 26\"" style="display: none;">
+                        <div class="error" id="spiralWidthError"></div>
                     </div>
                 </div>
             </div>
             
-            <button id="verifier-conformite" onclick="verifierConformite()">Vérifier la conformité</button>
+            <button id="checkCompliance">Vérifier la conformité</button>
             
-            <div id="resultats-verification" class="results hidden">
-                <!-- Les résultats seront affichés ici -->
+            <div id="result" class="result">
+                <div id="resultContent"></div>
             </div>
         </div>
     </div>
     
-    <script>
-        // Placeholders pour les systèmes de mesure
-        const placeholders = {
-            imperial: {
-                // Onglet Calcul
-                "hauteur-contremarche-ideale": "Ex: 7&quot;",
-                "giron-ideal": "Ex: 11&quot;",
-                "longueur-totale": "Ex: 15' - 2&quot;",
-                "hauteur-totale": "Ex: 10'-2&quot;",
-                "largeur-souhaitee": "Ex: 36 3/8&quot;",
-                
-                // Onglet Vérification
-                "largeur-escalier": "Ex: 36 3/8&quot;",
-                "hauteur-libre": "Ex: 80 pouces",
-                "hauteur-contremarche": "Ex: 7 1/8 pouces",
-                "giron": "Ex: 10 1/4 pouces"
-            },
-            metrique: {
-                // Onglet Calcul
-                "hauteur-contremarche-ideale": "Ex: 180 mm",
-                "giron-ideal": "Ex: 280 mm",
-                "longueur-totale": "Ex: 4500 mm",
-                "hauteur-totale": "Ex: 3000 mm",
-                "largeur-souhaitee": "Ex: 900 mm",
-                
-                // Onglet Vérification
-                "largeur-escalier": "Ex: 900 mm",
-                "hauteur-libre": "Ex: 2050 mm",
-                "hauteur-contremarche": "Ex: 180 mm",
-                "giron": "Ex: 280 mm"
-            }
-        };
-        
-        // Fonction pour mettre à jour les placeholders selon le système de mesure
-        function updatePlaceholders(tab) {
-            const systeme = document.getElementById(`systeme-mesure-${tab}`).value;
-            const placeholdersData = placeholders[systeme === "imperial" ? "imperial" : "metrique"];
-            
-            // Mettre à jour les placeholders pour l'onglet actif
-            for (const [id, placeholder] of Object.entries(placeholdersData)) {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.placeholder = placeholder;
-                }
-            }
-        }
-        
-        // Fonction pour changer d'onglet
-        function openTab(tabName) {
-            var tabContents = document.getElementsByClassName("tab-content");
-            var tabButtons = document.getElementsByClassName("tab-button");
-            
-            for (var i = 0; i < tabContents.length; i++) {
-                tabContents[i].classList.remove("active");
-            }
-            
-            for (var i = 0; i < tabButtons.length; i++) {
-                tabButtons[i].classList.remove("active");
-            }
-            
-            document.getElementById(tabName).classList.add("active");
-            
-            // Trouver et activer le bouton correspondant
-            for (var i = 0; i < tabButtons.length; i++) {
-                if (tabButtons[i].getAttribute("onclick").includes(tabName)) {
-                    tabButtons[i].classList.add("active");
-                }
-            }
-            
-            // Mettre à jour les placeholders pour le nouvel onglet
-            updatePlaceholders(tabName);
-        }
-        
-        // Afficher/masquer les options de marches rayonnantes
-        function toggleRayonnanteOptions() {
-            var configuration = document.getElementById("configuration-escalier-calcul").value;
-            var optionsRayonnantes = document.getElementById("options-rayonnantes");
-            
-            if (configuration === "l" || configuration === "u") {
-                optionsRayonnantes.classList.remove("hidden");
-            } else {
-                optionsRayonnantes.classList.add("hidden");
-            }
-        }
-        
-        // Afficher/masquer les options de marches rayonnantes pour l'onglet vérification
-        function toggleRayonnanteOptionsVerif() {
-            var configuration = document.getElementById("configuration-escalier-verif").value;
-            var optionsRayonnantes = document.getElementById("options-rayonnantes-verif");
-            
-            if (configuration === "l" || configuration === "u") {
-                optionsRayonnantes.classList.remove("hidden");
-            } else {
-                optionsRayonnantes.classList.add("hidden");
-            }
-        }
-        
-        // Fonction pour convertir les unités impériales en mm
-        function convertToMm(value, system) {
-            if (system === "imperial") {
-                // Gérer les formats comme "7 1/8"
-                if (value.includes(" ")) {
-                    const parts = value.split(" ");
-                    const whole = parseFloat(parts[0]);
-                    let fraction = 0;
-                    
-                    if (parts[1].includes("/")) {
-                        const fracParts = parts[1].split("/");
-                        fraction = parseFloat(fracParts[0]) / parseFloat(fracParts[1]);
-                    } else {
-                        fraction = parseFloat(parts[1]);
-                    }
-                    
-                    return (whole + fraction) * 25.4; // 1 pouce = 25.4 mm
-                } else if (value.includes("'")) {
-                    // Format pied-pouce: 5'10"
-                    value = value.replace('"', '');
-                    const parts = value.split("'");
-                    const feet = parseFloat(parts[0]);
-                    const inches = parts.length > 1 ? parseFloat(parts[1]) : 0;
-                    return (feet * 12 + inches) * 25.4; // 1 pied = 12 pouces, 1 pouce = 25.4 mm
-                } else {
-                    return parseFloat(value) * 25.4;
-                }
-            } else {
-                return parseFloat(value);
-            }
-        }
-        
-        // Fonction de calcul d'escalier
-        function calculerEscalier() {
-            // Code pour calculer l'escalier selon les paramètres saisis
-            var longueurTotale = document.getElementById("longueur-totale").value;
-            var hauteurTotale = document.getElementById("hauteur-totale").value;
-            var largeurSouhaitee = document.getElementById("largeur-souhaitee").value;
-            var typeEscalier = document.getElementById("type-escalier-calcul").value;
-            var configuration = document.getElementById("configuration-escalier-calcul").value;
-            var systemeMesure = document.getElementById("systeme-mesure-calcul").value;
-            
-            // Vérifier si les champs obligatoires sont remplis
-            if (!longueurTotale || !hauteurTotale || !largeurSouhaitee) {
-                alert("Veuillez remplir tous les champs obligatoires.");
-                return;
-            }
-            
-            // Conversion en mm pour les calculs
-            var longueurTotale_mm = convertToMm(longueurTotale, systemeMesure);
-            var hauteurTotale_mm = convertToMm(hauteurTotale, systemeMesure);
-            var largeurSouhaitee_mm = convertToMm(largeurSouhaitee, systemeMesure);
-            
-            // Calcul du nombre de marches et de la hauteur des contremarches
-            // Basé sur les limites du CNB (125-200 mm pour contremarches privées)
-            var nombreMarches = Math.round(hauteurTotale_mm / 175); // valeur moyenne comme point de départ
-            var hauteurContremarche_mm = hauteurTotale_mm / nombreMarches;
-            
-            // Ajuster si hors limites
-            if (hauteurContremarche_mm < 125) {
-                nombreMarches = Math.floor(hauteurTotale_mm / 125);
-                hauteurContremarche_mm = hauteurTotale_mm / nombreMarches;
-            } else if (hauteurContremarche_mm > 200 && typeEscalier === "prive") {
-                nombreMarches = Math.ceil(hauteurTotale_mm / 200);
-                hauteurContremarche_mm = hauteurTotale_mm / nombreMarches;
-            } else if (hauteurContremarche_mm > 180 && typeEscalier !== "prive") {
-                nombreMarches = Math.ceil(hauteurTotale_mm / 180);
-                hauteurContremarche_mm = hauteurTotale_mm / nombreMarches;
-            }
-            
-            // Calcul du giron basé sur la longueur disponible
-            var nombreGirons = nombreMarches - 1;
-            var giron_mm = longueurTotale_mm / nombreGirons;
-            
-            // Ajuster le giron selon les limites du CNB
-            var minGiron = typeEscalier === "prive" ? 255 : 280;
-            var maxGiron = typeEscalier === "prive" ? 355 : 355; // pas de max pour commun, mais on met une valeur raisonnable
-            
-            if (giron_mm < minGiron) {
-                // Réduire le nombre de marches si le giron est trop petit
-                nombreMarches = Math.floor(longueurTotale_mm / minGiron) + 1;
-                nombreGirons = nombreMarches - 1;
-                giron_mm = longueurTotale_mm / nombreGirons;
-                hauteurContremarche_mm = hauteurTotale_mm / nombreMarches;
-            } else if (giron_mm > maxGiron) {
-                // Augmenter le nombre de marches si le giron est trop grand
-                nombreMarches = Math.ceil(longueurTotale_mm / maxGiron) + 1;
-                nombreGirons = nombreMarches - 1;
-                giron_mm = longueurTotale_mm / nombreGirons;
-                hauteurContremarche_mm = hauteurTotale_mm / nombreMarches;
-            }
-            
-            // Vérification de la règle du pas (confort)
-            var reglePas1 = giron_mm + hauteurContremarche_mm; // 432-457 mm (17-18")
-            var reglePas2 = giron_mm * hauteurContremarche_mm; // 45800-47700 mm² (71-74 po²)
-            var reglePas3 = giron_mm + (2 * hauteurContremarche_mm); // 559-635 mm (22-25")
-            
-            var conforme1 = (reglePas1 >= 432 && reglePas1 <= 457);
-            var conforme2 = (reglePas2 >= 45800 && reglePas2 <= 47700);
-            var conforme3 = (reglePas3 >= 559 && reglePas3 <= 635);
-            
-            var reglesConformes = (conforme1 ? 1 : 0) + (conforme2 ? 1 : 0) + (conforme3 ? 1 : 0);
-            var confortEscalier = reglesConformes >= 2 ? "Confortable" : "Moins confortable";
-            
-            // Convertir les résultats pour l'affichage
-            var hauteurContremarche_display, giron_display, longueurHorizontale_display;
-            if (systemeMesure === "imperial") {
-                // Convertir mm en pouces avec fractions
-                var hauteurContremarche_pouces = hauteurContremarche_mm / 25.4;
-                var giron_pouces = giron_mm / 25.4;
-                var longueurHorizontale_pouces = longueurTotale_mm / 25.4;
-                
-                hauteurContremarche_display = convertirEnFractionImperiale(hauteurContremarche_pouces);
-                giron_display = convertirEnFractionImperiale(giron_pouces);
-                longueurHorizontale_display = convertirEnPiedsEtPouces(longueurHorizontale_pouces);
-            } else {
-                hauteurContremarche_display = hauteurContremarche_mm.toFixed(0) + " mm";
-                giron_display = giron_mm.toFixed(0) + " mm";
-                longueurHorizontale_display = (longueurTotale_mm / 1000).toFixed(2) + " m";
-            }
-            
-            // Vérification de la conformité au CNB
-            var conforme = hauteurContremarche_mm >= 125 && 
-                        (typeEscalier === "prive" ? hauteurContremarche_mm <= 200 : hauteurContremarche_mm <= 180) &&
-                        giron_mm >= minGiron &&
-                        (typeEscalier === "prive" ? giron_mm <= maxGiron : true) &&
-                        largeurSouhaitee_mm >= (typeEscalier === "prive" ? 860 : 900);
-            
-            // Afficher les résultats
-            var resultatsDiv = document.getElementById("resultats-calcul");
-            resultatsDiv.innerHTML = `
-                <h3>Résultats du calcul</h3>
-                <p><strong>Nombre de marches calculé:</strong> ${nombreMarches}</p>
-                <p><strong>Hauteur de contremarche:</strong> ${hauteurContremarche_display}</p>
-                <p><strong>Giron:</strong> ${giron_display}</p>
-                <p><strong>Pente de l'escalier:</strong> ${Math.atan(hauteurContremarche_mm/giron_mm) * (180/Math.PI).toFixed(1)} degrés</p>
-                <p><strong>Largeur de l'escalier:</strong> ${largeurSouhaitee}</p>
-                <p><strong>Longueur horizontale totale:</strong> ${longueurHorizontale_display}</p>
-                
-                <h4>Vérification de la règle du pas (confort)</h4>
-                <p>1. Giron + Contremarche = ${systemeMesure === "imperial" ? (reglePas1/25.4).toFixed(2) + " pouces" : reglePas1.toFixed(0) + " mm"} ${conforme1 ? "✓" : "✗"}</p>
-                <p>2. Giron × Contremarche = ${systemeMesure === "imperial" ? (reglePas2/25.4/25.4).toFixed(2) + " po²" : reglePas2.toFixed(0) + " mm²"} ${conforme2 ? "✓" : "✗"}</p>
-                <p>3. Giron + 2(Contremarche) = ${systemeMesure === "imperial" ? (reglePas3/25.4).toFixed(2) + " pouces" : reglePas3.toFixed(0) + " mm"} ${conforme3 ? "✓" : "✗"}</p>
-                <p><strong>Résultat:</strong> ${reglesConformes}/3 règles respectées - Escalier ${confortEscalier}</p>
-                
-                <hr>
-                <p><strong>Conformité:</strong> ${conforme ? "✓ L'escalier calculé est conforme au Code National du Bâtiment 2015, section 9.8." : "✗ L'escalier n'est pas conforme au Code National du Bâtiment 2015, section 9.8."}</p>
-            `;
-            resultatsDiv.classList.remove("hidden");
-        }
-        
-        // Fonction pour convertir un nombre décimal en fraction impériale
-        function convertirEnFractionImperiale(pouces) {
-            const entier = Math.floor(pouces);
-            const decimal = pouces - entier;
-            
-            // Arrondir à la fraction de pouce la plus proche
-            if (decimal < 0.0625) return entier + " pouces";
-            if (decimal < 0.1875) return entier + " 1/8 pouces";
-            if (decimal < 0.3125) return entier + " 1/4 pouces";
-            if (decimal < 0.4375) return entier + " 3/8 pouces";
-            if (decimal < 0.5625) return entier + " 1/2 pouces";
-            if (decimal < 0.6875) return entier + " 5/8 pouces";
-            if (decimal < 0.8125) return entier + " 3/4 pouces";
-            if (decimal < 0.9375) return entier + " 7/8 pouces";
-            return (entier + 1) + " pouces";
-        }
-        
-        // Fonction pour convertir des pouces en pieds et pouces
-        function convertirEnPiedsEtPouces(pouces) {
-            const pieds = Math.floor(pouces / 12);
-            const poucesRestants = pouces % 12;
-            
-            if (pieds === 0) {
-                return convertirEnFractionImperiale(poucesRestants);
-            } else if (poucesRestants < 0.0625) {
-                return pieds + " pieds";
-            } else {
-                return pieds + " pieds " + convertirEnFractionImperiale(poucesRestants);
-            }
-        }
-        
-        // Fonction de vérification de conformité
-        function verifierConformite() {
-            // Code pour vérifier la conformité selon les paramètres saisis
-            var largeurEscalier = document.getElementById("largeur-escalier").value;
-            var hauteurLibre = document.getElementById("hauteur-libre").value;
-            var hauteurContremarche = document.getElementById("hauteur-contremarche").value;
-            var giron = document.getElementById("giron").value;
-            var typeEscalier = document.getElementById("type-escalier-verif").value;
-            var configuration = document.getElementById("configuration-escalier-verif").value;
-            var systemeMesure = document.getElementById("systeme-mesure-verif").value;
-            
-            // Vérifier si les champs obligatoires sont remplis
-            if (!largeurEscalier || !hauteurLibre || !hauteurContremarche || !giron) {
-                alert("Veuillez remplir tous les champs obligatoires.");
-                return;
-            }
-            
-            // Conversion en mm pour les calculs
-            var largeurEscalier_mm = convertToMm(largeurEscalier, systemeMesure);
-            var hauteurLibre_mm = convertToMm(hauteurLibre, systemeMesure);
-            var hauteurContremarche_mm = convertToMm(hauteurContremarche, systemeMesure);
-            var giron_mm = convertToMm(giron, systemeMesure);
-            
-            // Exemples de valeurs limites selon CNB 2015, section 9.8
-            var minGiron, maxGiron, minHauteur, maxHauteur, minLargeur, minHauteurLibre;
-            
-            if (typeEscalier === "prive") {
-                minGiron = 255; // mm (10 1/16 po)
-                maxGiron = 355; // mm (13 15/16 po)
-                minHauteur = 125; // mm (4 15/16 po)
-                maxHauteur = 200; // mm (7 7/8 po)
-                minLargeur = 860; // mm (33 7/8 po)
-                minHauteurLibre = 1950; // mm (6 pi 4 3/4 po)
-            } else {
-                minGiron = 280; // mm (11 po)
-                maxGiron = Infinity; // Aucune limite maximale pour les escaliers communs
-                minHauteur = 125; // mm (4 15/16 po)
-                maxHauteur = 180; // mm (7 1/16 po)
-                minLargeur = 900; // mm (35 7/16 po)
-                minHauteurLibre = 2050; // mm (6 pi 8 11/16 po)
-            }
-            
-            // Vérifier la conformité
-            var gironConforme = giron_mm >= minGiron && (maxGiron === Infinity || giron_mm <= maxGiron);
-            var hauteurConforme = hauteurContremarche_mm >= minHauteur && hauteurContremarche_mm <= maxHauteur;
-            var largeurConforme = largeurEscalier_mm >= minLargeur;
-            var hauteurLibreConforme = hauteurLibre_mm >= minHauteurLibre;
-            
-            // Vérification de la règle du pas (confort)
-            var reglePas1 = giron_mm + hauteurContremarche_mm; // 432-457 mm (17-18")
-            var reglePas2 = giron_mm * hauteurContremarche_mm; // 45800-47700 mm² (71-74 po²)
-            var reglePas3 = giron_mm + (2 * hauteurContremarche_mm); // 559-635 mm (22-25")
-            
-            var conforme1 = (reglePas1 >= 432 && reglePas1 <= 457);
-            var conforme2 = (reglePas2 >= 45800 && reglePas2 <= 47700);
-            var conforme3 = (reglePas3 >= 559 && reglePas3 <= 635);
-            
-            var reglesConformes = (conforme1 ? 1 : 0) + (conforme2 ? 1 : 0) + (conforme3 ? 1 : 0);
-            var confortEscalier = reglesConformes >= 2 ? "Confortable" : "Moins confortable";
-            
-            // Formater l'affichage selon le système de mesure
-            var minGiron_display, maxGiron_display, minHauteur_display, maxHauteur_display, minLargeur_display, minHauteurLibre_display;
-            
-            if (systemeMesure === "imperial") {
-                minGiron_display = (minGiron / 25.4).toFixed(2) + " po";
-                maxGiron_display = maxGiron === Infinity ? "Aucune limite" : (maxGiron / 25.4).toFixed(2) + " po";
-                minHauteur_display = (minHauteur / 25.4).toFixed(2) + " po";
-                maxHauteur_display = (maxHauteur / 25.4).toFixed(2) + " po";
-                minLargeur_display = (minLargeur / 25.4).toFixed(2) + " po";
-                minHauteurLibre_display = (minHauteurLibre / 25.4 / 12).toFixed(2) + " pi";
-            } else {
-                minGiron_display = minGiron + " mm";
-                maxGiron_display = maxGiron === Infinity ? "Aucune limite" : maxGiron + " mm";
-                minHauteur_display = minHauteur + " mm";
-                maxHauteur_display = maxHauteur + " mm";
-                minLargeur_display = minLargeur + " mm";
-                minHauteurLibre_display = minHauteurLibre + " mm";
-            }
-            
-            // Afficher les résultats
-            var resultatsDiv = document.getElementById("resultats-verification");
-            resultatsDiv.innerHTML = `
-                <h3>Résultats de la vérification</h3>
-                <p><strong>Giron:</strong> ${gironConforme ? "✓ Conforme" : "✗ Non conforme"} (Min: ${minGiron_display}, Max: ${maxGiron_display})</p>
-                <p><strong>Hauteur de contremarche:</strong> ${hauteurConforme ? "✓ Conforme" : "✗ Non conforme"} (Min: ${minHauteur_display}, Max: ${maxHauteur_display})</p>
-                <p><strong>Largeur de l'escalier:</strong> ${largeurConforme ? "✓ Conforme" : "✗ Non conforme"} (Min: ${minLargeur_display})</p>
-                <p><strong>Hauteur libre:</strong> ${hauteurLibreConforme ? "✓ Conforme" : "✗ Non conforme"} (Min: ${minHauteurLibre_display})</p>
-                
-                <h4>Vérification de la règle du pas (confort)</h4>
-                <p>1. Giron + Contremarche = ${systemeMesure === "imperial" ? (reglePas1/25.4).toFixed(2) + " pouces" : reglePas1.toFixed(0) + " mm"} ${conforme1 ? "✓" : "✗"} (Idéal: 17-18 pouces / 432-457 mm)</p>
-                <p>2. Giron × Contremarche = ${systemeMesure === "imperial" ? (reglePas2/25.4/25.4).toFixed(2) + " po²" : reglePas2.toFixed(0) + " mm²"} ${conforme2 ? "✓" : "✗"} (Idéal: 71-74 po² / 45800-47700 mm²)</p>
-                <p>3. Giron + 2(Contremarche) = ${systemeMesure === "imperial" ? (reglePas3/25.4).toFixed(2) + " pouces" : reglePas3.toFixed(0) + " mm"} ${conforme3 ? "✓" : "✗"} (Idéal: 22-25 pouces / 559-635 mm)</p>
-                <p><strong>Résultat:</strong> ${reglesConformes}/3 règles respectées - ${reglesConformes >= 2 ? "✓" : "✗"} Escalier ${confortEscalier}</p>
-                
-                <hr>
-                <p><strong>Conformité globale:</strong> ${gironConforme && hauteurConforme && largeurConforme && hauteurLibreConforme ? "✓ L'escalier est conforme au Code National du Bâtiment 2015, section 9.8." : "✗ L'escalier n'est pas conforme au Code National du Bâtiment 2015, section 9.8."}</p>
-            `;
-            resultatsDiv.classList.remove("hidden");
-        }
-        
-        // Initialiser les écouteurs d'événements au chargement
-        document.addEventListener("DOMContentLoaded", function() {
-            // Initialiser les placeholders
-            updatePlaceholders('calcul');
-            
-            // Vérifier la configuration initiale
-            toggleRayonnanteOptions();
-            toggleRayonnanteOptionsVerif();
-        });
-    </script>
+    <script src="stairCheck.js"></script>
 </body>
 </html>

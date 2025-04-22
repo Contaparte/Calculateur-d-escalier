@@ -341,19 +341,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const placeholders = {
         imperial: {
             // Onglet Calcul
-            "hauteur-contremarche-ideale": "Ex: 7\"",
-            "giron-ideal": "Ex: 11\"",
-            "longueur-totale": "Ex: 15'-2\"",
-            "hauteur-totale": "Ex: 10'-2\"",
-            "largeur-souhaitee": "Ex: 36\"",
+            "hauteur-contremarche-ideale": "Ex: 7&quot;"",
+            "giron-ideal": "Ex: 11&quot;"",
+            "longueur-totale": "Ex: 15'-2&quot;"",
+            "hauteur-totale": "Ex: 10'-2&quot;"",
+            "largeur-souhaitee": "Ex: 36&quot;"",
             
             // Onglet Vérification
-            "largeur-escalier": "Ex: 36\"",
-            "hauteur-libre": "Ex: 6'-8\"",
-            "hauteur-contremarche": "Ex: 7 1/4\"",
-            "giron": "Ex: 10 1/4\"",
-            "cote-etroit": "Ex: 6\"",
-            "largeur-helicoidal": "Ex: 26\""
+            "largeur-escalier": "Ex: 36&quot;"",
+            "hauteur-libre": "Ex: 6'-8&quot;"",
+            "hauteur-contremarche": "Ex: 7 1/4&quot;"",
+            "giron": "Ex: 10 1/4&quot;"",
+            "cote-etroit": "Ex: 6&quot;"",
+            "largeur-helicoidal": "Ex: 26&quot;""
         },
         metrique: {
             // Onglet Calcul

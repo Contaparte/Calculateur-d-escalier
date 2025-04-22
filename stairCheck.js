@@ -337,6 +337,42 @@ document.addEventListener('DOMContentLoaded', function() {
     const calculatorResult = document.getElementById('calculatorResult');
     const calculatorResultContent = document.getElementById('calculatorResultContent');
     
+    // Placeholders pour les systèmes de mesure
+    const placeholders = {
+        imperial: {
+            // Onglet Calcul
+            "hauteur-contremarche-ideale": "Ex: 7\"",
+            "giron-ideal": "Ex: 11\"",
+            "longueur-totale": "Ex: 15'-2\"",
+            "hauteur-totale": "Ex: 10'-2\"",
+            "largeur-souhaitee": "Ex: 36\"",
+            
+            // Onglet Vérification
+            "largeur-escalier": "Ex: 36\"",
+            "hauteur-libre": "Ex: 6'-8\"",
+            "hauteur-contremarche": "Ex: 7 1/4\"",
+            "giron": "Ex: 10 1/4\"",
+            "cote-etroit": "Ex: 6\"",
+            "largeur-helicoidal": "Ex: 26\""
+        },
+        metrique: {
+            // Onglet Calcul
+            "hauteur-contremarche-ideale": "Ex: 180 mm",
+            "giron-ideal": "Ex: 280 mm",
+            "longueur-totale": "Ex: 4500 mm",
+            "hauteur-totale": "Ex: 3000 mm",
+            "largeur-souhaitee": "Ex: 900 mm",
+            
+            // Onglet Vérification
+            "largeur-escalier": "Ex: 900 mm",
+            "hauteur-libre": "Ex: 2050 mm",
+            "hauteur-contremarche": "Ex: 180 mm",
+            "giron": "Ex: 280 mm",
+            "cote-etroit": "Ex: 150 mm",
+            "largeur-helicoidal": "Ex: 660 mm"
+        }
+    };
+    
     // Gestion des onglets
     tabButtons.forEach(button => {
         button.addEventListener('click', function() {
@@ -348,35 +384,73 @@ document.addEventListener('DOMContentLoaded', function() {
             
             this.classList.add('active');
             document.getElementById(tabId).classList.add('active');
+            
+            // Mettre à jour les placeholders pour le nouvel onglet
+            updatePlaceholders(tabId);
         });
     });
+    
+    // Fonction pour mettre à jour les placeholders selon le système de mesure
+    function updatePlaceholders(tab) {
+        const isCalcTab = tab === 'calculator';
+        let systemeElement;
+        
+        if (isCalcTab) {
+            systemeElement = calcMeasurementSystem;
+        } else {
+            systemeElement = measurementSystem;
+        }
+        
+        const isImperial = systemeElement.value === 'imperial';
+        const placeholdersData = isImperial ? placeholders.imperial : placeholders.metrique;
+        
+        // Mettre à jour tous les placeholders
+        for (const [id, placeholder] of Object.entries(placeholdersData)) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.placeholder = placeholder;
+            }
+        }
+        
+        // Afficher/masquer les champs métriques/impériaux
+        const metricInputs = document.querySelectorAll('.metric-input');
+        const imperialInputs = document.querySelectorAll('.imperial-input');
+        
+        metricInputs.forEach(input => {
+            input.style.display = isImperial ? 'none' : 'block';
+        });
+        
+        imperialInputs.forEach(input => {
+            input.style.display = isImperial ? 'block' : 'none';
+        });
+    }
     
     // Synchroniser les systèmes de mesure entre les onglets
     measurementSystem.addEventListener('change', function() {
         calcMeasurementSystem.value = this.value;
-        updateMeasurementDisplay(calcMeasurementSystem);
+        updatePlaceholders('verification');
+        updatePlaceholders('calculator');
     });
     
     calcMeasurementSystem.addEventListener('change', function() {
         measurementSystem.value = this.value;
-        updateMeasurementDisplay(measurementSystem);
+        updatePlaceholders('verification');
+        updatePlaceholders('calculator');
     });
     
-    function updateMeasurementDisplay(selectElement) {
-        const isImperial = selectElement.value === 'imperial';
-        const selector = selectElement.id === 'measurementSystem' ? '' : 'calc';
-        
-        const metricInputs = document.querySelectorAll(`.${selector === '' ? '' : selector + ' '}` + '.metric-input');
-        const imperialInputs = document.querySelectorAll(`.${selector === '' ? '' : selector + ' '}` + '.imperial-input');
-        
-        if (isImperial) {
-            metricInputs.forEach(input => input.style.display = 'none');
-            imperialInputs.forEach(input => input.style.display = 'block');
+    // Gestion du changement de configuration d'escalier
+    stairConfig.addEventListener('change', function() {
+        if (this.value === 'turning') {
+            minimumWidthTurningStair.style.display = 'block';
+            spiralWidthField.style.display = 'none';
+        } else if (this.value === 'spiral') {
+            minimumWidthTurningStair.style.display = 'none';
+            spiralWidthField.style.display = 'block';
         } else {
-            metricInputs.forEach(input => input.style.display = 'block');
-            imperialInputs.forEach(input => input.style.display = 'none');
+            minimumWidthTurningStair.style.display = 'none';
+            spiralWidthField.style.display = 'none';
         }
-    }
+    });
     
     // Ajouter des écouteurs d'événements pour la conversion entre métrique et impérial
     const metricInputPairs = [
@@ -403,34 +477,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 pair.metric.value = value;
             }
         });
-    });
-
-    // Gestion du changement de configuration d'escalier
-    stairConfig.addEventListener('change', function() {
-        if (this.value === 'turning') {
-            minimumWidthTurningStair.style.display = 'block';
-            spiralWidthField.style.display = 'none';
-        } else if (this.value === 'spiral') {
-            minimumWidthTurningStair.style.display = 'none';
-            spiralWidthField.style.display = 'block';
-        } else {
-            minimumWidthTurningStair.style.display = 'none';
-            spiralWidthField.style.display = 'none';
-        }
-    });
-
-    // Gestion du changement de système de mesure
-    measurementSystem.addEventListener('change', function() {
-        const metricInputs = document.querySelectorAll('.metric-input');
-        const imperialInputs = document.querySelectorAll('.imperial-input');
-        
-        if (this.value === 'imperial') {
-            metricInputs.forEach(input => input.style.display = 'none');
-            imperialInputs.forEach(input => input.style.display = 'block');
-        } else {
-            metricInputs.forEach(input => input.style.display = 'block');
-            imperialInputs.forEach(input => input.style.display = 'none');
-        }
     });
 
     // Gestion du changement de type de bâtiment et d'usage
@@ -670,7 +716,14 @@ document.addEventListener('DOMContentLoaded', function() {
             result.classList.add('non-compliant');
             let issuesList = `<p>⚠ Non conforme au ${codeReference}.</p><p>Problèmes détectés:</p><ul>`;
             issues.forEach(issue => {
-                issuesList += `<li>${issue}</li>`;
+                let formattedIssue = issue;
+                if (!isMetric) {
+                    // Convertir les valeurs métriques en impériales pour l'affichage
+                    formattedIssue = issue.replace(/(\d+) mm/g, function(match, p1) {
+                        return metricToImperial(parseInt(p1)) + ' ';
+                    });
+                }
+                issuesList += `<li>${formattedIssue}</li>`;
             });
             issuesList += '</ul>';
             resultContent.innerHTML = issuesList;
@@ -679,7 +732,7 @@ document.addEventListener('DOMContentLoaded', function() {
         result.style.display = 'block';
     });
     
-    // Ajouter l'écouteur d'événement pour le bouton de calcul
+    // Calcul d'escalier
     calculateButton.addEventListener('click', function() {
         // Réinitialiser les messages d'erreur
         document.querySelectorAll('#calculator-tab .error').forEach(el => el.textContent = '');
@@ -799,24 +852,45 @@ document.addEventListener('DOMContentLoaded', function() {
             // Vérification de la largeur
             let widthWarning = '';
             if (!isWidthCompliant) {
+                let widthValueDisplay = isMetric ? 
+                    `${formatNumber(stairWidthValue)} mm` : 
+                    metricToImperial(stairWidthValue);
+                
+                let minWidthDisplay = isMetric ? 
+                    `${minWidth} mm` : 
+                    metricToImperial(minWidth);
+                
                 widthWarning = `
                     <div class="warning">
-                        <p>⚠ La largeur spécifiée (${formatNumber(stairWidthValue)} mm) est inférieure au minimum requis (${minWidth} mm) selon le ${codeReference}.</p>
+                        <p>⚠ La largeur spécifiée (${widthValueDisplay}) est inférieure au minimum requis (${minWidthDisplay}) selon le ${codeReference}.</p>
                     </div>
                 `;
             }
             
             // Afficher une explication de la règle du pas
-const explanationSection = `
-    <div class="result-section">
-        <h3>Règle du pas</h3>
-        <p>La règle du pas optimale stipule que la somme de 2 fois la hauteur de contremarche (2R) plus la profondeur du giron (G) devrait idéalement être comprise entre 630 et 650 mm, avec un optimum à 640 mm.</p>
-        <div class="step-formula">2R + G = 630 à 650 mm</div>
-        <p>Cette formule correspond au pas moyen d'un adulte et assure un confort optimal lors de l'utilisation de l'escalier.</p>
-    </div>
-`;
+            const stepRuleIdealImperial = "17-18 pouces";
+            const stepRuleIdealMetric = "432-457 mm";
+            const stepRuleSquareIdealImperial = "71-74 po²";
+            const stepRuleSquareIdealMetric = "45800-47700 mm²";
+            const stepRule2RGIdealImperial = "22-25 pouces";
+            const stepRule2RGIdealMetric = "559-635 mm";
+            
+            const stepRuleIdeal = isMetric ? stepRuleIdealMetric : stepRuleIdealImperial;
+            const stepRuleSquareIdeal = isMetric ? stepRuleSquareIdealMetric : stepRuleSquareIdealImperial;
+            const stepRule2RGIdeal = isMetric ? stepRule2RGIdealMetric : stepRule2RGIdealImperial;
+            
+            const stepRuleFormula = isMetric ? "2R + G = 630 à 650 mm" : "2R + G = 24,8 à 25,6 pouces";
+            
+            const explanationSection = `
+                <div class="result-section">
+                    <h3>Règle du pas</h3>
+                    <p>La règle du pas optimale stipule que la somme de 2 fois la hauteur de contremarche (2R) plus la profondeur du giron (G) devrait idéalement être comprise entre ${stepRuleIdeal}, avec un optimum à ${isMetric ? "640 mm" : "25,2 pouces"}.</p>
+                    <div class="step-formula">${stepRuleFormula}</div>
+                    <p>Cette formule correspond au pas moyen d'un adulte et assure un confort optimal lors de l'utilisation de l'escalier.</p>
+                </div>
+            `;
 
-        // Afficher les solutions
+            // Afficher les solutions
             let solutionsHtml = `
                 <div class="result-section">
                     <h3>Meilleures configurations</h3>
@@ -837,23 +911,19 @@ const explanationSection = `
             solutions.forEach((solution, index) => {
                 const isOptimal = index === 0;
                 const className = isOptimal ? 'optimal-solution' : '';
-                const riserHeight = formatNumber(solution.riserHeight);
-                const treadDepth = formatNumber(solution.treadDepth);
-                const stepValue = formatNumber(solution.stepValue);
-                const actualTotalRun = formatNumber(solution.treadDepth * solution.numTreads);
                 
                 let riserHeightDisplay, treadDepthDisplay, stepValueDisplay, actualTotalRunDisplay;
                 
                 if (isMetric) {
-                    riserHeightDisplay = riserHeight + ' mm';
-                    treadDepthDisplay = treadDepth + ' mm';
-                    stepValueDisplay = stepValue + ' mm';
-                    actualTotalRunDisplay = actualTotalRun + ' mm';
+                    riserHeightDisplay = formatNumber(solution.riserHeight) + ' mm';
+                    treadDepthDisplay = formatNumber(solution.treadDepth) + ' mm';
+                    stepValueDisplay = formatNumber(solution.stepValue) + ' mm';
+                    actualTotalRunDisplay = formatNumber(solution.treadDepth * solution.numTreads) + ' mm';
                 } else {
-                    riserHeightDisplay = riserHeight + ' mm (' + metricToImperial(solution.riserHeight) + ')';
-                    treadDepthDisplay = treadDepth + ' mm (' + metricToImperial(solution.treadDepth) + ')';
-                    stepValueDisplay = stepValue + ' mm (' + metricToImperial(solution.stepValue) + ')';
-                    actualTotalRunDisplay = actualTotalRun + ' mm (' + metricToImperial(solution.treadDepth * solution.numTreads) + ')';
+                    riserHeightDisplay = metricToImperial(solution.riserHeight);
+                    treadDepthDisplay = metricToImperial(solution.treadDepth);
+                    stepValueDisplay = metricToImperial(solution.stepValue);
+                    actualTotalRunDisplay = metricToImperial(solution.treadDepth * solution.numTreads);
                 }
                 
                 solutionsHtml += `
@@ -882,18 +952,36 @@ const explanationSection = `
                 const totalRiseCalculation = bestSolution.riserHeight * bestSolution.numRisers;
                 const totalRunCalculation = bestSolution.treadDepth * bestSolution.numTreads;
                 
+                let formatRiserHeight, formatTreadDepth, formatStepValue, formatTotalRise, formatTotalRun, formatStairWidth;
+                
+                if (isMetric) {
+                    formatRiserHeight = formatNumber(bestSolution.riserHeight) + ' mm';
+                    formatTreadDepth = formatNumber(bestSolution.treadDepth) + ' mm';
+                    formatStepValue = formatNumber(bestSolution.stepValue) + ' mm';
+                    formatTotalRise = formatNumber(totalRiseCalculation) + ' mm';
+                    formatTotalRun = formatNumber(totalRunCalculation) + ' mm';
+                    formatStairWidth = formatNumber(stairWidthValue) + ' mm';
+                } else {
+                    formatRiserHeight = metricToImperial(bestSolution.riserHeight);
+                    formatTreadDepth = metricToImperial(bestSolution.treadDepth);
+                    formatStepValue = metricToImperial(bestSolution.stepValue);
+                    formatTotalRise = metricToImperial(totalRiseCalculation);
+                    formatTotalRun = metricToImperial(totalRunCalculation);
+                    formatStairWidth = metricToImperial(stairWidthValue);
+                }
+                
                 detailsHtml = `
                     <div class="result-section">
                         <h3>Détails de la solution optimale</h3>
                         <ul>
                             <li>Nombre de contremarches: ${bestSolution.numRisers}</li>
                             <li>Nombre de marches: ${bestSolution.numTreads}</li>
-                            <li>Hauteur de contremarche: ${formatNumber(bestSolution.riserHeight)} mm ${isMetric ? '' : '(' + metricToImperial(bestSolution.riserHeight) + ')'}</li>
-                            <li>Profondeur du giron: ${formatNumber(bestSolution.treadDepth)} mm ${isMetric ? '' : '(' + metricToImperial(bestSolution.treadDepth) + ')'}</li>
-                            <li>Valeur du pas (2R + G): ${formatNumber(bestSolution.stepValue)} mm ${isMetric ? '' : '(' + metricToImperial(bestSolution.stepValue) + ')'}</li>
-                            <li>Hauteur totale: ${formatNumber(totalRiseCalculation)} mm ${isMetric ? '' : '(' + metricToImperial(totalRiseCalculation) + ')'}</li>
-                            <li>Longueur totale: ${formatNumber(totalRunCalculation)} mm ${isMetric ? '' : '(' + metricToImperial(totalRunCalculation) + ')'}</li>
-                            <li>Largeur recommandée: ${formatNumber(stairWidthValue)} mm ${isMetric ? '' : '(' + metricToImperial(stairWidthValue) + ')'} ${isWidthCompliant ? '' : '⚠'}</li>
+                            <li>Hauteur de contremarche: ${formatRiserHeight}</li>
+                            <li>Profondeur du giron: ${formatTreadDepth}</li>
+                            <li>Valeur du pas (2R + G): ${formatStepValue}</li>
+                            <li>Hauteur totale: ${formatTotalRise}</li>
+                            <li>Longueur totale: ${formatTotalRun}</li>
+                            <li>Largeur recommandée: ${formatStairWidth} ${isWidthCompliant ? '' : '⚠'}</li>
                         </ul>
                     </div>
                 `;
@@ -923,5 +1011,6 @@ const explanationSection = `
     
     // Initialiser l'affichage en fonction des sélections initiales
     stairConfig.dispatchEvent(new Event('change'));
-    measurementSystem.dispatchEvent(new Event('change'));
+    updatePlaceholders('verification');
+    updatePlaceholders('calculator');
 });

@@ -96,24 +96,60 @@
                         <label for="calcStairConfig">Configuration de l'escalier :</label>
                         <select id="calcStairConfig">
                             <option value="straight">Volée droite</option>
-                            <option value="l_shaped">En L</option>
-                            <option value="u_shaped">En U</option>
-                            <option value="spiral">Hélicoïdal</option>
+                            <option value="turning_30">Volée tournante à 30°</option>
+                            <option value="turning_45">Volée tournante à 45°</option>
+                            <option value="turning_60">Volée tournante à 60° (2 marches rayonnantes de 30°)</option>
+                            <option value="l_shaped">Volée tournante à 90° (en "L")</option>
+                            <option value="u_shaped">Volée tournante à 180° (en "U")</option>
+                            <option value="dancing_steps">Volée tournante à marches dansantes</option>
+                            <option value="spiral">Hélicoïdale</option>
                         </select>
                     </div>
                 </div>
                 
-                <!-- Nouveau bloc pour les options de marches rayonnantes -->
-                <div id="calcRadiatingStepsOptions" class="form-row" style="display: none;">
+                <!-- Options pour la volée tournante à 90° (en "L") -->
+                <div id="calcLShapedOptions" class="form-row" style="display: none;">
                     <div class="form-col">
-                        <label for="calcRadiatingStepsConfig">Configuration des marches rayonnantes :</label>
-                        <select id="calcRadiatingStepsConfig">
-                            <option value="none">Aucune marche rayonnante</option>
-                            <option value="one_30deg">Une marche rayonnante à 30°</option>
-                            <option value="one_45deg">Une marche rayonnante à 45°</option>
-                            <option value="two_30deg">Deux marches rayonnantes à 30°</option>
-                            <option value="three_30deg">Trois marches rayonnantes à 30°</option>
+                        <label for="calcLShapedConfig">Type de virage à 90° :</label>
+                        <select id="calcLShapedConfig">
+                            <option value="standard_landing">Palier standard (tournant à 90°)</option>
+                            <option value="two_45deg">2 marches rayonnantes de 45°</option>
+                            <option value="three_30deg">3 marches rayonnantes de 30°</option>
                         </select>
+                    </div>
+                </div>
+                
+                <!-- Options pour la volée tournante à marches dansantes -->
+                <div id="calcDancingStepsOptions" class="form-row" style="display: none;">
+                    <div class="form-col">
+                        <label for="calcDancingStepsConfig">Configuration des marches dansantes :</label>
+                        <select id="calcDancingStepsConfig">
+                            <option value="standard">Standard (angle constant)</option>
+                            <option value="exit">Issue (conforme à l'article 3.4.6.9)</option>
+                        </select>
+                    </div>
+                    <div class="form-col">
+                        <label for="calcMinNarrowSide">Largeur minimale côté étroit : <span class="info-icon" title="Largeur minimale du giron du côté étroit des marches dansantes">i</span></label>
+                        <input type="text" id="calcMinNarrowSide" class="metric-input" placeholder="Ex: 150 mm">
+                        <input type="text" id="calcMinNarrowSideImperial" class="imperial-input" placeholder="Ex: 6″" style="display: none;">
+                        <div class="error" id="calcMinNarrowSideError"></div>
+                    </div>
+                </div>
+                
+                <!-- Options pour l'escalier hélicoïdal -->
+                <div id="calcSpiralOptions" class="form-row" style="display: none;">
+                    <div class="form-col">
+                        <label for="calcSpiralConfig">Type d'escalier hélicoïdal :</label>
+                        <select id="calcSpiralConfig">
+                            <option value="secondary">Escalier secondaire</option>
+                            <option value="primary">Seul moyen d'évacuation (max. 3 personnes)</option>
+                        </select>
+                    </div>
+                    <div class="form-col">
+                        <label for="calcSpiralWidth">Largeur libre entre mains courantes : <span class="info-icon" title="Largeur minimale entre les mains courantes">i</span></label>
+                        <input type="text" id="calcSpiralWidth" class="metric-input" placeholder="Ex: 660 mm">
+                        <input type="text" id="calcSpiralWidthImperial" class="imperial-input" placeholder="Ex: 26″" style="display: none;">
+                        <div class="error" id="calcSpiralWidthError"></div>
                     </div>
                 </div>
             </div>
@@ -245,24 +281,60 @@
                         <label for="stairConfig">Configuration de l'escalier :</label>
                         <select id="stairConfig">
                             <option value="straight">Volée droite</option>
-                            <option value="l_shaped">En L</option>
-                            <option value="u_shaped">En U</option>
-                            <option value="spiral">Hélicoïdal</option>
+                            <option value="turning_30">Volée tournante à 30°</option>
+                            <option value="turning_45">Volée tournante à 45°</option>
+                            <option value="turning_60">Volée tournante à 60° (2 marches rayonnantes de 30°)</option>
+                            <option value="l_shaped">Volée tournante à 90° (en "L")</option>
+                            <option value="u_shaped">Volée tournante à 180° (en "U")</option>
+                            <option value="dancing_steps">Volée tournante à marches dansantes</option>
+                            <option value="spiral">Hélicoïdale</option>
                         </select>
                     </div>
                 </div>
                 
-                <!-- Nouveau bloc pour les options de marches rayonnantes -->
-                <div id="radiatingStepsOptions" class="form-row" style="display: none;">
+                <!-- Options pour la volée tournante à 90° (en "L") -->
+                <div id="lShapedOptions" class="form-row" style="display: none;">
                     <div class="form-col">
-                        <label for="radiatingStepsConfig">Configuration des marches rayonnantes :</label>
-                        <select id="radiatingStepsConfig">
-                            <option value="none">Aucune marche rayonnante</option>
-                            <option value="one_30deg">Une marche rayonnante à 30°</option>
-                            <option value="one_45deg">Une marche rayonnante à 45°</option>
-                            <option value="two_30deg">Deux marches rayonnantes à 30°</option>
-                            <option value="three_30deg">Trois marches rayonnantes à 30°</option>
+                        <label for="lShapedConfig">Type de virage à 90° :</label>
+                        <select id="lShapedConfig">
+                            <option value="standard_landing">Palier standard (tournant à 90°)</option>
+                            <option value="two_45deg">2 marches rayonnantes de 45°</option>
+                            <option value="three_30deg">3 marches rayonnantes de 30°</option>
                         </select>
+                    </div>
+                </div>
+                
+                <!-- Options pour la volée tournante à marches dansantes -->
+                <div id="dancingStepsOptions" class="form-row" style="display: none;">
+                    <div class="form-col">
+                        <label for="dancingStepsConfig">Configuration des marches dansantes :</label>
+                        <select id="dancingStepsConfig">
+                            <option value="standard">Standard (angle constant)</option>
+                            <option value="exit">Issue (conforme à l'article 3.4.6.9)</option>
+                        </select>
+                    </div>
+                    <div class="form-col">
+                        <label for="narrowSide">Largeur minimale côté étroit : <span class="info-icon" title="Largeur du giron du côté étroit d'une marche dansante">i</span></label>
+                        <input type="text" id="narrowSide" class="metric-input" placeholder="Ex: 150 mm">
+                        <input type="text" id="narrowSideImperial" class="imperial-input" placeholder="Ex: 6″" style="display: none;">
+                        <div class="error" id="narrowSideError"></div>
+                    </div>
+                </div>
+                
+                <!-- Options pour l'escalier hélicoïdal -->
+                <div id="spiralOptions" class="form-row" style="display: none;">
+                    <div class="form-col">
+                        <label for="spiralConfig">Type d'escalier hélicoïdal :</label>
+                        <select id="spiralConfig">
+                            <option value="secondary">Escalier secondaire</option>
+                            <option value="primary">Seul moyen d'évacuation (max. 3 personnes)</option>
+                        </select>
+                    </div>
+                    <div class="form-col">
+                        <label for="spiralWidth">Largeur libre entre mains courantes : <span class="info-icon" title="Largeur minimale d'un escalier hélicoïdal">i</span></label>
+                        <input type="text" id="spiralWidth" class="metric-input" placeholder="Ex: 660 mm">
+                        <input type="text" id="spiralWidthImperial" class="imperial-input" placeholder="Ex: 26″" style="display: none;">
+                        <div class="error" id="spiralWidthError"></div>
                     </div>
                 </div>
             </div>
@@ -295,22 +367,6 @@
                         <input type="text" id="treadDepth" class="metric-input" placeholder="Ex: 280 mm">
                         <input type="text" id="treadDepthImperial" class="imperial-input" placeholder="Ex: 10 1/4″" style="display: none;">
                         <div class="error" id="treadDepthError"></div>
-                    </div>
-                </div>
-                <div id="minimumWidthTurningStair" class="form-row" style="display: none;">
-                    <div class="form-col">
-                        <label for="narrowSide">Largeur minimale côté étroit : <span class="info-icon" title="Largeur du giron du côté étroit d'une marche dansante">i</span></label>
-                        <input type="text" id="narrowSide" class="metric-input" placeholder="Ex: 150 mm">
-                        <input type="text" id="narrowSideImperial" class="imperial-input" placeholder="Ex: 6″" style="display: none;">
-                        <div class="error" id="narrowSideError"></div>
-                    </div>
-                </div>
-                <div id="spiralWidthField" class="form-row" style="display: none;">
-                    <div class="form-col">
-                        <label for="spiralWidth">Largeur libre entre mains courantes : <span class="info-icon" title="Largeur minimale d'un escalier hélicoïdal">i</span></label>
-                        <input type="text" id="spiralWidth" class="metric-input" placeholder="Ex: 660 mm">
-                        <input type="text" id="spiralWidthImperial" class="imperial-input" placeholder="Ex: 26″" style="display: none;">
-                        <div class="error" id="spiralWidthError"></div>
                     </div>
                 </div>
             </div>

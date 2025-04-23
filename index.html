@@ -94,12 +94,24 @@
                 <div class="form-row">
                     <div class="form-col">
                         <label for="calcStairConfig">Configuration de l'escalier :</label>
-                        <select id="calcStairConfig">
+                        <select id="calcStairConfig" onchange="toggleRayonnanteOptions('calc')">
                             <option value="straight">Volée droite</option>
-                            <option value="turning">Tournant</option>
+                            <option value="L">En L</option>
+                            <option value="U">En U</option>
                             <option value="spiral">Hélicoïdal</option>
                         </select>
                     </div>
+                </div>
+                <div id="rayonnante-options-calc" class="form-row hidden">
+                    <div class="form-col">
+                        <label for="rayonnante-type-calc">Marches rayonnantes :</label>
+                        <select id="rayonnante-type-calc">
+                            <option value="none">Sans marches rayonnantes</option>
+                            <option value="30-1">Une marche rayonnante à 30°</option>
+                            <option value="45-1">Une marche rayonnante à 45°</option>
+                            <option value="30-2">Deux marches rayonnantes à 30°</option>
+                            <option value="30-3">Trois marches rayonnantes à 30°</option>
+                        </select>
                 </div>
             </div>
             
@@ -228,12 +240,24 @@
                 <div class="form-row">
                     <div class="form-col">
                         <label for="stairConfig">Configuration de l'escalier :</label>
-                        <select id="stairConfig">
+                        <select id="stairConfig" onchange="toggleRayonnanteOptions('verification')">
                             <option value="straight">Volée droite</option>
-                            <option value="turning">Tournant</option>
+                            <option value="L">En L</option>
+                            <option value="U">En U</option>
                             <option value="spiral">Hélicoïdal</option>
                         </select>
                     </div>
+                </div>
+                <div id="rayonnante-options-verification" class="form-row hidden">
+                    <div class="form-col">
+                        <label for="rayonnante-type-verification">Marches rayonnantes :</label>
+                        <select id="rayonnante-type-verification">
+                            <option value="none">Sans marches rayonnantes</option>
+                            <option value="30-1">Une marche rayonnante à 30°</option>
+                            <option value="45-1">Une marche rayonnante à 45°</option>
+                            <option value="30-2">Deux marches rayonnantes à 30°</option>
+                            <option value="30-3">Trois marches rayonnantes à 30°</option>
+                        </select>
                 </div>
             </div>
             

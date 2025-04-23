@@ -2037,9 +2037,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Section séparée pour la règle du pas (notion complémentaire)
             htmlContent += `
-                <div class="result-section" style="border-top: 1px dashed #ccc; padding-top: 15px;">
-                    <h3>Vérification du confort (Règle du pas - notion complémentaire)</h3>
-                    <p style="font-style: italic; color: #666;">La règle du pas n'est pas une exigence du CNB 2015, mais une pratique recommandée pour assurer le confort des utilisateurs de l'escalier.</p>
+                <div class="step-rule-section">
+                    <h3 class="step-rule-title">Vérification du confort (Règle du pas - notion complémentaire)</h3>
+                    <p class="info-text">La règle du pas n'est pas une exigence du CNB 2015, mais une pratique recommandée pour assurer le confort des utilisateurs de l'escalier.</p>
             `;
             
             if (stepRule.isValid) {
@@ -2058,7 +2058,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <li>${stepRule.rule2.isValid ? "✓" : "⨯"} Règle 2: Giron × CM = ${stepRule.rule2.value.toFixed(2)} po² (idéal: ${stepRule.rule2.min} po²-${stepRule.rule2.max} po²)</li>
                         <li>${stepRule.rule3.isValid ? "✓" : "⨯"} Règle 3: Giron + 2(CM) = ${stepRule.rule3.value.toFixed(2)}" (idéal: ${stepRule.rule3.min}"-${stepRule.rule3.max}")</li>
                     </ul>
-                    <p style="font-style: italic; color: #666;">Pour un confort optimal, il est recommandé de respecter au moins 2 des 3 règles du pas.</p>`;
+                    <p class="info-text">Pour un confort optimal, il est recommandé de respecter au moins 2 des 3 règles du pas.</p>`;
             }
             
             htmlContent += `</div>`;
@@ -2067,7 +2067,7 @@ document.addEventListener('DOMContentLoaded', function() {
             htmlContent += `
                 <div class="result-section" style="border-top: 1px dashed #ccc; padding-top: 15px;">
                     <h3>Visualisation de l'escalier</h3>
-                    <div id="stairVisualization"></div>
+                    <div id="stairVisualization" class="stair-visualization-container"></div>
                 </div>`;
             
             resultContent.innerHTML = htmlContent;
@@ -2099,9 +2099,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Section séparée pour la règle du pas (notion complémentaire)
             issuesList += `
-                <div class="result-section" style="border-top: 1px dashed #ccc; padding-top: 15px;">
-                    <h3>Vérification du confort (Règle du pas - notion complémentaire)</h3>
-                    <p style="font-style: italic; color: #666;">La règle du pas n'est pas une exigence du CNB 2015, mais une pratique recommandée pour assurer le confort des utilisateurs de l'escalier.</p>
+                <div class="step-rule-section">
+                    <h3 class="step-rule-title">Vérification du confort (Règle du pas - notion complémentaire)</h3>
+                    <p class="info-text">La règle du pas n'est pas une exigence du CNB 2015, mais une pratique recommandée pour assurer le confort des utilisateurs de l'escalier.</p>
             `;
             
             if (stepRule.isValid) {
@@ -2120,7 +2120,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <li>${stepRule.rule2.isValid ? "✓" : "⨯"} Règle 2: Giron × CM = ${stepRule.rule2.value.toFixed(2)} po² (idéal: ${stepRule.rule2.min} po²-${stepRule.rule2.max} po²)</li>
                         <li>${stepRule.rule3.isValid ? "✓" : "⨯"} Règle 3: Giron + 2(CM) = ${stepRule.rule3.value.toFixed(2)}" (idéal: ${stepRule.rule3.min}"-${stepRule.rule3.max}")</li>
                     </ul>
-                    <p style="font-style: italic; color: #666;">Pour un confort optimal, il est recommandé de respecter au moins 2 des 3 règles du pas.</p>`;
+                    <p class="info-text">Pour un confort optimal, il est recommandé de respecter au moins 2 des 3 règles du pas.</p>`;
             }
             
             issuesList += `</div>`;
@@ -2129,7 +2129,7 @@ document.addEventListener('DOMContentLoaded', function() {
             issuesList += `
                 <div class="result-section" style="border-top: 1px dashed #ccc; padding-top: 15px;">
                     <h3>Visualisation de l'escalier</h3>
-                    <div id="stairVisualization"></div>
+                    <div id="stairVisualization" class="stair-visualization-container"></div>
                 </div>`;
             
             resultContent.innerHTML = issuesList;
@@ -2392,9 +2392,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Afficher une explication de la règle du pas (section séparée)
             const stepRuleSection = `
-                <div class="result-section" style="border-top: 1px dashed #ccc; padding-top: 15px;">
-                    <h3>Règle du pas (notion complémentaire)</h3>
-                    <p style="font-style: italic; color: #666;">La règle du pas n'est pas une exigence du CNB 2015, mais une pratique recommandée pour assurer le confort des utilisateurs de l'escalier.</p>
+                <div class="step-rule-section">
+                    <h3 class="step-rule-title">Règle du pas (notion complémentaire)</h3>
+                    <p class="info-text">La règle du pas n'est pas une exigence du CNB 2015, mais une pratique recommandée pour assurer le confort des utilisateurs de l'escalier.</p>
                     <p>Les critères de confort pour un escalier sont vérifiés lorsqu'au moins 2 des 3 règles suivantes sont respectées :</p>
                     <ol>
                         <li>Giron + CM = 17" à 18" (${isMetric ? "432-457 mm" : "17-18 pouces"})</li>
@@ -2487,9 +2487,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Informations sur les règles du pas pour la meilleure solution (section séparée)
                 let stepRuleDetails = `
-                    <div class="result-section" style="border-top: 1px dashed #ccc; padding-top: 15px;">
-                        <h3>Vérification de la règle du pas (solution optimale)</h3>
-                        <p style="font-style: italic; color: #666;">La règle du pas n'est pas une exigence du CNB 2015, mais une pratique recommandée pour assurer le confort des utilisateurs de l'escalier.</p>
+                    <div class="step-rule-section">
+                        <h3 class="step-rule-title">Vérification de la règle du pas (solution optimale)</h3>
+                        <p class="info-text">La règle du pas n'est pas une exigence du CNB 2015, mais une pratique recommandée pour assurer le confort des utilisateurs de l'escalier.</p>
                         <ul>
                             <li>${bestSolution.stepRule.rule1.isValid ? "✓" : "⨯"} Règle 1: Giron + CM = ${bestSolution.stepRule.rule1.value.toFixed(2)}" (idéal: ${bestSolution.stepRule.rule1.min}"-${bestSolution.stepRule.rule1.max}")</li>
                             <li>${bestSolution.stepRule.rule2.isValid ? "✓" : "⨯"} Règle 2: Giron × CM = ${bestSolution.stepRule.rule2.value.toFixed(2)} po² (idéal: ${bestSolution.stepRule.rule2.min}-${bestSolution.stepRule.rule2.max} po²)</li>
@@ -2518,7 +2518,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 detailsHtml += `
                     <div class="result-section" style="border-top: 1px dashed #ccc; padding-top: 15px;">
                         <h3>Visualisation de l'escalier</h3>
-                        <div id="calculatorStairVisualization"></div>
+                        <div id="calculatorStairVisualization" class="stair-visualization-container"></div>
                     </div>
                 `;
             }

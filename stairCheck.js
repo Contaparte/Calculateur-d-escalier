@@ -1,3 +1,1087 @@
+// Fonction pour générer un SVG d'escalier en vue de dessus et de côté
+function generateStairVisualization(stairData, elementId, isMetric) {
+    // Récupérer les données de l'escalier
+    const {
+        numRisers,
+        numTreads,
+        riserHeight,
+        treadDepth,
+        stairWidth,
+        stairConfig,
+        totalRun,
+        totalRise
+    } = stairData;
+
+    // Paramètres de visualisation
+    const padding = 40;
+    const scale = calculateScale(totalRun, totalRise, stairWidth, numTreads, numRisers);
+    const svgWidth = Math.max(600, totalRun * scale + 2 * padding);
+    const svgHeight = 500;
+    const topViewHeight = 300;
+    const sideViewHeight = 180;
+    const sideViewTop = topViewHeight + 20;
+
+    // Créer l'élément SVG
+    const container = document.getElementById(elementId);
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", svgWidth);
+    svg.setAttribute("height", svgHeight);
+    svg.setAttribute("viewBox", `0 0 ${svgWidth} ${svgHeight}`);
+    svg.setAttribute("style", "border: 1px solid #ccc; background-color: #f9f9f9;");
+    
+    // Titre de la visualisation
+    const title = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    title.setAttribute("x", svgWidth / 2);
+    title.setAttribute("y", 25);
+    title.setAttribute("text-anchor", "middle");
+    title.setAttribute("font-size", "16");
+    title.setAttribute("font-weight", "bold");
+    title.textContent = "Visualisation de l'escalier";
+    svg.appendChild(title);
+    
+    // Sous-titre Vue de dessus
+    const topViewTitle = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    topViewTitle.setAttribute("x", padding);
+    topViewTitle.setAttribute("y", 50);
+    topViewTitle.setAttribute("font-size", "14");
+    topViewTitle.setAttribute("font-weight", "bold");
+    topViewTitle.textContent = "Vue de dessus";
+    svg.appendChild(topViewTitle);
+    
+    // Sous-titre Vue de côté
+    const sideViewTitle = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    sideViewTitle.setAttribute("x", padding);
+    sideViewTitle.setAttribute("y", sideViewTop - 10);
+    sideViewTitle.setAttribute("font-size", "14");
+    sideViewTitle.setAttribute("font-weight", "bold");
+    sideViewTitle.textContent = "Vue de côté";
+    svg.appendChild(sideViewTitle);
+
+    // Dessiner l'escalier selon la configuration
+    switch (stairConfig) {
+        case 'straight':
+            drawStraightStair(svg, stairData, {
+                padding,
+                scale,
+                topViewHeight,
+                sideViewTop,
+                sideViewHeight,
+                svgWidth,
+                isMetric
+            });
+            break;
+        case 'l_shaped':
+            drawLShapedStair(svg, stairData, {
+                padding,
+                scale,
+                topViewHeight,
+                sideViewTop,
+                sideViewHeight,
+                svgWidth,
+                isMetric
+            });
+            break;
+        case 'u_shaped':
+            drawUShapedStair(svg, stairData, {
+                padding,
+                scale,
+                topViewHeight,
+                sideViewTop,
+                sideViewHeight,
+                svgWidth,
+                isMetric
+            });
+            break;
+        case 'turning_30':
+        case 'turning_45':
+        case 'turning_60':
+            drawTurningStair(svg, stairData, {
+                padding,
+                scale,
+                topViewHeight,
+                sideViewTop,
+                sideViewHeight,
+                svgWidth,
+                isMetric
+            });
+            break;
+        case 'dancing_steps':
+            drawDancingStepsStair(svg, stairData, {
+                padding,
+                scale,
+                topViewHeight,
+                sideViewTop,
+                sideViewHeight,
+                svgWidth,
+                isMetric
+            });
+            break;
+        case 'spiral':
+            drawSpiralStair(svg, stairData, {
+                padding,
+                scale,
+                topViewHeight,
+                sideViewTop,
+                sideViewHeight,
+                svgWidth,
+                isMetric
+            });
+            break;
+        default:
+            drawStraightStair(svg, stairData, {
+                padding,
+                scale,
+                topViewHeight,
+                sideViewTop,
+                sideViewHeight,
+                svgWidth,
+                isMetric
+            });
+    }
+    
+    // Ajouter le SVG au conteneur
+    container.appendChild(svg);
+}
+
+// Calculer l'échelle appropriée pour la visualisation
+function calculateScale(totalRun, totalRise, stairWidth, numTreads, numRisers) {
+    // Espace disponible (avec la marge)
+    const availableWidth = 520; // 600 - 2*40
+    const availableHeight = 220; // 300 - 2*40
+    
+    // Calculer les échelles possibles
+    const scaleWidth = availableWidth / totalRun;
+    const scaleHeight = availableHeight / Math.max(stairWidth, totalRise);
+    
+    // Prendre la plus petite échelle pour s'assurer que tout est visible
+    return Math.min(scaleWidth, scaleHeight, 0.2); // Limiter l'échelle maximale
+}
+
+// Formater une dimension pour l'affichage
+function formatDimension(value, isMetric) {
+    if (isMetric) {
+        return Math.round(value) + " mm";
+    } else {
+        const inches = value / 25.4;
+        const feet = Math.floor(inches / 12);
+        const remainingInches = Math.round((inches % 12) * 10) / 10;
+        
+        if (feet > 0) {
+            return `${feet}'-${remainingInches}"`;
+        } else {
+            return `${remainingInches}"`;
+        }
+    }
+}
+
+// Dessiner un escalier droit
+function drawStraightStair(svg, stairData, options) {
+    const {
+        numRisers,
+        numTreads,
+        riserHeight,
+        treadDepth,
+        stairWidth,
+        totalRun,
+        totalRise
+    } = stairData;
+    
+    const {
+        padding,
+        scale,
+        topViewHeight,
+        sideViewTop,
+        sideViewHeight,
+        svgWidth,
+        isMetric
+    } = options;
+    
+    // Vue de dessus
+    const topViewGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    
+    // Cadre de la vue de dessus
+    const topViewBorder = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    topViewBorder.setAttribute("x", padding);
+    topViewBorder.setAttribute("y", 60);
+    topViewBorder.setAttribute("width", totalRun * scale);
+    topViewBorder.setAttribute("height", stairWidth * scale);
+    topViewBorder.setAttribute("fill", "none");
+    topViewBorder.setAttribute("stroke", "#333");
+    topViewBorder.setAttribute("stroke-width", "1");
+    topViewGroup.appendChild(topViewBorder);
+    
+    // Marches en vue de dessus
+    for (let i = 0; i < numTreads; i++) {
+        const tread = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        const x = padding + i * treadDepth * scale;
+        tread.setAttribute("x1", x);
+        tread.setAttribute("y1", 60);
+        tread.setAttribute("x2", x);
+        tread.setAttribute("y2", 60 + stairWidth * scale);
+        tread.setAttribute("stroke", "#777");
+        tread.setAttribute("stroke-width", "1");
+        topViewGroup.appendChild(tread);
+        
+        // Numéro de marche
+        if (numTreads <= 20) { // N'afficher les numéros que si pas trop de marches
+            const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            text.setAttribute("x", x + treadDepth * scale / 2);
+            text.setAttribute("y", 60 + stairWidth * scale / 2);
+            text.setAttribute("text-anchor", "middle");
+            text.setAttribute("dominant-baseline", "middle");
+            text.setAttribute("font-size", "10");
+            text.textContent = (i + 1).toString();
+            topViewGroup.appendChild(text);
+        }
+    }
+    
+    // Dernière ligne de marche
+    const lastTread = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    lastTread.setAttribute("x1", padding + numTreads * treadDepth * scale);
+    lastTread.setAttribute("y1", 60);
+    lastTread.setAttribute("x2", padding + numTreads * treadDepth * scale);
+    lastTread.setAttribute("y2", 60 + stairWidth * scale);
+    lastTread.setAttribute("stroke", "#777");
+    lastTread.setAttribute("stroke-width", "1");
+    topViewGroup.appendChild(lastTread);
+    
+    // Flèche de direction
+    const arrow = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    arrow.setAttribute("d", `M ${padding + totalRun * scale / 2} ${60 + stairWidth * scale + 15} L ${padding + totalRun * scale / 2 + 15} ${60 + stairWidth * scale + 5} L ${padding + totalRun * scale / 2 - 15} ${60 + stairWidth * scale + 5} Z`);
+    arrow.setAttribute("fill", "#4CAF50");
+    topViewGroup.appendChild(arrow);
+    
+    // Légende pour la vue de dessus
+    const widthText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    widthText.setAttribute("x", padding - 10);
+    widthText.setAttribute("y", 60 + stairWidth * scale / 2);
+    widthText.setAttribute("text-anchor", "end");
+    widthText.setAttribute("dominant-baseline", "middle");
+    widthText.setAttribute("font-size", "12");
+    widthText.textContent = formatDimension(stairWidth, isMetric);
+    topViewGroup.appendChild(widthText);
+    
+    const lengthText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    lengthText.setAttribute("x", padding + totalRun * scale / 2);
+    lengthText.setAttribute("y", 50);
+    lengthText.setAttribute("text-anchor", "middle");
+    lengthText.setAttribute("font-size", "12");
+    lengthText.textContent = formatDimension(totalRun, isMetric);
+    topViewGroup.appendChild(lengthText);
+    
+    svg.appendChild(topViewGroup);
+    
+    // Vue de côté
+    const sideViewGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    
+    // Dessiner les marches en vue de côté
+    const polygonPoints = [];
+    polygonPoints.push(`${padding},${sideViewTop}`);
+    
+    for (let i = 0; i < numRisers; i++) {
+        // Point horizontal (giron)
+        const x1 = padding + i * treadDepth * scale;
+        const y1 = sideViewTop - i * riserHeight * scale;
+        
+        // Point vertical (hauteur)
+        const x2 = x1;
+        const y2 = sideViewTop - (i + 1) * riserHeight * scale;
+        
+        // Point suivant (prochain giron)
+        const x3 = x1 + treadDepth * scale;
+        const y3 = y2;
+        
+        if (i < numRisers - 1) {
+            polygonPoints.push(`${x1},${y1} ${x2},${y2} ${x3},${y3}`);
+        } else {
+            // Dernière marche
+            polygonPoints.push(`${x1},${y1} ${x2},${y2}`);
+        }
+        
+        // Dessiner les lignes de marche
+        const line1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line1.setAttribute("x1", x1);
+        line1.setAttribute("y1", y1);
+        line1.setAttribute("x2", x2);
+        line1.setAttribute("y2", y2);
+        line1.setAttribute("stroke", "#333");
+        line1.setAttribute("stroke-width", "1.5");
+        sideViewGroup.appendChild(line1);
+        
+        if (i < numRisers - 1) {
+            const line2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line2.setAttribute("x1", x2);
+            line2.setAttribute("y1", y2);
+            line2.setAttribute("x2", x3);
+            line2.setAttribute("y2", y3);
+            line2.setAttribute("stroke", "#333");
+            line2.setAttribute("stroke-width", "1.5");
+            sideViewGroup.appendChild(line2);
+        }
+    }
+    
+    // Ajouter le point final
+    polygonPoints.push(`${padding + totalRun * scale},${sideViewTop - totalRise * scale}`);
+    
+    // Fermer le polygone
+    polygonPoints.push(`${padding + totalRun * scale},${sideViewTop} ${padding},${sideViewTop}`);
+    
+    // Créer le polygone de l'escalier
+    const stairPolygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    stairPolygon.setAttribute("points", polygonPoints.join(" "));
+    stairPolygon.setAttribute("fill", "#f0f0f0");
+    stairPolygon.setAttribute("stroke", "#999");
+    stairPolygon.setAttribute("stroke-width", "1");
+    sideViewGroup.insertBefore(stairPolygon, sideViewGroup.firstChild);
+    
+    // Légende pour la vue de côté
+    const riseText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    riseText.setAttribute("x", padding - 10);
+    riseText.setAttribute("y", sideViewTop - totalRise * scale / 2);
+    riseText.setAttribute("text-anchor", "end");
+    riseText.setAttribute("dominant-baseline", "middle");
+    riseText.setAttribute("font-size", "12");
+    riseText.textContent = formatDimension(totalRise, isMetric);
+    sideViewGroup.appendChild(riseText);
+    
+    const runText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    runText.setAttribute("x", padding + totalRun * scale / 2);
+    runText.setAttribute("y", sideViewTop + 15);
+    runText.setAttribute("text-anchor", "middle");
+    runText.setAttribute("font-size", "12");
+    runText.textContent = formatDimension(totalRun, isMetric);
+    sideViewGroup.appendChild(runText);
+    
+    // Étiquettes de dimensions pour une marche
+    if (numTreads > 0) {
+        // Hauteur de contremarche
+        const riserLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        riserLabel.setAttribute("x", padding + 0.5 * treadDepth * scale);
+        riserLabel.setAttribute("y", sideViewTop - 0.5 * riserHeight * scale);
+        riserLabel.setAttribute("text-anchor", "middle");
+        riserLabel.setAttribute("dominant-baseline", "middle");
+        riserLabel.setAttribute("font-size", "10");
+        riserLabel.setAttribute("fill", "#d32f2f");
+        riserLabel.textContent = formatDimension(riserHeight, isMetric);
+        sideViewGroup.appendChild(riserLabel);
+        
+        // Giron
+        const treadLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        treadLabel.setAttribute("x", padding + 1.5 * treadDepth * scale);
+        treadLabel.setAttribute("y", sideViewTop - 1 * riserHeight * scale - 5);
+        treadLabel.setAttribute("text-anchor", "middle");
+        treadLabel.setAttribute("font-size", "10");
+        treadLabel.setAttribute("fill", "#1976d2");
+        treadLabel.textContent = formatDimension(treadDepth, isMetric);
+        sideViewGroup.appendChild(treadLabel);
+    }
+    
+    svg.appendChild(sideViewGroup);
+    
+    // Légende
+    const legend = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    
+    // Titre de légende
+    const legendTitle = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    legendTitle.setAttribute("x", svgWidth - padding - 100);
+    legendTitle.setAttribute("y", 50);
+    legendTitle.setAttribute("font-size", "12");
+    legendTitle.setAttribute("font-weight", "bold");
+    legendTitle.textContent = "Légende:";
+    legend.appendChild(legendTitle);
+    
+    // Entrée Hauteur de contremarche
+    const riserColorBox = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    riserColorBox.setAttribute("x", svgWidth - padding - 100);
+    riserColorBox.setAttribute("y", 60);
+    riserColorBox.setAttribute("width", 10);
+    riserColorBox.setAttribute("height", 10);
+    riserColorBox.setAttribute("fill", "#d32f2f");
+    legend.appendChild(riserColorBox);
+    
+    const riserLegendText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    riserLegendText.setAttribute("x", svgWidth - padding - 85);
+    riserLegendText.setAttribute("y", 69);
+    riserLegendText.setAttribute("font-size", "10");
+    riserLegendText.textContent = "Hauteur contremarche: " + formatDimension(riserHeight, isMetric);
+    legend.appendChild(riserLegendText);
+    
+    // Entrée Giron
+    const treadColorBox = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    treadColorBox.setAttribute("x", svgWidth - padding - 100);
+    treadColorBox.setAttribute("y", 80);
+    treadColorBox.setAttribute("width", 10);
+    treadColorBox.setAttribute("height", 10);
+    treadColorBox.setAttribute("fill", "#1976d2");
+    legend.appendChild(treadColorBox);
+    
+    const treadLegendText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    treadLegendText.setAttribute("x", svgWidth - padding - 85);
+    treadLegendText.setAttribute("y", 89);
+    treadLegendText.setAttribute("font-size", "10");
+    treadLegendText.textContent = "Giron: " + formatDimension(treadDepth, isMetric);
+    legend.appendChild(treadLegendText);
+    
+    // Nombre de marches
+    const stairsCountText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    stairsCountText.setAttribute("x", svgWidth - padding - 100);
+    stairsCountText.setAttribute("y", 109);
+    stairsCountText.setAttribute("font-size", "10");
+    stairsCountText.textContent = `Contremarches: ${numRisers}`;
+    legend.appendChild(stairsCountText);
+    
+    // Nombre de girons
+    const treadsCountText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    treadsCountText.setAttribute("x", svgWidth - padding - 100);
+    treadsCountText.setAttribute("y", 129);
+    treadsCountText.setAttribute("font-size", "10");
+    treadsCountText.textContent = `Marches: ${numTreads}`;
+    legend.appendChild(treadsCountText);
+    
+    svg.appendChild(legend);
+}
+
+// Fonction pour dessiner un escalier en L
+function drawLShapedStair(svg, stairData, options) {
+    const {
+        numRisers,
+        numTreads,
+        riserHeight,
+        treadDepth,
+        stairWidth,
+        totalRun,
+        totalRise,
+        lShapedConfig
+    } = stairData;
+    
+    const {
+        padding,
+        scale,
+        topViewHeight,
+        sideViewTop,
+        sideViewHeight,
+        svgWidth,
+        isMetric
+    } = options;
+    
+    // Déterminer la position du virage
+    let turnIndex;
+    
+    if (lShapedConfig === 'standard_landing') {
+        // Palier standard au milieu (ou proche)
+        turnIndex = Math.floor(numTreads / 2);
+    } else if (lShapedConfig === 'two_45deg' || lShapedConfig === 'three_30deg') {
+        // Marches rayonnantes - position du virage
+        turnIndex = Math.floor(numTreads / 2);
+    } else {
+        // Par défaut, mettre le virage au milieu
+        turnIndex = Math.floor(numTreads / 2);
+    }
+    
+    const firstSegmentLength = turnIndex * treadDepth;
+    const secondSegmentLength = (numTreads - turnIndex) * treadDepth;
+    
+    // Vue de dessus
+    const topViewGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    
+    // Premier segment
+    const firstSegment = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    firstSegment.setAttribute("x", padding);
+    firstSegment.setAttribute("y", 60);
+    firstSegment.setAttribute("width", firstSegmentLength * scale);
+    firstSegment.setAttribute("height", stairWidth * scale);
+    firstSegment.setAttribute("fill", "#f0f0f0");
+    firstSegment.setAttribute("stroke", "#333");
+    firstSegment.setAttribute("stroke-width", "1");
+    topViewGroup.appendChild(firstSegment);
+    
+    // Second segment
+    const secondSegment = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    secondSegment.setAttribute("x", padding);
+    secondSegment.setAttribute("y", 60 + stairWidth * scale);
+    secondSegment.setAttribute("width", stairWidth * scale);
+    secondSegment.setAttribute("height", secondSegmentLength * scale);
+    secondSegment.setAttribute("fill", "#f0f0f0");
+    secondSegment.setAttribute("stroke", "#333");
+    secondSegment.setAttribute("stroke-width", "1");
+    topViewGroup.appendChild(secondSegment);
+    
+    // Marches du premier segment
+    for (let i = 0; i < turnIndex; i++) {
+        const tread = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        const x = padding + i * treadDepth * scale;
+        tread.setAttribute("x1", x);
+        tread.setAttribute("y1", 60);
+        tread.setAttribute("x2", x);
+        tread.setAttribute("y2", 60 + stairWidth * scale);
+        tread.setAttribute("stroke", "#777");
+        tread.setAttribute("stroke-width", "1");
+        topViewGroup.appendChild(tread);
+        
+        // Numéro de marche
+        if (numTreads <= 20) {
+            const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            text.setAttribute("x", x + treadDepth * scale / 2);
+            text.setAttribute("y", 60 + stairWidth * scale / 2);
+            text.setAttribute("text-anchor", "middle");
+            text.setAttribute("dominant-baseline", "middle");
+            text.setAttribute("font-size", "10");
+            text.textContent = (i + 1).toString();
+            topViewGroup.appendChild(text);
+        }
+    }
+    
+    // Marches du second segment
+    for (let i = 0; i < numTreads - turnIndex; i++) {
+        const tread = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        const y = 60 + stairWidth * scale + i * treadDepth * scale;
+        tread.setAttribute("x1", padding);
+        tread.setAttribute("y1", y);
+        tread.setAttribute("x2", padding + stairWidth * scale);
+        tread.setAttribute("y2", y);
+        tread.setAttribute("stroke", "#777");
+        tread.setAttribute("stroke-width", "1");
+        topViewGroup.appendChild(tread);
+        
+        // Numéro de marche
+        if (numTreads <= 20) {
+            const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            text.setAttribute("x", padding + stairWidth * scale / 2);
+            text.setAttribute("y", y + treadDepth * scale / 2);
+            text.setAttribute("text-anchor", "middle");
+            text.setAttribute("dominant-baseline", "middle");
+            text.setAttribute("font-size", "10");
+            text.textContent = (turnIndex + i + 1).toString();
+            topViewGroup.appendChild(text);
+        }
+    }
+    
+    // Flèches de direction
+    const arrow1 = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    arrow1.setAttribute("d", `M ${padding + firstSegmentLength * scale / 2} ${60 - 15} L ${padding + firstSegmentLength * scale / 2 + 15} ${60 - 5} L ${padding + firstSegmentLength * scale / 2 - 15} ${60 - 5} Z`);
+    arrow1.setAttribute("fill", "#4CAF50");
+    topViewGroup.appendChild(arrow1);
+    
+    const arrow2 = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    arrow2.setAttribute("d", `M ${padding - 15} ${60 + stairWidth * scale + secondSegmentLength * scale / 2} L ${padding - 5} ${60 + stairWidth * scale + secondSegmentLength * scale / 2 - 15} L ${padding - 5} ${60 + stairWidth * scale + secondSegmentLength * scale / 2 + 15} Z`);
+    arrow2.setAttribute("fill", "#4CAF50");
+    topViewGroup.appendChild(arrow2);
+    
+    // Légende pour la vue de dessus
+    const widthText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    widthText.setAttribute("x", padding - 10);
+    widthText.setAttribute("y", 60 + stairWidth * scale / 2);
+    widthText.setAttribute("text-anchor", "end");
+    widthText.setAttribute("dominant-baseline", "middle");
+    widthText.setAttribute("font-size", "12");
+    widthText.textContent = formatDimension(stairWidth, isMetric);
+    topViewGroup.appendChild(widthText);
+    
+    const lengthText1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    lengthText1.setAttribute("x", padding + firstSegmentLength * scale / 2);
+    lengthText1.setAttribute("y", 50);
+    lengthText1.setAttribute("text-anchor", "middle");
+    lengthText1.setAttribute("font-size", "12");
+    lengthText1.textContent = formatDimension(firstSegmentLength, isMetric);
+    topViewGroup.appendChild(lengthText1);
+    
+    const lengthText2 = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    lengthText2.setAttribute("x", padding - 25);
+    lengthText2.setAttribute("y", 60 + stairWidth * scale + secondSegmentLength * scale / 2);
+    lengthText2.setAttribute("text-anchor", "middle");
+    lengthText2.setAttribute("font-size", "12");
+    lengthText2.setAttribute("transform", `rotate(-90, ${padding - 25}, ${60 + stairWidth * scale + secondSegmentLength * scale / 2})`);
+    lengthText2.textContent = formatDimension(secondSegmentLength, isMetric);
+    topViewGroup.appendChild(lengthText2);
+    
+    svg.appendChild(topViewGroup);
+    
+    // Vue de côté simplifiée (un peu modifiée pour l'escalier en L)
+    const sideViewGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    
+    // Cadre de la vue de côté
+    const totalRunEffective = Math.max(firstSegmentLength, stairWidth) + secondSegmentLength;
+    
+    // Dessiner les marches en vue de côté
+    const polygonPoints = [];
+    polygonPoints.push(`${padding},${sideViewTop}`);
+    
+    for (let i = 0; i < numRisers; i++) {
+        let x1, x2, x3;
+        
+        if (i < turnIndex) {
+            // Premier segment
+            x1 = padding + i * treadDepth * scale;
+            x2 = x1;
+            x3 = x1 + treadDepth * scale;
+        } else {
+            // Après le virage, représenter visuellement comme continuation
+            const effectiveIndex = i - turnIndex;
+            x1 = padding + firstSegmentLength * scale + effectiveIndex * treadDepth * scale;
+            x2 = x1;
+            x3 = x1 + treadDepth * scale;
+        }
+        
+        const y1 = sideViewTop - i * riserHeight * scale;
+        const y2 = sideViewTop - (i + 1) * riserHeight * scale;
+        const y3 = y2;
+        
+        if (i < numRisers - 1) {
+            polygonPoints.push(`${x1},${y1} ${x2},${y2} ${x3},${y3}`);
+        } else {
+            // Dernière marche
+            polygonPoints.push(`${x1},${y1} ${x2},${y2}`);
+        }
+        
+        // Dessiner les lignes de marche
+        const line1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line1.setAttribute("x1", x1);
+        line1.setAttribute("y1", y1);
+        line1.setAttribute("x2", x2);
+        line1.setAttribute("y2", y2);
+        line1.setAttribute("stroke", "#333");
+        line1.setAttribute("stroke-width", "1.5");
+        sideViewGroup.appendChild(line1);
+        
+        if (i < numRisers - 1) {
+            const line2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line2.setAttribute("x1", x2);
+            line2.setAttribute("y1", y2);
+            line2.setAttribute("x2", x3);
+            line2.setAttribute("y2", y3);
+            line2.setAttribute("stroke", "#333");
+            line2.setAttribute("stroke-width", "1.5");
+            sideViewGroup.appendChild(line2);
+        }
+        
+        // Indication du virage
+        if (i === turnIndex - 1) {
+            const turnIndicator = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            turnIndicator.setAttribute("cx", x3);
+            turnIndicator.setAttribute("cy", y3);
+            turnIndicator.setAttribute("r", 5);
+            turnIndicator.setAttribute("fill", "#d32f2f");
+            sideViewGroup.appendChild(turnIndicator);
+            
+            const turnText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            turnText.setAttribute("x", x3 + 10);
+            turnText.setAttribute("y", y3);
+            turnText.setAttribute("font-size", "10");
+            turnText.setAttribute("fill", "#d32f2f");
+            turnText.textContent = "Virage à 90°";
+            sideViewGroup.appendChild(turnText);
+        }
+    }
+    
+    // Ajouter le point final
+    const finalX = padding + firstSegmentLength * scale + (numTreads - turnIndex) * treadDepth * scale;
+    polygonPoints.push(`${finalX},${sideViewTop - totalRise * scale}`);
+    
+    // Fermer le polygone
+    polygonPoints.push(`${finalX},${sideViewTop} ${padding},${sideViewTop}`);
+    
+    // Créer le polygone de l'escalier
+    const stairPolygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    stairPolygon.setAttribute("points", polygonPoints.join(" "));
+    stairPolygon.setAttribute("fill", "#f0f0f0");
+    stairPolygon.setAttribute("stroke", "#999");
+    stairPolygon.setAttribute("stroke-width", "1");
+    stairPolygon.setAttribute("stroke-dasharray", "3,3");
+    sideViewGroup.insertBefore(stairPolygon, sideViewGroup.firstChild);
+    
+    // Légende pour la vue de côté
+    const riseText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    riseText.setAttribute("x", padding - 10);
+    riseText.setAttribute("y", sideViewTop - totalRise * scale / 2);
+    riseText.setAttribute("text-anchor", "end");
+    riseText.setAttribute("dominant-baseline", "middle");
+    riseText.setAttribute("font-size", "12");
+    riseText.textContent = formatDimension(totalRise, isMetric);
+    sideViewGroup.appendChild(riseText);
+    
+    const runText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    runText.setAttribute("x", padding + totalRunEffective * scale / 2);
+    runText.setAttribute("y", sideViewTop + 15);
+    runText.setAttribute("text-anchor", "middle");
+    runText.setAttribute("font-size", "12");
+    runText.textContent = "(Vue simplifiée)";
+    sideViewGroup.appendChild(runText);
+    
+    svg.appendChild(sideViewGroup);
+    
+    // Légende
+    const legend = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    
+    // Titre de légende
+    const legendTitle = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    legendTitle.setAttribute("x", svgWidth - padding - 100);
+    legendTitle.setAttribute("y", 50);
+    legendTitle.setAttribute("font-size", "12");
+    legendTitle.setAttribute("font-weight", "bold");
+    legendTitle.textContent = "Légende:";
+    legend.appendChild(legendTitle);
+    
+    // Entrée Hauteur de contremarche
+    const riserColorBox = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    riserColorBox.setAttribute("x", svgWidth - padding - 100);
+    riserColorBox.setAttribute("y", 60);
+    riserColorBox.setAttribute("width", 10);
+    riserColorBox.setAttribute("height", 10);
+    riserColorBox.setAttribute("fill", "#d32f2f");
+    legend.appendChild(riserColorBox);
+    
+    const riserLegendText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    riserLegendText.setAttribute("x", svgWidth - padding - 85);
+    riserLegendText.setAttribute("y", 69);
+    riserLegendText.setAttribute("font-size", "10");
+    riserLegendText.textContent = "Hauteur contremarche: " + formatDimension(riserHeight, isMetric);
+    legend.appendChild(riserLegendText);
+    
+    // Entrée Giron
+    const treadColorBox = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    treadColorBox.setAttribute("x", svgWidth - padding - 100);
+    treadColorBox.setAttribute("y", 80);
+    treadColorBox.setAttribute("width", 10);
+    treadColorBox.setAttribute("height", 10);
+    treadColorBox.setAttribute("fill", "#1976d2");
+    legend.appendChild(treadColorBox);
+    
+    const treadLegendText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    treadLegendText.setAttribute("x", svgWidth - padding - 85);
+    treadLegendText.setAttribute("y", 89);
+    treadLegendText.setAttribute("font-size", "10");
+    treadLegendText.textContent = "Giron: " + formatDimension(treadDepth, isMetric);
+    legend.appendChild(treadLegendText);
+    
+    // Nombre de marches
+    const stairsCountText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    stairsCountText.setAttribute("x", svgWidth - padding - 100);
+    stairsCountText.setAttribute("y", 109);
+    stairsCountText.setAttribute("font-size", "10");
+    stairsCountText.textContent = `Contremarches: ${numRisers}`;
+    legend.appendChild(stairsCountText);
+    
+    // Nombre de girons
+    const treadsCountText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    treadsCountText.setAttribute("x", svgWidth - padding - 100);
+    treadsCountText.setAttribute("y", 129);
+    treadsCountText.setAttribute("font-size", "10");
+    treadsCountText.textContent = `Marches: ${numTreads}`;
+    legend.appendChild(treadsCountText);
+    
+    // Type de virage
+    const turnTypeText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    turnTypeText.setAttribute("x", svgWidth - padding - 100);
+    turnTypeText.setAttribute("y", 149);
+    turnTypeText.setAttribute("font-size", "10");
+    
+    let turnTypeDescription = "Palier standard";
+    if (lShapedConfig === 'two_45deg') turnTypeDescription = "Virage avec 2 marches à 45°";
+    if (lShapedConfig === 'three_30deg') turnTypeDescription = "Virage avec 3 marches à 30°";
+    
+    turnTypeText.textContent = `Type de virage: ${turnTypeDescription}`;
+    legend.appendChild(turnTypeText);
+    
+    svg.appendChild(legend);
+}
+
+// Fonction placeholder pour dessiner un escalier en U
+function drawUShapedStair(svg, stairData, options) {
+    // Implémentation simplifiée - pour une version complète, adaptez le code de drawLShapedStair
+    // avec un deuxième virage
+    drawStraightStair(svg, stairData, options);
+    
+    // Ajouter un texte d'avertissement
+    const warningText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    warningText.setAttribute("x", options.svgWidth / 2);
+    warningText.setAttribute("y", options.sideViewTop - 30);
+    warningText.setAttribute("text-anchor", "middle");
+    warningText.setAttribute("font-size", "14");
+    warningText.setAttribute("fill", "#d32f2f");
+    warningText.textContent = "Visualisation simplifiée pour escalier en U";
+    svg.appendChild(warningText);
+}
+
+// Fonction placeholder pour dessiner un escalier tournant
+function drawTurningStair(svg, stairData, options) {
+    // Implémentation simplifiée - pour une version complète, utilisez des calculs géométriques
+    // pour les marches tournantes
+    drawStraightStair(svg, stairData, options);
+    
+    // Ajouter un texte d'avertissement
+    const warningText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    warningText.setAttribute("x", options.svgWidth / 2);
+    warningText.setAttribute("y", options.sideViewTop - 30);
+    warningText.setAttribute("text-anchor", "middle");
+    warningText.setAttribute("font-size", "14");
+    warningText.setAttribute("fill", "#d32f2f");
+    warningText.textContent = "Visualisation simplifiée pour escalier tournant";
+    svg.appendChild(warningText);
+}
+
+// Fonction placeholder pour dessiner un escalier à marches dansantes
+function drawDancingStepsStair(svg, stairData, options) {
+    // Implémentation simplifiée - pour une version complète, utilisez des calculs géométriques
+    // pour les marches dansantes
+    drawStraightStair(svg, stairData, options);
+    
+    // Ajouter un texte d'avertissement
+    const warningText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    warningText.setAttribute("x", options.svgWidth / 2);
+    warningText.setAttribute("y", options.sideViewTop - 30);
+    warningText.setAttribute("text-anchor", "middle");
+    warningText.setAttribute("font-size", "14");
+    warningText.setAttribute("fill", "#d32f2f");
+    warningText.textContent = "Visualisation simplifiée pour escalier à marches dansantes";
+    svg.appendChild(warningText);
+}
+
+// Fonction placeholder pour dessiner un escalier hélicoïdal
+function drawSpiralStair(svg, stairData, options) {
+    const {
+        numRisers,
+        numTreads,
+        riserHeight,
+        stairWidth,
+        spiralWidth,
+        totalRise
+    } = stairData;
+    
+    const {
+        padding,
+        scale,
+        topViewHeight,
+        sideViewTop,
+        sideViewHeight,
+        svgWidth,
+        isMetric
+    } = options;
+    
+    // Définir les dimensions de l'escalier hélicoïdal
+    const centerX = padding + 150;
+    const centerY = 60 + 150;
+    const radius = Math.min(stairWidth, 300) * scale / 2;
+    
+    // Vue de dessus
+    const topViewGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    
+    // Cercle extérieur
+    const outerCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    outerCircle.setAttribute("cx", centerX);
+    outerCircle.setAttribute("cy", centerY);
+    outerCircle.setAttribute("r", radius);
+    outerCircle.setAttribute("fill", "none");
+    outerCircle.setAttribute("stroke", "#333");
+    outerCircle.setAttribute("stroke-width", "1");
+    topViewGroup.appendChild(outerCircle);
+    
+    // Cercle intérieur
+    const innerRadius = radius - (stairWidth - spiralWidth) * scale;
+    const innerCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    innerCircle.setAttribute("cx", centerX);
+    innerCircle.setAttribute("cy", centerY);
+    innerCircle.setAttribute("r", innerRadius);
+    innerCircle.setAttribute("fill", "none");
+    innerCircle.setAttribute("stroke", "#333");
+    innerCircle.setAttribute("stroke-width", "1");
+    topViewGroup.appendChild(innerCircle);
+    
+    // Point central
+    const centerPoint = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    centerPoint.setAttribute("cx", centerX);
+    centerPoint.setAttribute("cy", centerY);
+    centerPoint.setAttribute("r", 3);
+    centerPoint.setAttribute("fill", "#333");
+    topViewGroup.appendChild(centerPoint);
+    
+    // Marches de l'escalier hélicoïdal
+    for (let i = 0; i < numRisers; i++) {
+        const angle = (i * 360 / numRisers) * Math.PI / 180;
+        const nextAngle = ((i + 1) * 360 / numRisers) * Math.PI / 180;
+        
+        // Ligne de la marche
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", centerX + innerRadius * Math.cos(angle));
+        line.setAttribute("y1", centerY + innerRadius * Math.sin(angle));
+        line.setAttribute("x2", centerX + radius * Math.cos(angle));
+        line.setAttribute("y2", centerY + radius * Math.sin(angle));
+        line.setAttribute("stroke", "#777");
+        line.setAttribute("stroke-width", "1");
+        topViewGroup.appendChild(line);
+        
+        // Arc pour la marche
+        const arc = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        const largeArcFlag = nextAngle - angle <= Math.PI ? "0" : "1";
+        
+        arc.setAttribute("d", `M ${centerX + radius * Math.cos(angle)},${centerY + radius * Math.sin(angle)} 
+                             A ${radius},${radius} 0 ${largeArcFlag} 1 ${centerX + radius * Math.cos(nextAngle)},${centerY + radius * Math.sin(nextAngle)}`);
+        arc.setAttribute("fill", "none");
+        arc.setAttribute("stroke", "#ddd");
+        arc.setAttribute("stroke-width", "0.5");
+        arc.setAttribute("stroke-dasharray", "3,3");
+        topViewGroup.appendChild(arc);
+    }
+    
+    // Flèche de direction (sens horaire)
+    const arrow = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    arrow.setAttribute("d", `M ${centerX},${centerY - radius - 20} 
+                           A ${radius + 10},${radius + 10} 0 0 1 ${centerX + 20},${centerY - radius - 5}
+                           L ${centerX},${centerY - radius - 30}
+                           L ${centerX - 20},${centerY - radius - 5} Z`);
+    arrow.setAttribute("fill", "#4CAF50");
+    topViewGroup.appendChild(arrow);
+    
+    // Légende pour la vue de dessus
+    const diameterText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    diameterText.setAttribute("x", centerX);
+    diameterText.setAttribute("y", centerY + radius + 20);
+    diameterText.setAttribute("text-anchor", "middle");
+    diameterText.setAttribute("font-size", "12");
+    diameterText.textContent = "Diamètre: " + formatDimension(stairWidth, isMetric);
+    topViewGroup.appendChild(diameterText);
+    
+    const widthText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    widthText.setAttribute("x", centerX + (radius + innerRadius) / 2);
+    widthText.setAttribute("y", centerY);
+    widthText.setAttribute("text-anchor", "middle");
+    widthText.setAttribute("font-size", "10");
+    widthText.textContent = formatDimension((stairWidth - spiralWidth) * scale / scale, isMetric);
+    topViewGroup.appendChild(widthText);
+    
+    svg.appendChild(topViewGroup);
+    
+    // Vue de côté simplifiée (représentation approximative)
+    const sideViewGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    
+    // Dessiner une représentation simplifiée de l'escalier hélicoïdal en coupe
+    const totalAngle = 360 * (numRisers / 12); // 12 marches par tour est une approximation
+    const spiralHeight = totalRise;
+    const spiralWidth = totalAngle / 360 * 2 * Math.PI * radius;
+    
+    // Dessiner la base
+    const baseRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    baseRect.setAttribute("x", padding);
+    baseRect.setAttribute("y", sideViewTop);
+    baseRect.setAttribute("width", spiralWidth * scale);
+    baseRect.setAttribute("height", 10);
+    baseRect.setAttribute("fill", "#ccc");
+    sideViewGroup.appendChild(baseRect);
+    
+    // Dessiner le noyau central
+    const centralPole = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    centralPole.setAttribute("x", padding + 10);
+    centralPole.setAttribute("y", sideViewTop - spiralHeight * scale);
+    centralPole.setAttribute("width", 20);
+    centralPole.setAttribute("height", spiralHeight * scale);
+    centralPole.setAttribute("fill", "#aaa");
+    sideViewGroup.appendChild(centralPole);
+    
+    // Dessiner la spirale
+    const spiral = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    let spiralPath = `M ${padding + 20} ${sideViewTop}`;
+    
+    const numPoints = 50;
+    for (let i = 0; i <= numPoints; i++) {
+        const t = i / numPoints;
+        const x = padding + 20 + t * spiralWidth * scale;
+        const y = sideViewTop - t * spiralHeight * scale;
+        spiralPath += ` L ${x} ${y}`;
+    }
+    
+    spiral.setAttribute("d", spiralPath);
+    spiral.setAttribute("fill", "none");
+    spiral.setAttribute("stroke", "#1976d2");
+    spiral.setAttribute("stroke-width", "2");
+    sideViewGroup.appendChild(spiral);
+    
+    // Légende pour la vue de côté
+    const heightText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    heightText.setAttribute("x", padding - 10);
+    heightText.setAttribute("y", sideViewTop - spiralHeight * scale / 2);
+    heightText.setAttribute("text-anchor", "end");
+    heightText.setAttribute("dominant-baseline", "middle");
+    heightText.setAttribute("font-size", "12");
+    heightText.textContent = formatDimension(spiralHeight, isMetric);
+    sideViewGroup.appendChild(heightText);
+    
+    const representationText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    representationText.setAttribute("x", padding + spiralWidth * scale / 2);
+    representationText.setAttribute("y", sideViewTop + 30);
+    representationText.setAttribute("text-anchor", "middle");
+    representationText.setAttribute("font-size", "12");
+    representationText.setAttribute("font-style", "italic");
+    representationText.textContent = "(Représentation approximative en coupe)";
+    sideViewGroup.appendChild(representationText);
+    
+    svg.appendChild(sideViewGroup);
+    
+    // Légende
+    const legend = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    
+    // Titre de légende
+    const legendTitle = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    legendTitle.setAttribute("x", svgWidth - padding - 100);
+    legendTitle.setAttribute("y", 50);
+    legendTitle.setAttribute("font-size", "12");
+    legendTitle.setAttribute("font-weight", "bold");
+    legendTitle.textContent = "Légende:";
+    legend.appendChild(legendTitle);
+    
+    // Entrée Hauteur de contremarche
+    const riserColorBox = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    riserColorBox.setAttribute("x", svgWidth - padding - 100);
+    riserColorBox.setAttribute("y", 60);
+    riserColorBox.setAttribute("width", 10);
+    riserColorBox.setAttribute("height", 10);
+    riserColorBox.setAttribute("fill", "#d32f2f");
+    legend.appendChild(riserColorBox);
+    
+    const riserLegendText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    riserLegendText.setAttribute("x", svgWidth - padding - 85);
+    riserLegendText.setAttribute("y", 69);
+    riserLegendText.setAttribute("font-size", "10");
+    riserLegendText.textContent = "Hauteur contremarche: " + formatDimension(riserHeight, isMetric);
+    legend.appendChild(riserLegendText);
+    
+    // Entrée Diamètre
+    const diameterColorBox = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    diameterColorBox.setAttribute("x", svgWidth - padding - 100);
+    diameterColorBox.setAttribute("y", 80);
+    diameterColorBox.setAttribute("width", 10);
+    diameterColorBox.setAttribute("height", 10);
+    diameterColorBox.setAttribute("fill", "#1976d2");
+    legend.appendChild(diameterColorBox);
+    
+    const diameterLegendText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    diameterLegendText.setAttribute("x", svgWidth - padding - 85);
+    diameterLegendText.setAttribute("y", 89);
+    diameterLegendText.setAttribute("font-size", "10");
+    diameterLegendText.textContent = "Diamètre total: " + formatDimension(stairWidth, isMetric);
+    legend.appendChild(diameterLegendText);
+    
+    // Nombre de marches
+    const stairsCountText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    stairsCountText.setAttribute("x", svgWidth - padding - 100);
+    stairsCountText.setAttribute("y", 109);
+    stairsCountText.setAttribute("font-size", "10");
+    stairsCountText.textContent = `Contremarches: ${numRisers}`;
+    legend.appendChild(stairsCountText);
+    
+    // Largeur libre
+    const freeWidthText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    freeWidthText.setAttribute("x", svgWidth - padding - 100);
+    freeWidthText.setAttribute("y", 129);
+    freeWidthText.setAttribute("font-size", "10");
+    freeWidthText.textContent = `Largeur libre: ${formatDimension(spiralWidth, isMetric)}`;
+    legend.appendChild(freeWidthText);
+    
+    svg.appendChild(legend);
+}
+
 function validateImperialInput(inputValue) {
     if (!inputValue) return '';
     

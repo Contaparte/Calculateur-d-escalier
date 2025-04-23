@@ -341,35 +341,57 @@ document.addEventListener('DOMContentLoaded', function() {
     const placeholders = {
         imperial: {
             // Onglet Calcul
-            "hauteur-contremarche-ideale": "Ex: 7&quot;",
-            "giron-ideal": "Ex: 11&quot;",
-            "longueur-totale": "Ex: 15'-2&quot;",
-            "hauteur-totale": "Ex: 10'-2&quot;",
-            "largeur-souhaitee": "Ex: 36&quot;",
+            "idealRiser": "Ex: 7&quot;",
+            "idealRiserImperial": "Ex: 7&quot;",
+            "idealTread": "Ex: 11&quot;",
+            "idealTreadImperial": "Ex: 11&quot;",
+            "totalRun": "Ex: 15'-2&quot;",
+            "totalRunImperial": "Ex: 15'-2&quot;",
+            "totalRise": "Ex: 10'-2&quot;",
+            "totalRiseImperial": "Ex: 10'-2&quot;",
+            "stairDesiredWidth": "Ex: 36&quot;",
+            "stairDesiredWidthImperial": "Ex: 36&quot;",
             
             // Onglet Vérification
-            "largeur-escalier": "Ex: 36&quot;",
-            "hauteur-libre": "Ex: 6'-8&quot;",
-            "hauteur-contremarche": "Ex: 7 1/4&quot;",
-            "giron": "Ex: 10 1/4&quot;",
-            "cote-etroit": "Ex: 6&quot;",
-            "largeur-helicoidal": "Ex: 26&quot;"
+            "stairWidth": "Ex: 36&quot;",
+            "stairWidthImperial": "Ex: 36&quot;",
+            "headroom": "Ex: 6'-8&quot;",
+            "headroomImperial": "Ex: 6'-8&quot;",
+            "riserHeight": "Ex: 7 1/4&quot;",
+            "riserHeightImperial": "Ex: 7 1/4&quot;",
+            "treadDepth": "Ex: 10 1/4&quot;",
+            "treadDepthImperial": "Ex: 10 1/4&quot;",
+            "narrowSide": "Ex: 6&quot;",
+            "narrowSideImperial": "Ex: 6&quot;",
+            "spiralWidth": "Ex: 26&quot;",
+            "spiralWidthImperial": "Ex: 26&quot;"
         },
         metrique: {
             // Onglet Calcul
-            "hauteur-contremarche-ideale": "Ex: 180 mm",
-            "giron-ideal": "Ex: 280 mm",
-            "longueur-totale": "Ex: 4500 mm",
-            "hauteur-totale": "Ex: 3000 mm",
-            "largeur-souhaitee": "Ex: 900 mm",
+            "idealRiser": "Ex: 180 mm",
+            "idealRiserImperial": "Ex: 180 mm",
+            "idealTread": "Ex: 280 mm",
+            "idealTreadImperial": "Ex: 280 mm",
+            "totalRun": "Ex: 4500 mm",
+            "totalRunImperial": "Ex: 4500 mm",
+            "totalRise": "Ex: 3000 mm",
+            "totalRiseImperial": "Ex: 3000 mm",
+            "stairDesiredWidth": "Ex: 900 mm",
+            "stairDesiredWidthImperial": "Ex: 900 mm",
             
             // Onglet Vérification
-            "largeur-escalier": "Ex: 900 mm",
-            "hauteur-libre": "Ex: 2050 mm",
-            "hauteur-contremarche": "Ex: 180 mm",
-            "giron": "Ex: 280 mm",
-            "cote-etroit": "Ex: 150 mm",
-            "largeur-helicoidal": "Ex: 660 mm"
+            "stairWidth": "Ex: 900 mm",
+            "stairWidthImperial": "Ex: 900 mm",
+            "headroom": "Ex: 2050 mm",
+            "headroomImperial": "Ex: 2050 mm",
+            "riserHeight": "Ex: 180 mm",
+            "riserHeightImperial": "Ex: 180 mm",
+            "treadDepth": "Ex: 280 mm",
+            "treadDepthImperial": "Ex: 280 mm",
+            "narrowSide": "Ex: 150 mm",
+            "narrowSideImperial": "Ex: 150 mm",
+            "spiralWidth": "Ex: 660 mm",
+            "spiralWidthImperial": "Ex: 660 mm"
         }
     };
     
@@ -404,7 +426,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const isImperial = systemeElement.value === 'imperial';
         const placeholdersData = isImperial ? placeholders.imperial : placeholders.metrique;
         
-        // Mettre à jour tous les placeholders
+        // Mettre à jour tous les placeholders directement par ID
         for (const [id, placeholder] of Object.entries(placeholdersData)) {
             const element = document.getElementById(id);
             if (element) {

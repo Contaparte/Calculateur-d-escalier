@@ -341,30 +341,30 @@ document.addEventListener('DOMContentLoaded', function() {
     const placeholders = {
         imperial: {
             // Onglet Calcul
-            "idealRiser": "Ex: 7&quot;",
-            "idealRiserImperial": "Ex: 7&quot;",
-            "idealTread": "Ex: 11&quot;",
-            "idealTreadImperial": "Ex: 11&quot;",
-            "totalRun": "Ex: 15'-2&quot;",
-            "totalRunImperial": "Ex: 15'-2&quot;",
-            "totalRise": "Ex: 10'-2&quot;",
-            "totalRiseImperial": "Ex: 10'-2&quot;",
-            "stairDesiredWidth": "Ex: 36&quot;",
-            "stairDesiredWidthImperial": "Ex: 36&quot;",
+            "idealRiser": "Ex: 7″",
+            "idealRiserImperial": "Ex: 7″",
+            "idealTread": "Ex: 11″",
+            "idealTreadImperial": "Ex: 11″",
+            "totalRun": "Ex: 15'-2″",
+            "totalRunImperial": "Ex: 15'-2″",
+            "totalRise": "Ex: 10'-2″",
+            "totalRiseImperial": "Ex: 10'-2″",
+            "stairDesiredWidth": "Ex: 36″",
+            "stairDesiredWidthImperial": "Ex: 36″",
             
             // Onglet Vérification
-            "stairWidth": "Ex: 36&quot;",
-            "stairWidthImperial": "Ex: 36&quot;",
-            "headroom": "Ex: 6'-8&quot;",
-            "headroomImperial": "Ex: 6'-8&quot;",
-            "riserHeight": "Ex: 7 1/4&quot;",
-            "riserHeightImperial": "Ex: 7 1/4&quot;",
-            "treadDepth": "Ex: 10 1/4&quot;",
-            "treadDepthImperial": "Ex: 10 1/4&quot;",
-            "narrowSide": "Ex: 6&quot;",
-            "narrowSideImperial": "Ex: 6&quot;",
-            "spiralWidth": "Ex: 26&quot;",
-            "spiralWidthImperial": "Ex: 26&quot;"
+            "stairWidth": "Ex: 36″",
+            "stairWidthImperial": "Ex: 36″",
+            "headroom": "Ex: 6'-8″",
+            "headroomImperial": "Ex: 6'-8″",
+            "riserHeight": "Ex: 7 1/4″",
+            "riserHeightImperial": "Ex: 7 1/4″",
+            "treadDepth": "Ex: 10 1/4″",
+            "treadDepthImperial": "Ex: 10 1/4″",
+            "narrowSide": "Ex: 6″",
+            "narrowSideImperial": "Ex: 6″",
+            "spiralWidth": "Ex: 26″",
+            "spiralWidthImperial": "Ex: 26″"
         },
         metrique: {
             // Onglet Calcul

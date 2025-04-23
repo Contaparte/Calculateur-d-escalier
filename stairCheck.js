@@ -863,26 +863,6 @@ document.addEventListener('DOMContentLoaded', function() {
             isCompliant = false;
         }
         
-        // Vérification de la règle du pas
-        const stepRule = checkStepRule(riserHeightValue, treadDepthValue);
-        if (!stepRule.isValid) {
-            let stepsIssue = "La règle du pas n'est pas respectée (moins de 2 des 3 règles sont satisfaites) :";
-            
-            // Détailler les règles du pas qui ne sont pas respectées
-            if (!stepRule.rule1.isValid) {
-                stepsIssue += `<br>- Règle 1 : Giron + CM = ${stepRule.rule1.value.toFixed(2)}" (devrait être entre ${stepRule.rule1.min}" et ${stepRule.rule1.max}")`;
-            }
-            if (!stepRule.rule2.isValid) {
-                stepsIssue += `<br>- Règle 2 : Giron × CM = ${stepRule.rule2.value.toFixed(2)} po² (devrait être entre ${stepRule.rule2.min} po² et ${stepRule.rule2.max} po²)`;
-            }
-            if (!stepRule.rule3.isValid) {
-                stepsIssue += `<br>- Règle 3 : Giron + 2(CM) = ${stepRule.rule3.value.toFixed(2)}" (devrait être entre ${stepRule.rule3.min}" et ${stepRule.rule3.max}")`;
-            }
-            
-            issues.push(stepsIssue);
-            // Ne pas marquer comme non conforme car c'est juste une recommandation
-        }
-        
         // Vérification de la largeur minimale côté étroit (pour escalier avec marches dansantes)
         if (config === 'dancing_steps' && narrowSideValue < minNarrowSide) {
             const narrowSideImperialValue = metricToImperial(narrowSideValue);
@@ -920,56 +900,160 @@ document.addEventListener('DOMContentLoaded', function() {
             isCompliant = false;
         }
         
+        // Vérification de la règle du pas (traitée séparément car c'est une notion complémentaire)
+        const stepRule = checkStepRule(riserHeightValue, treadDepthValue);
+        
+        // Préparer le contenu pour la visualisation de l'escalier
+        const stairData = {
+            numRisers: Math.round(2500 / riserHeightValue), // Approximation pour la visualisation
+            numTreads: Math.round(2500 / riserHeightValue) - 1,
+            riserHeight: riserHeightValue,
+            treadDepth: treadDepthValue,
+            stairWidth: stairWidthValue,
+            totalRun: treadDepthValue * (Math.round(2500 / riserHeightValue) - 1),
+            totalRise: riserHeightValue * Math.round(2500 / riserHeightValue),
+            stairConfig: config,
+            lShapedConfig: lShapedConfigValue,
+            dancingStepsConfig: dancingStepsConfigValue,
+            spiralConfig: spiralConfigValue,
+            narrowSide: narrowSideValue,
+            spiralWidth: spiralWidthValue
+        };
+        
         // Afficher le résultat
         resultContent.innerHTML = '';
         result.className = 'result';
         
         if (isCompliant) {
             result.classList.add('compliant');
-            resultContent.innerHTML = `<p class="success">✓ Conforme au ${codeReference}.</p>`;
             
-            // Si la conformité est vérifiée mais que la règle du pas n'est pas respectée
-            if (!stepRule.isValid) {
-                let stepRuleInfo = `
-                <div class="warning">
-                    <p>⚠ Note: La règle du pas n'est pas entièrement respectée (${stepRule.validRuleCount}/3 règles satisfaites). Pour un confort optimal, il est recommandé de respecter au moins 2 des 3 règles suivantes :</p>
-                    <ul>
-                        <li>Règle 1: Giron + CM = 17" à 18" (actuel: ${stepRule.rule1.value.toFixed(2)}")</li>
-                        <li>Règle 2: Giron × CM = 71 po² à 74 po² (actuel: ${stepRule.rule2.value.toFixed(2)} po²)</li>
-                        <li>Règle 3: Giron + 2(CM) = 22" à 25" (actuel: ${stepRule.rule3.value.toFixed(2)}")</li>
-                    </ul>
-                </div>
-                `;
-                resultContent.innerHTML += stepRuleInfo;
-            } else {
-                // Indiquer quelles règles du pas sont respectées
-                let stepRuleInfo = `
+            // Contenu pour le résultat conforme
+            let htmlContent = `
+                <p class="success">✓ Conforme au ${codeReference}.</p>
+                
                 <div class="result-section">
-                    <p>✓ La règle du pas est respectée (${stepRule.validRuleCount}/3 règles satisfaites) :</p>
+                    <h3>Vérification selon le CNB 2015</h3>
                     <ul>
-                        <li>${stepRule.rule1.isValid ? "✓" : "⨯"} Règle 1: Giron + CM = 17" à 18" (actuel: ${stepRule.rule1.value.toFixed(2)}")</li>
-                        <li>${stepRule.rule2.isValid ? "✓" : "⨯"} Règle 2: Giron × CM = 71 po² à 74 po² (actuel: ${stepRule.rule2.value.toFixed(2)} po²)</li>
-                        <li>${stepRule.rule3.isValid ? "✓" : "⨯"} Règle 3: Giron + 2(CM) = 22" à 25" (actuel: ${stepRule.rule3.value.toFixed(2)}")</li>
-                    </ul>
-                </div>
-                `;
-                resultContent.innerHTML += stepRuleInfo;
+                        <li>✓ Hauteur de contremarche: ${formatNumber(riserHeightValue)} mm ${isMetric ? '' : '(' + metricToImperial(riserHeightValue) + ')'} - conforme (min: ${minRiser} mm, max: ${maxRiser} mm)</li>
+                        <li>✓ Giron: ${formatNumber(treadDepthValue)} mm ${isMetric ? '' : '(' + metricToImperial(treadDepthValue) + ')'} - conforme (min: ${minTread} mm${maxTread !== Infinity ? ', max: ' + maxTread + ' mm' : ''})</li>
+                        <li>✓ Largeur de l'escalier: ${formatNumber(stairWidthValue)} mm ${isMetric ? '' : '(' + metricToImperial(stairWidthValue) + ')'} - conforme (min: ${minWidth} mm)</li>
+                        <li>✓ Hauteur libre (échappée): ${formatNumber(headroomValue)} mm ${isMetric ? '' : '(' + metricToImperial(headroomValue) + ')'} - conforme (min: ${minHeadroom} mm)</li>
+            `;
+            
+            // Ajouter des vérifications spécifiques selon le type d'escalier
+            if (config === 'dancing_steps') {
+                htmlContent += `<li>✓ Largeur minimale côté étroit: ${formatNumber(narrowSideValue)} mm ${isMetric ? '' : '(' + metricToImperial(narrowSideValue) + ')'} - conforme (min: ${minNarrowSide} mm)</li>`;
             }
+            
+            if (config === 'spiral') {
+                htmlContent += `<li>✓ Largeur libre entre mains courantes: ${formatNumber(spiralWidthValue)} mm ${isMetric ? '' : '(' + metricToImperial(spiralWidthValue) + ')'} - conforme (min: ${minSpiralWidth} mm)</li>`;
+            }
+            
+            htmlContent += `</ul></div>`;
+            
+            // Section séparée pour la règle du pas (notion complémentaire)
+            htmlContent += `
+                <div class="result-section" style="border-top: 1px dashed #ccc; padding-top: 15px;">
+                    <h3>Vérification du confort (Règle du pas - notion complémentaire)</h3>
+                    <p style="font-style: italic; color: #666;">La règle du pas n'est pas une exigence du CNB 2015, mais une pratique recommandée pour assurer le confort des utilisateurs de l'escalier.</p>
+            `;
+            
+            if (stepRule.isValid) {
+                htmlContent += `
+                    <p class="success">✓ La règle du pas est respectée (${stepRule.validRuleCount}/3 règles satisfaites).</p>
+                    <ul>
+                        <li>${stepRule.rule1.isValid ? "✓" : "⨯"} Règle 1: Giron + CM = ${stepRule.rule1.value.toFixed(2)}" (idéal: ${stepRule.rule1.min}"-${stepRule.rule1.max}")</li>
+                        <li>${stepRule.rule2.isValid ? "✓" : "⨯"} Règle 2: Giron × CM = ${stepRule.rule2.value.toFixed(2)} po² (idéal: ${stepRule.rule2.min} po²-${stepRule.rule2.max} po²)</li>
+                        <li>${stepRule.rule3.isValid ? "✓" : "⨯"} Règle 3: Giron + 2(CM) = ${stepRule.rule3.value.toFixed(2)}" (idéal: ${stepRule.rule3.min}"-${stepRule.rule3.max}")</li>
+                    </ul>`;
+            } else {
+                htmlContent += `
+                    <p style="color: #ff9800;">⚠ La règle du pas n'est pas entièrement respectée (${stepRule.validRuleCount}/3 règles satisfaites).</p>
+                    <ul>
+                        <li>${stepRule.rule1.isValid ? "✓" : "⨯"} Règle 1: Giron + CM = ${stepRule.rule1.value.toFixed(2)}" (idéal: ${stepRule.rule1.min}"-${stepRule.rule1.max}")</li>
+                        <li>${stepRule.rule2.isValid ? "✓" : "⨯"} Règle 2: Giron × CM = ${stepRule.rule2.value.toFixed(2)} po² (idéal: ${stepRule.rule2.min} po²-${stepRule.rule2.max} po²)</li>
+                        <li>${stepRule.rule3.isValid ? "✓" : "⨯"} Règle 3: Giron + 2(CM) = ${stepRule.rule3.value.toFixed(2)}" (idéal: ${stepRule.rule3.min}"-${stepRule.rule3.max}")</li>
+                    </ul>
+                    <p style="font-style: italic; color: #666;">Pour un confort optimal, il est recommandé de respecter au moins 2 des 3 règles du pas.</p>`;
+            }
+            
+            htmlContent += `</div>`;
+            
+            // Ajouter la visualisation de l'escalier
+            htmlContent += `
+                <div class="result-section" style="border-top: 1px dashed #ccc; padding-top: 15px;">
+                    <h3>Visualisation de l'escalier</h3>
+                    <div id="stairVisualization"></div>
+                </div>`;
+            
+            resultContent.innerHTML = htmlContent;
+            
+            // Générer la visualisation de l'escalier
+            setTimeout(() => {
+                generateStairVisualization(stairData, 'stairVisualization', isMetric);
+            }, 100);
+            
         } else {
             result.classList.add('non-compliant');
-            let issuesList = `<p>⚠ Non conforme au ${codeReference}.</p><p>Problèmes détectés:</p><ul>`;
+            
+            // Préparer la liste des problèmes
+            let issuesList = `<p>⚠ Non conforme au ${codeReference}.</p>`;
+            issuesList += `<div class="result-section"><h3>Problèmes détectés selon le CNB 2015:</h3><ul>`;
+            
             issues.forEach(issue => {
                 let formattedIssue = issue;
                 if (!isMetric) {
                     // Convertir les valeurs métriques en impériales pour l'affichage
                     formattedIssue = issue.replace(/(\d+(?:\.\d+)?) mm/g, function(match, p1) {
-                        return metricToImperial(parseFloat(p1)) + ' (' + parseFloat(p1).toFixed(2) + ' mm)';
+                        return metricToImperial(parseFloat(p1)) + ' (' + parseFloat(p1).toFixed(0) + ' mm)';
                     });
                 }
                 issuesList += `<li>${formattedIssue}</li>`;
             });
-            issuesList += '</ul>';
+            
+            issuesList += '</ul></div>';
+            
+            // Section séparée pour la règle du pas (notion complémentaire)
+            issuesList += `
+                <div class="result-section" style="border-top: 1px dashed #ccc; padding-top: 15px;">
+                    <h3>Vérification du confort (Règle du pas - notion complémentaire)</h3>
+                    <p style="font-style: italic; color: #666;">La règle du pas n'est pas une exigence du CNB 2015, mais une pratique recommandée pour assurer le confort des utilisateurs de l'escalier.</p>
+            `;
+            
+            if (stepRule.isValid) {
+                issuesList += `
+                    <p class="success">✓ La règle du pas est respectée (${stepRule.validRuleCount}/3 règles satisfaites).</p>
+                    <ul>
+                        <li>${stepRule.rule1.isValid ? "✓" : "⨯"} Règle 1: Giron + CM = ${stepRule.rule1.value.toFixed(2)}" (idéal: ${stepRule.rule1.min}"-${stepRule.rule1.max}")</li>
+                        <li>${stepRule.rule2.isValid ? "✓" : "⨯"} Règle 2: Giron × CM = ${stepRule.rule2.value.toFixed(2)} po² (idéal: ${stepRule.rule2.min} po²-${stepRule.rule2.max} po²)</li>
+                        <li>${stepRule.rule3.isValid ? "✓" : "⨯"} Règle 3: Giron + 2(CM) = ${stepRule.rule3.value.toFixed(2)}" (idéal: ${stepRule.rule3.min}"-${stepRule.rule3.max}")</li>
+                    </ul>`;
+            } else {
+                issuesList += `
+                    <p style="color: #ff9800;">⚠ La règle du pas n'est pas entièrement respectée (${stepRule.validRuleCount}/3 règles satisfaites).</p>
+                    <ul>
+                        <li>${stepRule.rule1.isValid ? "✓" : "⨯"} Règle 1: Giron + CM = ${stepRule.rule1.value.toFixed(2)}" (idéal: ${stepRule.rule1.min}"-${stepRule.rule1.max}")</li>
+                        <li>${stepRule.rule2.isValid ? "✓" : "⨯"} Règle 2: Giron × CM = ${stepRule.rule2.value.toFixed(2)} po² (idéal: ${stepRule.rule2.min} po²-${stepRule.rule2.max} po²)</li>
+                        <li>${stepRule.rule3.isValid ? "✓" : "⨯"} Règle 3: Giron + 2(CM) = ${stepRule.rule3.value.toFixed(2)}" (idéal: ${stepRule.rule3.min}"-${stepRule.rule3.max}")</li>
+                    </ul>
+                    <p style="font-style: italic; color: #666;">Pour un confort optimal, il est recommandé de respecter au moins 2 des 3 règles du pas.</p>`;
+            }
+            
+            issuesList += `</div>`;
+            
+            // Ajouter la visualisation de l'escalier
+            issuesList += `
+                <div class="result-section" style="border-top: 1px dashed #ccc; padding-top: 15px;">
+                    <h3>Visualisation de l'escalier</h3>
+                    <div id="stairVisualization"></div>
+                </div>`;
+            
             resultContent.innerHTML = issuesList;
+            
+            // Générer la visualisation de l'escalier
+            setTimeout(() => {
+                generateStairVisualization(stairData, 'stairVisualization', isMetric);
+            }, 100);
         }
         
         result.style.display = 'block';
@@ -1188,21 +1272,45 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
             }
             
-            // Afficher une explication de la règle du pas
-            const stepRuleIdealImperial = "17-18 pouces";
-            const stepRuleIdealMetric = "432-457 mm";
-            const stepRuleSquareIdealImperial = "71-74 po²";
-            const stepRuleSquareIdealMetric = "45800-47700 mm²";
-            const stepRule2RGIdealImperial = "22-25 pouces";
-            const stepRule2RGIdealMetric = "559-635 mm";
+            // Obtenir la meilleure solution pour la visualisation
+            const bestSolution = solutions[0];
             
-            const stepRuleIdeal = isMetric ? stepRuleIdealMetric : stepRuleIdealImperial;
-            const stepRuleSquareIdeal = isMetric ? stepRuleSquareIdealMetric : stepRuleSquareIdealImperial;
-            const stepRule2RGIdeal = isMetric ? stepRule2RGIdealMetric : stepRule2RGIdealImperial;
+            // Préparer les données pour la visualisation
+            const stairData = {
+                numRisers: bestSolution.numRisers,
+                numTreads: bestSolution.numTreads,
+                riserHeight: bestSolution.riserHeight,
+                treadDepth: bestSolution.treadDepth,
+                stairWidth: stairWidthValue,
+                totalRun: totalRunValue,
+                totalRise: totalRiseValue,
+                stairConfig: stairConfigValue,
+                lShapedConfig: lShapedConfigValue,
+                dancingStepsConfig: dancingStepsConfigValue,
+                spiralConfig: spiralConfigValue,
+                narrowSide: minNarrowSideValue,
+                spiralWidth: spiralWidthValue
+            };
             
-            const explanationSection = `
+            // Section pour les exigences du CNB
+            const cnbRequirementsSection = `
                 <div class="result-section">
-                    <h3>Règle du pas</h3>
+                    <h3>Exigences du CNB 2015</h3>
+                    <ul>
+                        <li>Hauteur de contremarche: min ${formatNumber(minRiser)} mm, max ${formatNumber(maxRiser)} mm</li>
+                        <li>Giron: min ${formatNumber(minTread)} mm${maxTread !== Infinity ? ', max ' + formatNumber(maxTread) + ' mm' : ''}</li>
+                        <li>Largeur minimale de l'escalier: ${formatNumber(minWidth)} mm</li>
+                        ${stairConfigValue === 'dancing_steps' ? `<li>Largeur minimale côté étroit: ${formatNumber(minNarrowSide)} mm</li>` : ''}
+                        ${stairConfigValue === 'spiral' ? `<li>Largeur libre entre mains courantes: ${formatNumber(minSpiralWidth)} mm</li>` : ''}
+                    </ul>
+                </div>
+            `;
+            
+            // Afficher une explication de la règle du pas (section séparée)
+            const stepRuleSection = `
+                <div class="result-section" style="border-top: 1px dashed #ccc; padding-top: 15px;">
+                    <h3>Règle du pas (notion complémentaire)</h3>
+                    <p style="font-style: italic; color: #666;">La règle du pas n'est pas une exigence du CNB 2015, mais une pratique recommandée pour assurer le confort des utilisateurs de l'escalier.</p>
                     <p>Les critères de confort pour un escalier sont vérifiés lorsqu'au moins 2 des 3 règles suivantes sont respectées :</p>
                     <ol>
                         <li>Giron + CM = 17" à 18" (${isMetric ? "432-457 mm" : "17-18 pouces"})</li>
@@ -1271,7 +1379,6 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
             
             // Afficher les détails de la meilleure solution
-            const bestSolution = solutions[0];
             let detailsHtml = '';
             
             if (bestSolution) {
@@ -1294,10 +1401,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     formatStairWidth = metricToImperial(stairWidthValue);
                 }
                 
-                // Informations sur les règles du pas pour la meilleure solution
+                // Informations sur les règles du pas pour la meilleure solution (section séparée)
                 let stepRuleDetails = `
-                    <div class="result-section">
-                        <h4>Vérification de la règle du pas (solution optimale)</h4>
+                    <div class="result-section" style="border-top: 1px dashed #ccc; padding-top: 15px;">
+                        <h3>Vérification de la règle du pas (solution optimale)</h3>
+                        <p style="font-style: italic; color: #666;">La règle du pas n'est pas une exigence du CNB 2015, mais une pratique recommandée pour assurer le confort des utilisateurs de l'escalier.</p>
                         <ul>
                             <li>${bestSolution.stepRule.rule1.isValid ? "✓" : "⨯"} Règle 1: Giron + CM = ${bestSolution.stepRule.rule1.value.toFixed(2)}" (idéal: ${bestSolution.stepRule.rule1.min}"-${bestSolution.stepRule.rule1.max}")</li>
                             <li>${bestSolution.stepRule.rule2.isValid ? "✓" : "⨯"} Règle 2: Giron × CM = ${bestSolution.stepRule.rule2.value.toFixed(2)} po² (idéal: ${bestSolution.stepRule.rule2.min}-${bestSolution.stepRule.rule2.max} po²)</li>
@@ -1320,7 +1428,14 @@ document.addEventListener('DOMContentLoaded', function() {
                             <li>Largeur recommandée: ${formatStairWidth} ${isWidthCompliant ? '' : '⚠'}</li>
                         </ul>
                     </div>
-                    ${stepRuleDetails}
+                `;
+                
+                // Ajouter la section de visualisation
+                detailsHtml += `
+                    <div class="result-section" style="border-top: 1px dashed #ccc; padding-top: 15px;">
+                        <h3>Visualisation de l'escalier</h3>
+                        <div id="calculatorStairVisualization"></div>
+                    </div>
                 `;
             }
             
@@ -1380,9 +1495,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 <p class="success">✓ Solution conforme au ${codeReference} trouvée.</p>
                 ${widthWarning}
                 ${specificWarnings}
-                ${explanationSection}
+                ${cnbRequirementsSection}
                 ${solutionsHtml}
                 ${detailsHtml}
+                ${stepRuleDetails}
                 ${configNotes}
                 <div class="result-section">
                     <h3>Notes importantes</h3>
@@ -1394,6 +1510,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     </ul>
                 </div>
             `;
+            
+            // Générer la visualisation de l'escalier
+            setTimeout(() => {
+                generateStairVisualization(stairData, 'calculatorStairVisualization', isMetric);
+            }, 100);
         }
         
         calculatorResult.style.display = 'block';

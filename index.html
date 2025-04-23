@@ -94,26 +94,26 @@
                 <div class="form-row">
                     <div class="form-col">
                         <label for="calcStairConfig">Configuration de l'escalier :</label>
-                        <select id="calcStairConfig" onchange="toggleRayonnanteOptions('calc')">
+                        <select id="calcStairConfig">
                             <option value="straight">Volée droite</option>
-                            <option value="L">En L</option>
-                            <option value="U">En U</option>
+                            <option value="l_shaped">En L</option>
+                            <option value="u_shaped">En U</option>
                             <option value="spiral">Hélicoïdal</option>
                         </select>
                     </div>
                 </div>
-                <div id="rayonnante-options-calc" class="form-row hidden">
-                    <div class="form-row">
+                
+                <!-- Nouveau bloc pour les options de marches rayonnantes -->
+                <div id="calcRadiatingStepsOptions" class="form-row" style="display: none;">
                     <div class="form-col">
-                        <label for="rayonnante-type-calc">Marches rayonnantes :</label>
-                        <select id="rayonnante-type-calc">
-                            <option value="none">Sans marches rayonnantes</option>
-                            <option value="30-1">Une marche rayonnante à 30°</option>
-                            <option value="45-1">Une marche rayonnante à 45°</option>
-                            <option value="30-2">Deux marches rayonnantes à 30°</option>
-                            <option value="30-3">Trois marches rayonnantes à 30°</option>
+                        <label for="calcRadiatingStepsConfig">Configuration des marches rayonnantes :</label>
+                        <select id="calcRadiatingStepsConfig">
+                            <option value="none">Aucune marche rayonnante</option>
+                            <option value="one_30deg">Une marche rayonnante à 30°</option>
+                            <option value="one_45deg">Une marche rayonnante à 45°</option>
+                            <option value="two_30deg">Deux marches rayonnantes à 30°</option>
+                            <option value="three_30deg">Trois marches rayonnantes à 30°</option>
                         </select>
-                        <div class="info-icon" title="Selon la Figure 9.8.-5 du CNB: Les marches rayonnantes ont une forme triangulaire et présentent un angle de rotation de 30° ou 45°. D'autres angles de rotation ne sont pas autorisés.">i</div>
                     </div>
                 </div>
             </div>
@@ -243,26 +243,26 @@
                 <div class="form-row">
                     <div class="form-col">
                         <label for="stairConfig">Configuration de l'escalier :</label>
-                        <select id="stairConfig" onchange="toggleRayonnanteOptions('verification')">
+                        <select id="stairConfig">
                             <option value="straight">Volée droite</option>
-                            <option value="L">En L</option>
-                            <option value="U">En U</option>
+                            <option value="l_shaped">En L</option>
+                            <option value="u_shaped">En U</option>
                             <option value="spiral">Hélicoïdal</option>
                         </select>
                     </div>
                 </div>
-                <div id="rayonnante-options-verification" class="form-row hidden">
-                    <div class="form-row">
+                
+                <!-- Nouveau bloc pour les options de marches rayonnantes -->
+                <div id="radiatingStepsOptions" class="form-row" style="display: none;">
                     <div class="form-col">
-                        <label for="rayonnante-type-verification">Marches rayonnantes :</label>
-                        <select id="rayonnante-type-verification">
-                            <option value="none">Sans marches rayonnantes</option>
-                            <option value="30-1">Une marche rayonnante à 30°</option>
-                            <option value="45-1">Une marche rayonnante à 45°</option>
-                            <option value="30-2">Deux marches rayonnantes à 30°</option>
-                            <option value="30-3">Trois marches rayonnantes à 30°</option>
+                        <label for="radiatingStepsConfig">Configuration des marches rayonnantes :</label>
+                        <select id="radiatingStepsConfig">
+                            <option value="none">Aucune marche rayonnante</option>
+                            <option value="one_30deg">Une marche rayonnante à 30°</option>
+                            <option value="one_45deg">Une marche rayonnante à 45°</option>
+                            <option value="two_30deg">Deux marches rayonnantes à 30°</option>
+                            <option value="three_30deg">Trois marches rayonnantes à 30°</option>
                         </select>
-                        <div class="info-icon" title="Selon la Figure 9.8.-5 du CNB: Les marches rayonnantes ont une forme triangulaire et présentent un angle de rotation de 30° ou 45°. D'autres angles de rotation ne sont pas autorisés.">i</div>
                     </div>
                 </div>
             </div>

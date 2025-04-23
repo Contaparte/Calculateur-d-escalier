@@ -462,10 +462,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Gestion du changement de configuration d'escalier
     stairConfig.addEventListener('change', function() {
-        if (this.value === 'turning') {
+        toggleRayonnanteOptions('verification');
+        
+        if (this.value === "L" || this.value === "U") {
             minimumWidthTurningStair.style.display = 'block';
             spiralWidthField.style.display = 'none';
-        } else if (this.value === 'spiral') {
+        } else if (this.value === "spiral") {
             minimumWidthTurningStair.style.display = 'none';
             spiralWidthField.style.display = 'block';
         } else {
@@ -473,6 +475,25 @@ document.addEventListener('DOMContentLoaded', function() {
             spiralWidthField.style.display = 'none';
         }
     });
+    
+    // Fonction pour afficher/masquer les options de marches rayonnantes
+    function toggleRayonnanteOptions(tab) {
+        let stairConfigSelect, rayonnanteOptionsDiv;
+        
+        if (tab === 'calc') {
+            stairConfigSelect = document.getElementById('calcStairConfig');
+            rayonnanteOptionsDiv = document.getElementById('rayonnante-options-calc');
+        } else {
+            stairConfigSelect = document.getElementById('stairConfig');
+            rayonnanteOptionsDiv = document.getElementById('rayonnante-options-verification');
+        }
+        
+        if (stairConfigSelect.value === "L" || stairConfigSelect.value === "U") {
+            rayonnanteOptionsDiv.classList.remove('hidden');
+        } else {
+            rayonnanteOptionsDiv.classList.add('hidden');
+        }
+    }
     
     // Ajouter des écouteurs d'événements pour la conversion entre métrique et impérial
     const metricInputPairs = [
@@ -536,6 +557,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const type = stairType.value;
         const stairUseValue = stairUse.value;
         const config = stairConfig.value;
+        const rayonnanteType = document.getElementById('rayonnante-type-verification').value;
         
         // Conversion des valeurs en métrique si nécessaire
         let riserHeightValue, treadDepthValue, narrowSideValue, stairWidthValue, headroomValue, spiralWidthValue;
@@ -554,7 +576,6 @@ document.addEventListener('DOMContentLoaded', function() {
             stairWidthValue = imperialToMetric(validateImperialInput(stairWidthImperial.value));
             headroomValue = imperialToMetric(validateImperialInput(headroomImperial.value));
             spiralWidthValue = imperialToMetric(validateImperialInput(spiralWidthImperial.value));
-            
         }
         
         // Validation des entrées
@@ -570,7 +591,7 @@ document.addEventListener('DOMContentLoaded', function() {
             isValid = false;
         }
         
-        if (config === 'turning' && (isNaN(narrowSideValue) || narrowSideValue <= 0)) {
+        if ((config === 'L' || config === 'U') && (isNaN(narrowSideValue) || narrowSideValue <= 0)) {
             document.getElementById('narrowSideError').textContent = 'Veuillez entrer une valeur numérique valide pour la largeur minimale côté étroit.';
             isValid = false;
         }
@@ -609,7 +630,7 @@ document.addEventListener('DOMContentLoaded', function() {
             maxTread = Infinity; // pas de limite maximale
             
             // Largeur minimale côté étroit (3.4.6.9)
-            if (config === 'turning') {
+            if (config === 'L' || config === 'U') {
                 minNarrowSide = 240; // 240 mm pour une issue
             }
             
@@ -641,7 +662,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Largeur minimale côté étroit (9.8.4.3)
-            if (config === 'turning') {
+            if (config === 'L' || config === 'U') {
                 minNarrowSide = 150; // 150 mm
             }
             
@@ -672,7 +693,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Ajustements spécifiques aux issues de la partie 3
                 minWidth = 1100; // 1100 mm minimum pour une issue
                 
-                if (config === 'turning') {
+                if (config === 'L' || config === 'U') {
                     minNarrowSide = 240; // 240 mm pour une issue
                 }
             } else {
@@ -1033,6 +1054,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialiser l'affichage en fonction des sélections initiales
     stairConfig.dispatchEvent(new Event('change'));
+    toggleRayonnanteOptions('verification');
+    toggleRayonnanteOptions('calc');
     updatePlaceholders('verification');
     updatePlaceholders('calculator');
 });

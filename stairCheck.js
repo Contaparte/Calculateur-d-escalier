@@ -397,20 +397,34 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Gestion des onglets
     tabButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const tabId = this.getAttribute('data-tab');
+    button.addEventListener('click', function() {
+        const tabId = this.getAttribute('data-tab');
+        
+        // Activer le bouton d'onglet et le contenu correspondant
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        tabContents.forEach(content => content.classList.remove('active'));
+        
+        this.classList.add('active');
+        const tabContent = document.getElementById(tabId);
+        if (tabContent) {
+            tabContent.classList.add('active');
             
-            // Activer le bouton d'onglet et le contenu correspondant
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            tabContents.forEach(content => content.classList.remove('active'));
-            
-            this.classList.add('active');
-            document.getElementById(tabId).classList.add('active');
-            
-            // Mettre à jour les placeholders pour le nouvel onglet
-            updatePlaceholders(tabId);
-        });
+            // Si on passe à l'onglet de vérification, réinitialiser les éléments spécifiques
+            if (tabId === 'verification') {
+                // Forcer la mise à jour de l'affichage des éléments spécifiques à cet onglet
+                setTimeout(function() {
+                    const stairConfigElement = document.getElementById('stairConfig');
+                    if (stairConfigElement) {
+                        stairConfigElement.dispatchEvent(new Event('change'));
+                    }
+                }, 0);
+            }
+        }
+        
+        // Mettre à jour les placeholders pour le nouvel onglet
+        updatePlaceholders(tabId);
     });
+});
     
     // Fonction pour mettre à jour les placeholders selon le système de mesure
     function updatePlaceholders(tab) {
@@ -461,20 +475,25 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Gestion du changement de configuration d'escalier
+if (stairConfig) {
     stairConfig.addEventListener('change', function() {
         toggleRayonnanteOptions('verification');
         
-        if (this.value === "L" || this.value === "U") {
-            minimumWidthTurningStair.style.display = 'block';
-            spiralWidthField.style.display = 'none';
-        } else if (this.value === "spiral") {
-            minimumWidthTurningStair.style.display = 'none';
-            spiralWidthField.style.display = 'block';
-        } else {
-            minimumWidthTurningStair.style.display = 'none';
-            spiralWidthField.style.display = 'none';
+        // Vérifier l'existence des éléments avant d'y accéder
+        if (minimumWidthTurningStair && spiralWidthField) {
+            if (this.value === "L" || this.value === "U") {
+                minimumWidthTurningStair.style.display = 'block';
+                spiralWidthField.style.display = 'none';
+            } else if (this.value === "spiral") {
+                minimumWidthTurningStair.style.display = 'none';
+                spiralWidthField.style.display = 'block';
+            } else {
+                minimumWidthTurningStair.style.display = 'none';
+                spiralWidthField.style.display = 'none';
+            }
         }
     });
+}
     
     // Fonction pour afficher/masquer les options de marches rayonnantes
     function toggleRayonnanteOptions(tab) {
@@ -526,10 +545,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Gestion du changement de type de bâtiment et d'usage
-    buildingType.addEventListener('change', updateRequirements);
-    buildingUse.addEventListener('change', updateRequirements);
-    stairType.addEventListener('change', updateRequirements);
-    stairUse.addEventListener('change', updateRequirements);
+if (buildingType) buildingType.addEventListener('change', updateRequirements);
+if (buildingUse) buildingUse.addEventListener('change', updateRequirements);
+if (stairType) stairType.addEventListener('change', updateRequirements);
+if (stairUse) stairUse.addEventListener('change', updateRequirements);
 
     function updateRequirements() {
         // Cette fonction sera utilisée pour ajuster les exigences en fonction

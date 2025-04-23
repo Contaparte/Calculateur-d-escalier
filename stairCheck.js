@@ -1547,40 +1547,59 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     // Gestion des onglets
-    tabButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const tabId = this.getAttribute('data-tab');
-            
-            // Désactiver tous les onglets
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            tabContents.forEach(content => content.classList.remove('active'));
-            
-            // Activer l'onglet cliqué
-            this.classList.add('active');
-            document.getElementById(tabId).classList.add('active');
-            
+tabButtons.forEach(button => {
+    button.addEventListener('click', function() {
+        // Récupérer l'ID de l'onglet cible
+        const tabId = this.getAttribute('data-tab');
+        console.log("Tab clicked:", tabId);
+        
+        // Désactiver tous les onglets
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        tabContents.forEach(content => content.classList.remove('active'));
+        
+        // Activer l'onglet cliqué
+        this.classList.add('active');
+        
+        // Activer le contenu correspondant
+        const targetTab = document.getElementById(tabId);
+        if (targetTab) {
+            targetTab.classList.add('active');
             // Mettre à jour les placeholders pour le nouvel onglet
             updatePlaceholders(tabId);
-        });
+        } else {
+            console.error("Tab not found:", tabId);
+        }
     });
+});
     
     // Fonction pour mettre à jour les placeholders selon le système de mesure
-    function updatePlaceholders(tab) {
-        const isCalcTab = tab === 'calculator';
-        let systemeElement = isCalcTab ? calcMeasurementSystem : measurementSystem;
-        
-        if (!systemeElement) return;
-        
-        const isImperial = systemeElement.value === 'imperial';
-        const placeholdersData = isImperial ? placeholders.imperial : placeholders.metrique;
-        
-        // Mettre à jour tous les placeholders directement par ID
-        for (const [id, placeholder] of Object.entries(placeholdersData)) {
-            const element = document.getElementById(id);
-            if (element) {
-                element.placeholder = placeholder;
-            }
+function updatePlaceholders(tab) {
+    console.log("Updating placeholders for tab:", tab);
+    
+    const isCalcTab = tab === 'calculator';
+    let systemeElement;
+    
+    if (isCalcTab) {
+        systemeElement = calcMeasurementSystem;
+    } else {
+        systemeElement = measurementSystem;
+    }
+    
+    if (!systemeElement) {
+        console.error("Système de mesure non trouvé pour l'onglet:", tab);
+        return;
+    }
+    
+    const isImperial = systemeElement.value === 'imperial';
+    const placeholdersData = isImperial ? placeholders.imperial : placeholders.metrique;
+    
+    // Mettre à jour tous les placeholders directement par ID
+    for (const [id, placeholder] of Object.entries(placeholdersData)) {
+        const element = document.getElementById(id);
+        if (element) {
+            element.placeholder = placeholder;
         }
+    }
         
         // Afficher/masquer les champs métriques/impériaux
         const metricInputs = document.querySelectorAll('.metric-input');
@@ -2073,188 +2092,190 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Calcul d'escalier
-    if (calculateButton) {
-        calculateButton.addEventListener('click', function() {
-            // Réinitialiser les messages d'erreur
-            document.querySelectorAll('#calculator .error').forEach(el => el.textContent = '');
+if (calculateButton) {
+    calculateButton.addEventListener('click', function() {
+        console.log("Calculate button clicked");
+        // Réinitialiser les messages d'erreur
+        document.querySelectorAll('#calculator .error').forEach(el => el.textContent = '');
+        
+        // Récupérer les valeurs du formulaire
+        const isMetric = calcMeasurementSystem.value === 'metric';
+        const buildingTypeValue = calcBuildingType.value;
+        const stairTypeValue = calcStairType.value;
+        const stairConfigValue = calcStairConfig.value;
+        const lShapedConfigValue = calcLShapedConfig ? calcLShapedConfig.value : null;
+        const dancingStepsConfigValue = calcDancingStepsConfig ? calcDancingStepsConfig.value : null;
+        const spiralConfigValue = calcSpiralConfig ? calcSpiralConfig.value : null;
+        
+        // Conversion des valeurs en métrique si nécessaire
+        let totalRunValue, totalRiseValue, stairWidthValue, idealRiserValue, idealTreadValue;
+        let minNarrowSideValue, spiralWidthValue;
+        
+        if (isMetric) {
+            totalRunValue = parseFloat(totalRun.value);
+            totalRiseValue = parseFloat(totalRise.value);
+            stairWidthValue = parseFloat(stairDesiredWidth.value);
+            idealRiserValue = parseFloat(idealRiser.value) || 0;
+            idealTreadValue = parseFloat(idealTread.value) || 0;
+            minNarrowSideValue = parseFloat(calcMinNarrowSide ? calcMinNarrowSide.value : 0) || 0;
+            spiralWidthValue = parseFloat(calcSpiralWidth ? calcSpiralWidth.value : 0) || 0;
+        } else {
+            totalRunValue = imperialToMetric(validateImperialInput(totalRunImperial.value));
+            totalRiseValue = imperialToMetric(validateImperialInput(totalRiseImperial.value));
+            stairWidthValue = imperialToMetric(validateImperialInput(stairDesiredWidthImperial.value));
+            idealRiserValue = imperialToMetric(validateImperialInput(idealRiserImperial.value)) || 0;
+            idealTreadValue = imperialToMetric(validateImperialInput(idealTreadImperial.value)) || 0;
+            minNarrowSideValue = imperialToMetric(validateImperialInput(calcMinNarrowSideImperial ? calcMinNarrowSideImperial.value : '')) || 0;
+            spiralWidthValue = imperialToMetric(validateImperialInput(calcSpiralWidthImperial ? calcSpiralWidthImperial.value : '')) || 0;
+        }
+        
+        // Validation des entrées
+        let isValid = true;
+        
+        if (isNaN(totalRunValue) || totalRunValue <= 0) {
+            document.getElementById('totalRunError').textContent = 'Veuillez entrer une valeur numérique valide pour la longueur totale.';
+            isValid = false;
+        }
+        
+        if (isNaN(totalRiseValue) || totalRiseValue <= 0) {
+            document.getElementById('totalRiseError').textContent = 'Veuillez entrer une valeur numérique valide pour la hauteur totale.';
+            isValid = false;
+        }
+        
+        if (isNaN(stairWidthValue) || stairWidthValue <= 0) {
+            document.getElementById('stairDesiredWidthError').textContent = 'Veuillez entrer une valeur numérique valide pour la largeur souhaitée.';
+            isValid = false;
+        }
+        
+        // Validation spécifique pour les marches dansantes
+        if (stairConfigValue === 'dancing_steps' && (isNaN(minNarrowSideValue) || minNarrowSideValue <= 0)) {
+            document.getElementById('calcMinNarrowSideError').textContent = 'Veuillez entrer une valeur numérique valide pour la largeur minimale côté étroit.';
+            isValid = false;
+        }
+        
+        // Validation spécifique pour les escaliers hélicoïdaux
+        if (stairConfigValue === 'spiral' && (isNaN(spiralWidthValue) || spiralWidthValue <= 0)) {
+            document.getElementById('calcSpiralWidthError').textContent = 'Veuillez entrer une valeur numérique valide pour la largeur libre entre mains courantes.';
+            isValid = false;
+        }
+        
+        if (!isValid) return;
+        
+        // Calculer les solutions optimales
+        const preferences = {
+            buildingType: buildingTypeValue,
+            stairType: stairTypeValue,
+            stairConfig: stairConfigValue,
+            lShapedConfig: lShapedConfigValue,
+            dancingStepsConfig: dancingStepsConfigValue,
+            spiralConfig: spiralConfigValue,
+            idealRiser: idealRiserValue,
+            idealTread: idealTreadValue,
+            priority: priorityComfort.checked ? 'comfort' : 'space'
+        };
+        
+        const solutions = calculateOptimalStair(totalRiseValue, totalRunValue, preferences);
+        
+        // Définir les limites selon le CNB 2015 pour vérification
+        let minRiser, maxRiser, minTread, maxTread, minWidth, minNarrowSide, minSpiralWidth;
+        let codeReference = 'CNB 2015';
+        
+        if (buildingTypeValue === 'part3') {
+            codeReference = 'CNB 2015 Partie 3';
+            minRiser = 125;
+            maxRiser = 180;
+            minTread = 280;
+            maxTread = Infinity;
+            minWidth = 1100;
+            minNarrowSide = 240; // Pour marches dansantes dans une issue
+            minSpiralWidth = 660; // Pour escalier hélicoïdal
             
-            // Récupérer les valeurs du formulaire
-            const isMetric = calcMeasurementSystem.value === 'metric';
-            const buildingTypeValue = calcBuildingType.value;
-            const stairTypeValue = calcStairType.value;
-            const stairConfigValue = calcStairConfig.value;
-            const lShapedConfigValue = calcLShapedConfig ? calcLShapedConfig.value : null;
-            const dancingStepsConfigValue = calcDancingStepsConfig ? calcDancingStepsConfig.value : null;
-            const spiralConfigValue = calcSpiralConfig ? calcSpiralConfig.value : null;
+            if (stairConfigValue === 'spiral') {
+                maxRiser = 240;
+            }
+        } else {
+            codeReference = 'CNB 2015 Partie 9';
             
-            // Conversion des valeurs en métrique si nécessaire
-            let totalRunValue, totalRiseValue, stairWidthValue, idealRiserValue, idealTreadValue;
-            let minNarrowSideValue, spiralWidthValue;
-            
-            if (isMetric) {
-                totalRunValue = parseFloat(totalRun.value);
-                totalRiseValue = parseFloat(totalRise.value);
-                stairWidthValue = parseFloat(stairDesiredWidth.value);
-                idealRiserValue = parseFloat(idealRiser.value) || 0;
-                idealTreadValue = parseFloat(idealTread.value) || 0;
-                minNarrowSideValue = parseFloat(calcMinNarrowSide ? calcMinNarrowSide.value : 0) || 0;
-                spiralWidthValue = parseFloat(calcSpiralWidth ? calcSpiralWidth.value : 0) || 0;
+            if (stairTypeValue === 'private') {
+                minRiser = 125;
+                maxRiser = 200;
+                minTread = 255;
+                maxTread = 355;
+                minWidth = 860;
+                minNarrowSide = 150; // Pour marches dansantes privées
             } else {
-                totalRunValue = imperialToMetric(validateImperialInput(totalRunImperial.value));
-                totalRiseValue = imperialToMetric(validateImperialInput(totalRiseImperial.value));
-                stairWidthValue = imperialToMetric(validateImperialInput(stairDesiredWidthImperial.value));
-                idealRiserValue = imperialToMetric(validateImperialInput(idealRiserImperial.value)) || 0;
-                idealTreadValue = imperialToMetric(validateImperialInput(idealTreadImperial.value)) || 0;
-                minNarrowSideValue = imperialToMetric(validateImperialInput(calcMinNarrowSideImperial ? calcMinNarrowSideImperial.value : '')) || 0;
-                spiralWidthValue = imperialToMetric(validateImperialInput(calcSpiralWidthImperial ? calcSpiralWidthImperial.value : '')) || 0;
-            }
-            
-            // Validation des entrées
-            let isValid = true;
-            
-            if (isNaN(totalRunValue) || totalRunValue <= 0) {
-                document.getElementById('totalRunError').textContent = 'Veuillez entrer une valeur numérique valide pour la longueur totale.';
-                isValid = false;
-            }
-            
-            if (isNaN(totalRiseValue) || totalRiseValue <= 0) {
-                document.getElementById('totalRiseError').textContent = 'Veuillez entrer une valeur numérique valide pour la hauteur totale.';
-                isValid = false;
-            }
-            
-            if (isNaN(stairWidthValue) || stairWidthValue <= 0) {
-                document.getElementById('stairDesiredWidthError').textContent = 'Veuillez entrer une valeur numérique valide pour la largeur souhaitée.';
-                isValid = false;
-            }
-            
-            // Validation spécifique pour les marches dansantes
-            if (stairConfigValue === 'dancing_steps' && (isNaN(minNarrowSideValue) || minNarrowSideValue <= 0)) {
-                document.getElementById('calcMinNarrowSideError').textContent = 'Veuillez entrer une valeur numérique valide pour la largeur minimale côté étroit.';
-                isValid = false;
-            }
-            
-            // Validation spécifique pour les escaliers hélicoïdaux
-            if (stairConfigValue === 'spiral' && (isNaN(spiralWidthValue) || spiralWidthValue <= 0)) {
-                document.getElementById('calcSpiralWidthError').textContent = 'Veuillez entrer une valeur numérique valide pour la largeur libre entre mains courantes.';
-                isValid = false;
-            }
-            
-            if (!isValid) return;
-            
-            // Calculer les solutions optimales
-            const preferences = {
-                buildingType: buildingTypeValue,
-                stairType: stairTypeValue,
-                stairConfig: stairConfigValue,
-                lShapedConfig: lShapedConfigValue,
-                dancingStepsConfig: dancingStepsConfigValue,
-                spiralConfig: spiralConfigValue,
-                idealRiser: idealRiserValue,
-                idealTread: idealTreadValue,
-                priority: priorityComfort.checked ? 'comfort' : 'space'
-            };
-            
-            const solutions = calculateOptimalStair(totalRiseValue, totalRunValue, preferences);
-            
-            // Définir les limites selon le CNB 2015 pour vérification
-            let minRiser, maxRiser, minTread, maxTread, minWidth, minNarrowSide, minSpiralWidth;
-            let codeReference = 'CNB 2015';
-            
-            if (buildingTypeValue === 'part3') {
-                codeReference = 'CNB 2015 Partie 3';
                 minRiser = 125;
                 maxRiser = 180;
                 minTread = 280;
                 maxTread = Infinity;
-                minWidth = 1100;
-                minNarrowSide = 240; // Pour marches dansantes dans une issue
-                minSpiralWidth = 660; // Pour escalier hélicoïdal
-                
-                if (stairConfigValue === 'spiral') {
-                    maxRiser = 240;
-                }
-            } else {
-                codeReference = 'CNB 2015 Partie 9';
-                
-                if (stairTypeValue === 'private') {
-                    minRiser = 125;
-                    maxRiser = 200;
-                    minTread = 255;
-                    maxTread = 355;
-                    minWidth = 860;
-                    minNarrowSide = 150; // Pour marches dansantes privées
-                } else {
-                    minRiser = 125;
-                    maxRiser = 180;
-                    minTread = 280;
-                    maxTread = Infinity;
-                    minWidth = 900;
-                    minNarrowSide = dancingStepsConfigValue === 'exit' ? 240 : 150; // Selon le type de marches dansantes
-                }
-                
-                minSpiralWidth = 660; // Pour escalier hélicoïdal
-                
-                if (stairConfigValue === 'spiral') {
-                    maxRiser = 240;
-                }
+                minWidth = 900;
+                minNarrowSide = dancingStepsConfigValue === 'exit' ? 240 : 150; // Selon le type de marches dansantes
             }
             
-            // Vérifier la largeur de l'escalier
-            const isWidthCompliant = stairWidthValue >= minWidth;
-            
-            // Vérifications spécifiques selon le type d'escalier
-            let specificWarnings = '';
+            minSpiralWidth = 660; // Pour escalier hélicoïdal
             
             if (stairConfigValue === 'spiral') {
-                const isSpiralWidthCompliant = spiralWidthValue >= minSpiralWidth;
+                maxRiser = 240;
+            }
+        }
+        
+        // Vérifier la largeur de l'escalier
+        const isWidthCompliant = stairWidthValue >= minWidth;
+        
+        // Vérifications spécifiques selon le type d'escalier
+        let specificWarnings = '';
+        
+        if (stairConfigValue === 'spiral') {
+            const isSpiralWidthCompliant = spiralWidthValue >= minSpiralWidth;
+            
+            if (!isSpiralWidthCompliant) {
+                let spiralWidthDisplay = isMetric ? 
+                    `${formatNumber(spiralWidthValue)} mm` : 
+                    metricToImperial(spiralWidthValue);
                 
-                if (!isSpiralWidthCompliant) {
-                    let spiralWidthDisplay = isMetric ? 
-                        `${formatNumber(spiralWidthValue)} mm` : 
-                        metricToImperial(spiralWidthValue);
-                    
-                    let minSpiralWidthDisplay = isMetric ? 
-                        `${minSpiralWidth} mm` : 
-                        metricToImperial(minSpiralWidth);
-                    
-                    specificWarnings += `
-                        <div class="warning">
-                            <p>⚠ La largeur libre entre mains courantes (${spiralWidthDisplay}) est inférieure au minimum requis (${minSpiralWidthDisplay}) selon le ${codeReference}.</p>
-                        </div>
-                    `;
-                }
+                let minSpiralWidthDisplay = isMetric ? 
+                    `${minSpiralWidth} mm` : 
+                    metricToImperial(minSpiralWidth);
                 
-                if (spiralConfigValue === 'primary' && stairTypeValue === 'common') {
-                    specificWarnings += `
-                        <div class="warning">
-                            <p>⚠ Un escalier hélicoïdal ne peut servir de seul moyen d'évacuation que s'il ne dessert pas plus de 3 personnes (CNB 2015 9.8.4.7).</p>
-                        </div>
-                    `;
-                }
-            } else if (stairConfigValue === 'dancing_steps') {
-                const isNarrowSideCompliant = minNarrowSideValue >= minNarrowSide;
-                
-                if (!isNarrowSideCompliant) {
-                    let narrowSideDisplay = isMetric ? 
-                        `${formatNumber(minNarrowSideValue)} mm` : 
-                        metricToImperial(minNarrowSideValue);
-                    
-                    let minNarrowSideDisplay = isMetric ? 
-                        `${minNarrowSide} mm` : 
-                        metricToImperial(minNarrowSide);
-                    
-                    specificWarnings += `
-                        <div class="warning">
-                            <p>⚠ La largeur minimale côté étroit ${narrowSideDisplay} (${minNarrowSideValue.toFixed(2)} mm) est inférieure au minimum requis (${minNarrowSide} mm) selon le ${codeReference}.</p>
-                        </div>
-                    `;
-                }
+                specificWarnings += `
+                    <div class="warning">
+                        <p>⚠ La largeur libre entre mains courantes (${spiralWidthDisplay}) est inférieure au minimum requis (${minSpiralWidthDisplay}) selon le ${codeReference}.</p>
+                    </div>
+                `;
             }
             
-            // Préparer l'affichage des résultats
-            calculatorResultContent.innerHTML = '';
+            if (spiralConfigValue === 'primary' && stairTypeValue === 'common') {
+                specificWarnings += `
+                    <div class="warning">
+                        <p>⚠ Un escalier hélicoïdal ne peut servir de seul moyen d'évacuation que s'il ne dessert pas plus de 3 personnes (CNB 2015 9.8.4.7).</p>
+                    </div>
+                `;
+            }
+        } else if (stairConfigValue === 'dancing_steps') {
+            const isNarrowSideCompliant = minNarrowSideValue >= minNarrowSide;
             
-            if (solutions.length === 0) {
+            if (!isNarrowSideCompliant) {
+                let narrowSideDisplay = isMetric ? 
+                    `${formatNumber(minNarrowSideValue)} mm` : 
+                    metricToImperial(minNarrowSideValue);
+                
+                let minNarrowSideDisplay = isMetric ? 
+                    `${minNarrowSide} mm` : 
+                    metricToImperial(minNarrowSide);
+                
+                specificWarnings += `
+                    <div class="warning">
+                        <p>⚠ La largeur minimale côté étroit ${narrowSideDisplay} (${minNarrowSideValue.toFixed(2)} mm) est inférieure au minimum requis (${minNarrowSide} mm) selon le ${codeReference}.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Préparer l'affichage des résultats
+        if (calculatorResultContent) calculatorResultContent.innerHTML = '';
+        
+        if (solutions.length === 0) {
+            if (calculatorResult) {
                 calculatorResult.className = 'result non-compliant';
                 calculatorResultContent.innerHTML = `
                     <p>⚠ Aucune solution conforme n'a été trouvée avec les dimensions spécifiées.</p>
@@ -2265,7 +2286,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         <li>Consultez un professionnel pour une solution sur mesure</li>
                     </ul>
                 `;
-            } else {
+            }
+        } else {
+            if (calculatorResult) {
                 calculatorResult.className = 'result compliant';
                 
                 // Vérification de la largeur
@@ -2296,8 +2319,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     riserHeight: bestSolution.riserHeight,
                     treadDepth: bestSolution.treadDepth,
                     stairWidth: stairWidthValue,
-                    totalRun: bestSolution.treadDepth * bestSolution.numTreads,
-                    totalRise: bestSolution.riserHeight * bestSolution.numRisers,
+                    totalRun: totalRunValue,
+                    totalRise: totalRiseValue,
                     stairConfig: stairConfigValue,
                     lShapedConfig: lShapedConfigValue,
                     dancingStepsConfig: dancingStepsConfigValue,
@@ -2524,17 +2547,395 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Générer la visualisation de l'escalier
                 setTimeout(() => {
-                    generateStairVisualization(stairData, 'calculatorStairVisualization', isMetric);
+                    if (typeof generateStairVisualization === 'function') {
+                        generateStairVisualization(stairData, 'calculatorStairVisualization', isMetric);
+                    } else {
+                        console.error("La fonction generateStairVisualization n'est pas définie");
+                    }
                 }, 100);
             }
-            
+        }
+        
+        if (calculatorResult) {
             calculatorResult.style.display = 'block';
-        });
-    }
+        }
+    });
+}
     
     // Initialiser l'affichage en fonction des sélections initiales
     if (stairConfig) stairConfig.dispatchEvent(new Event('change'));
     if (calcStairConfig) calcStairConfig.dispatchEvent(new Event('change'));
     updatePlaceholders('verification');
     updatePlaceholders('calculator');
+
+// Calcule l'échelle appropriée pour la visualisation
+function calculateScale(totalRun, totalRise, stairWidth, numTreads, numRisers) {
+    // Espace disponible (avec la marge)
+    const availableWidth = 520; // 600 - 2*40
+    const availableHeight = 220; // 300 - 2*40
+    
+    // Calculer les échelles possibles
+    const scaleWidth = availableWidth / totalRun;
+    const scaleHeight = availableHeight / Math.max(stairWidth, totalRise);
+    
+    // Prendre la plus petite échelle pour s'assurer que tout est visible
+    return Math.min(scaleWidth, scaleHeight, 0.2); // Limiter l'échelle maximale
+}
+
+// Formater une dimension pour l'affichage
+function formatDimension(value, isMetric) {
+    if (isMetric) {
+        return Math.round(value) + " mm";
+    } else {
+        return metricToImperial(value);
+    }
+}
+
+// Fonction pour générer un SVG d'escalier en vue de dessus et de côté
+function generateStairVisualization(stairData, elementId, isMetric) {
+    // Récupérer les données de l'escalier
+    const {
+        numRisers,
+        numTreads,
+        riserHeight,
+        treadDepth,
+        stairWidth,
+        stairConfig,
+        totalRun,
+        totalRise
+    } = stairData;
+
+    // Paramètres de visualisation
+    const padding = 40;
+    const scale = calculateScale(totalRun, totalRise, stairWidth, numTreads, numRisers);
+    const svgWidth = Math.max(600, totalRun * scale + 2 * padding);
+    const svgHeight = 500;
+    const topViewHeight = 300;
+    const sideViewHeight = 180;
+    const sideViewTop = topViewHeight + 20;
+
+    // Créer l'élément SVG
+    const container = document.getElementById(elementId);
+    if (!container) {
+        console.error("Container not found:", elementId);
+        return;
+    }
+    
+    container.innerHTML = '';
+    
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", svgWidth);
+    svg.setAttribute("height", svgHeight);
+    svg.setAttribute("viewBox", `0 0 ${svgWidth} ${svgHeight}`);
+    svg.setAttribute("style", "border: 1px solid #ccc; background-color: #f9f9f9;");
+    
+    // Titre de la visualisation
+    const title = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    title.setAttribute("x", svgWidth / 2);
+    title.setAttribute("y", 25);
+    title.setAttribute("text-anchor", "middle");
+    title.setAttribute("font-size", "16");
+    title.setAttribute("font-weight", "bold");
+    title.textContent = "Visualisation de l'escalier";
+    svg.appendChild(title);
+    
+    // Sous-titre Vue de dessus
+    const topViewTitle = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    topViewTitle.setAttribute("x", padding);
+    topViewTitle.setAttribute("y", 50);
+    topViewTitle.setAttribute("font-size", "14");
+    topViewTitle.setAttribute("font-weight", "bold");
+    topViewTitle.textContent = "Vue de dessus";
+    svg.appendChild(topViewTitle);
+    
+    // Sous-titre Vue de côté
+    const sideViewTitle = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    sideViewTitle.setAttribute("x", padding);
+    sideViewTitle.setAttribute("y", sideViewTop - 10);
+    sideViewTitle.setAttribute("font-size", "14");
+    sideViewTitle.setAttribute("font-weight", "bold");
+    sideViewTitle.textContent = "Vue de côté";
+    svg.appendChild(sideViewTitle);
+
+    // Dessiner l'escalier selon la configuration
+    drawStraightStair(svg, stairData, {
+        padding,
+        scale,
+        topViewHeight,
+        sideViewTop,
+        sideViewHeight,
+        svgWidth,
+        isMetric
+    });
+    
+    // Ajouter le SVG au conteneur
+    container.appendChild(svg);
+}
+
+// Dessiner un escalier droit
+function drawStraightStair(svg, stairData, options) {
+    const {
+        numRisers,
+        numTreads,
+        riserHeight,
+        treadDepth,
+        stairWidth,
+        totalRun,
+        totalRise
+    } = stairData;
+    
+    const {
+        padding,
+        scale,
+        topViewHeight,
+        sideViewTop,
+        sideViewHeight,
+        svgWidth,
+        isMetric
+    } = options;
+    
+    // Vue de dessus
+    const topViewGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    
+    // Cadre de la vue de dessus
+    const topViewBorder = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    topViewBorder.setAttribute("x", padding);
+    topViewBorder.setAttribute("y", 60);
+    topViewBorder.setAttribute("width", totalRun * scale);
+    topViewBorder.setAttribute("height", stairWidth * scale);
+    topViewBorder.setAttribute("fill", "none");
+    topViewBorder.setAttribute("stroke", "#333");
+    topViewBorder.setAttribute("stroke-width", "1");
+    topViewGroup.appendChild(topViewBorder);
+    
+    // Marches en vue de dessus
+    for (let i = 0; i < numTreads; i++) {
+        const tread = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        const x = padding + i * treadDepth * scale;
+        tread.setAttribute("x1", x);
+        tread.setAttribute("y1", 60);
+        tread.setAttribute("x2", x);
+        tread.setAttribute("y2", 60 + stairWidth * scale);
+        tread.setAttribute("stroke", "#777");
+        tread.setAttribute("stroke-width", "1");
+        topViewGroup.appendChild(tread);
+        
+        // Numéro de marche
+        if (numTreads <= 20) { // N'afficher les numéros que si pas trop de marches
+            const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            text.setAttribute("x", x + treadDepth * scale / 2);
+            text.setAttribute("y", 60 + stairWidth * scale / 2);
+            text.setAttribute("text-anchor", "middle");
+            text.setAttribute("dominant-baseline", "middle");
+            text.setAttribute("font-size", "10");
+            text.textContent = (i + 1).toString();
+            topViewGroup.appendChild(text);
+        }
+    }
+    
+    // Dernière ligne de marche
+    const lastTread = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    lastTread.setAttribute("x1", padding + numTreads * treadDepth * scale);
+    lastTread.setAttribute("y1", 60);
+    lastTread.setAttribute("x2", padding + numTreads * treadDepth * scale);
+    lastTread.setAttribute("y2", 60 + stairWidth * scale);
+    lastTread.setAttribute("stroke", "#777");
+    lastTread.setAttribute("stroke-width", "1");
+    topViewGroup.appendChild(lastTread);
+    
+    // Flèche de direction
+    const arrow = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    arrow.setAttribute("d", `M ${padding + totalRun * scale / 2} ${60 + stairWidth * scale + 15} L ${padding + totalRun * scale / 2 + 15} ${60 + stairWidth * scale + 5} L ${padding + totalRun * scale / 2 - 15} ${60 + stairWidth * scale + 5} Z`);
+    arrow.setAttribute("fill", "#4CAF50");
+    topViewGroup.appendChild(arrow);
+    
+    // Légende pour la vue de dessus
+    const widthText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    widthText.setAttribute("x", padding - 10);
+    widthText.setAttribute("y", 60 + stairWidth * scale / 2);
+    widthText.setAttribute("text-anchor", "end");
+    widthText.setAttribute("dominant-baseline", "middle");
+    widthText.setAttribute("font-size", "12");
+    widthText.textContent = formatDimension(stairWidth, isMetric);
+    topViewGroup.appendChild(widthText);
+    
+    const lengthText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    lengthText.setAttribute("x", padding + totalRun * scale / 2);
+    lengthText.setAttribute("y", 50);
+    lengthText.setAttribute("text-anchor", "middle");
+    lengthText.setAttribute("font-size", "12");
+    lengthText.textContent = formatDimension(totalRun, isMetric);
+    topViewGroup.appendChild(lengthText);
+    
+    svg.appendChild(topViewGroup);
+
+    // Vue de côté
+    const sideViewGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    
+    // Dessiner les marches en vue de côté
+    const polygonPoints = [];
+    polygonPoints.push(`${padding},${sideViewTop}`);
+    
+    for (let i = 0; i < numRisers; i++) {
+        // Point horizontal (giron)
+        const x1 = padding + i * treadDepth * scale;
+        const y1 = sideViewTop - i * riserHeight * scale;
+        
+        // Point vertical (hauteur)
+        const x2 = x1;
+        const y2 = sideViewTop - (i + 1) * riserHeight * scale;
+        
+        // Point suivant (prochain giron)
+        const x3 = x1 + treadDepth * scale;
+        const y3 = y2;
+        
+        if (i < numRisers - 1) {
+            polygonPoints.push(`${x1},${y1} ${x2},${y2} ${x3},${y3}`);
+        } else {
+            // Dernière marche
+            polygonPoints.push(`${x1},${y1} ${x2},${y2}`);
+        }
+        
+        // Dessiner les lignes de marche
+        const line1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line1.setAttribute("x1", x1);
+        line1.setAttribute("y1", y1);
+        line1.setAttribute("x2", x2);
+        line1.setAttribute("y2", y2);
+        line1.setAttribute("stroke", "#333");
+        line1.setAttribute("stroke-width", "1.5");
+        sideViewGroup.appendChild(line1);
+        
+        if (i < numRisers - 1) {
+            const line2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line2.setAttribute("x1", x2);
+            line2.setAttribute("y1", y2);
+            line2.setAttribute("x2", x3);
+            line2.setAttribute("y2", y3);
+            line2.setAttribute("stroke", "#333");
+            line2.setAttribute("stroke-width", "1.5");
+            sideViewGroup.appendChild(line2);
+        }
+    }
+    
+    // Ajouter le point final
+    polygonPoints.push(`${padding + totalRun * scale},${sideViewTop - totalRise * scale}`);
+    
+    // Fermer le polygone
+    polygonPoints.push(`${padding + totalRun * scale},${sideViewTop} ${padding},${sideViewTop}`);
+    
+    // Créer le polygone de l'escalier
+    const stairPolygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    stairPolygon.setAttribute("points", polygonPoints.join(" "));
+    stairPolygon.setAttribute("fill", "#f0f0f0");
+    stairPolygon.setAttribute("stroke", "#999");
+    stairPolygon.setAttribute("stroke-width", "1");
+    sideViewGroup.insertBefore(stairPolygon, sideViewGroup.firstChild);
+    
+    // Légende pour la vue de côté
+    const riseText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    riseText.setAttribute("x", padding - 10);
+    riseText.setAttribute("y", sideViewTop - totalRise * scale / 2);
+    riseText.setAttribute("text-anchor", "end");
+    riseText.setAttribute("dominant-baseline", "middle");
+    riseText.setAttribute("font-size", "12");
+    riseText.textContent = formatDimension(totalRise, isMetric);
+    sideViewGroup.appendChild(riseText);
+    
+    const runText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    runText.setAttribute("x", padding + totalRun * scale / 2);
+    runText.setAttribute("y", sideViewTop + 15);
+    runText.setAttribute("text-anchor", "middle");
+    runText.setAttribute("font-size", "12");
+    runText.textContent = formatDimension(totalRun, isMetric);
+    sideViewGroup.appendChild(runText);
+    
+    // Étiquettes de dimensions pour une marche
+    if (numTreads > 0) {
+        // Hauteur de contremarche
+        const riserLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        riserLabel.setAttribute("x", padding + 0.5 * treadDepth * scale);
+        riserLabel.setAttribute("y", sideViewTop - 0.5 * riserHeight * scale);
+        riserLabel.setAttribute("text-anchor", "middle");
+        riserLabel.setAttribute("dominant-baseline", "middle");
+        riserLabel.setAttribute("font-size", "10");
+        riserLabel.setAttribute("fill", "#d32f2f");
+        riserLabel.textContent = formatDimension(riserHeight, isMetric);
+        sideViewGroup.appendChild(riserLabel);
+        
+        // Giron
+        const treadLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        treadLabel.setAttribute("x", padding + 1.5 * treadDepth * scale);
+        treadLabel.setAttribute("y", sideViewTop - 1 * riserHeight * scale - 5);
+        treadLabel.setAttribute("text-anchor", "middle");
+        treadLabel.setAttribute("font-size", "10");
+        treadLabel.setAttribute("fill", "#1976d2");
+        treadLabel.textContent = formatDimension(treadDepth, isMetric);
+        sideViewGroup.appendChild(treadLabel);
+    }
+    
+    svg.appendChild(sideViewGroup);
+
+    // Légende
+    const legend = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    
+    // Titre de légende
+    const legendTitle = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    legendTitle.setAttribute("x", svgWidth - padding - 100);
+    legendTitle.setAttribute("y", 50);
+    legendTitle.setAttribute("font-size", "12");
+    legendTitle.setAttribute("font-weight", "bold");
+    legendTitle.textContent = "Légende:";
+    legend.appendChild(legendTitle);
+    
+    // Entrée Hauteur de contremarche
+    const riserColorBox = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    riserColorBox.setAttribute("x", svgWidth - padding - 100);
+    riserColorBox.setAttribute("y", 60);
+    riserColorBox.setAttribute("width", 10);
+    riserColorBox.setAttribute("height", 10);
+    riserColorBox.setAttribute("fill", "#d32f2f");
+    legend.appendChild(riserColorBox);
+    
+    const riserLegendText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    riserLegendText.setAttribute("x", svgWidth - padding - 85);
+    riserLegendText.setAttribute("y", 69);
+    riserLegendText.setAttribute("font-size", "10");
+    riserLegendText.textContent = "Hauteur contremarche: " + formatDimension(riserHeight, isMetric);
+    legend.appendChild(riserLegendText);
+    
+    // Entrée Giron
+    const treadColorBox = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    treadColorBox.setAttribute("x", svgWidth - padding - 100);
+    treadColorBox.setAttribute("y", 80);
+    treadColorBox.setAttribute("width", 10);
+    treadColorBox.setAttribute("height", 10);
+    treadColorBox.setAttribute("fill", "#1976d2");
+    legend.appendChild(treadColorBox);
+    
+    const treadLegendText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    treadLegendText.setAttribute("x", svgWidth - padding - 85);
+    treadLegendText.setAttribute("y", 89);
+    treadLegendText.setAttribute("font-size", "10");
+    treadLegendText.textContent = "Giron: " + formatDimension(treadDepth, isMetric);
+    legend.appendChild(treadLegendText);
+    
+    // Nombre de marches
+    const stairsCountText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    stairsCountText.setAttribute("x", svgWidth - padding - 100);
+    stairsCountText.setAttribute("y", 109);
+    stairsCountText.setAttribute("font-size", "10");
+    stairsCountText.textContent = `Contremarches: ${numRisers}`;
+    legend.appendChild(stairsCountText);
+    
+    // Nombre de girons
+    const treadsCountText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    treadsCountText.setAttribute("x", svgWidth - padding - 100);
+    treadsCountText.setAttribute("y", 129);
+    treadsCountText.setAttribute("font-size", "10");
+    treadsCountText.textContent = `Marches: ${numTreads}`;
+    legend.appendChild(treadsCountText);
+    
+    svg.appendChild(legend);
+}
 });

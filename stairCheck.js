@@ -165,6 +165,52 @@ function imperialToMetric(imperialValue) {
     return null;
 }
 
+// Fonction pour vérifier si la règle du pas est respectée (2 des 3 règles doivent être respectées)
+function checkStepRule(riser, tread) {
+    // Convertir en pouces pour calculer selon les règles du pas
+    const riserInches = riser / 25.4;
+    const treadInches = tread / 25.4;
+    
+    // Règle 1: Giron + CM = 17" à 18"
+    const rule1 = treadInches + riserInches;
+    const isRule1Valid = rule1 >= 17 && rule1 <= 18;
+    
+    // Règle 2: Giron x CM = 71po² à 74po²
+    const rule2 = treadInches * riserInches;
+    const isRule2Valid = rule2 >= 71 && rule2 <= 74;
+    
+    // Règle 3: Giron + 2(CM) = 22" à 25"
+    const rule3 = treadInches + (2 * riserInches);
+    const isRule3Valid = rule3 >= 22 && rule3 <= 25;
+    
+    // Vérifier si au moins 2 des 3 règles sont respectées
+    const validRules = [isRule1Valid, isRule2Valid, isRule3Valid].filter(Boolean).length;
+    const isValid = validRules >= 2;
+    
+    return {
+        isValid,
+        rule1: {
+            value: rule1,
+            isValid: isRule1Valid,
+            min: 17,
+            max: 18
+        },
+        rule2: {
+            value: rule2,
+            isValid: isRule2Valid,
+            min: 71,
+            max: 74
+        },
+        rule3: {
+            value: rule3,
+            isValid: isRule3Valid,
+            min: 22,
+            max: 25
+        },
+        validRuleCount: validRules
+    };
+}
+
 // Fonction pour calculer le nombre optimal de marches et leurs dimensions
 function calculateOptimalStair(totalRise, totalRun, preferences) {
     const {
@@ -279,11 +325,11 @@ function calculateOptimalStair(totalRise, totalRun, preferences) {
         // Vérifier si le giron est dans les limites
         if (treadDepth < minTread || (maxTread !== Infinity && treadDepth > maxTread)) continue;
         
+        // Vérifier la règle du pas
+        const stepRule = checkStepRule(riserHeight, treadDepth);
+        
         // Calculer la valeur du pas (2R + G)
         const stepValue = 2 * riserHeight + treadDepth;
-        
-        // Vérifier si la règle du pas est respectée
-        const isStepRuleCompliant = (stepValue >= minStep && stepValue <= maxStep);
         
         // Calculer l'écart par rapport aux valeurs idéales
         const riserDeviation = idealRiser > 0 ? Math.abs(riserHeight - idealRiser) : 0;
@@ -296,6 +342,11 @@ function calculateOptimalStair(totalRise, totalRun, preferences) {
         if (priority === 'comfort') {
             // Priorité au confort : la règle du pas est plus importante
             score = stepDeviation * 2 + riserDeviation + treadDeviation;
+            
+            // Bonus si la règle du pas est respectée (au moins 2 des 3 règles)
+            if (stepRule.isValid) {
+                score *= 0.8; // Réduire le score pour favoriser les solutions conformes à la règle du pas
+            }
         } else {
             // Priorité à l'espace : utiliser au mieux l'espace disponible
             score = riserDeviation + treadDeviation * 2;
@@ -307,7 +358,7 @@ function calculateOptimalStair(totalRise, totalRun, preferences) {
             riserHeight,
             treadDepth,
             stepValue,
-            isStepRuleCompliant,
+            stepRule,
             score,
             riserDeviation,
             treadDeviation,
@@ -812,9 +863,30 @@ document.addEventListener('DOMContentLoaded', function() {
             isCompliant = false;
         }
         
+        // Vérification de la règle du pas
+        const stepRule = checkStepRule(riserHeightValue, treadDepthValue);
+        if (!stepRule.isValid) {
+            let stepsIssue = "La règle du pas n'est pas respectée (moins de 2 des 3 règles sont satisfaites) :";
+            
+            // Détailler les règles du pas qui ne sont pas respectées
+            if (!stepRule.rule1.isValid) {
+                stepsIssue += `<br>- Règle 1 : Giron + CM = ${stepRule.rule1.value.toFixed(2)}" (devrait être entre ${stepRule.rule1.min}" et ${stepRule.rule1.max}")`;
+            }
+            if (!stepRule.rule2.isValid) {
+                stepsIssue += `<br>- Règle 2 : Giron × CM = ${stepRule.rule2.value.toFixed(2)} po² (devrait être entre ${stepRule.rule2.min} po² et ${stepRule.rule2.max} po²)`;
+            }
+            if (!stepRule.rule3.isValid) {
+                stepsIssue += `<br>- Règle 3 : Giron + 2(CM) = ${stepRule.rule3.value.toFixed(2)}" (devrait être entre ${stepRule.rule3.min}" et ${stepRule.rule3.max}")`;
+            }
+            
+            issues.push(stepsIssue);
+            // Ne pas marquer comme non conforme car c'est juste une recommandation
+        }
+        
         // Vérification de la largeur minimale côté étroit (pour escalier avec marches dansantes)
         if (config === 'dancing_steps' && narrowSideValue < minNarrowSide) {
-            issues.push(`La largeur minimale côté étroit (${narrowSideValue} mm) est inférieure au minimum requis (${minNarrowSide} mm).`);
+            const narrowSideImperialValue = metricToImperial(narrowSideValue);
+            issues.push(`La largeur minimale côté étroit ${narrowSideImperialValue} (${narrowSideValue.toFixed(2)} mm) est inférieure au minimum requis (${minNarrowSide} mm) selon le ${codeReference}.`);
             isCompliant = false;
         }
         
@@ -855,6 +927,34 @@ document.addEventListener('DOMContentLoaded', function() {
         if (isCompliant) {
             result.classList.add('compliant');
             resultContent.innerHTML = `<p class="success">✓ Conforme au ${codeReference}.</p>`;
+            
+            // Si la conformité est vérifiée mais que la règle du pas n'est pas respectée
+            if (!stepRule.isValid) {
+                let stepRuleInfo = `
+                <div class="warning">
+                    <p>⚠ Note: La règle du pas n'est pas entièrement respectée (${stepRule.validRuleCount}/3 règles satisfaites). Pour un confort optimal, il est recommandé de respecter au moins 2 des 3 règles suivantes :</p>
+                    <ul>
+                        <li>Règle 1: Giron + CM = 17" à 18" (actuel: ${stepRule.rule1.value.toFixed(2)}")</li>
+                        <li>Règle 2: Giron × CM = 71 po² à 74 po² (actuel: ${stepRule.rule2.value.toFixed(2)} po²)</li>
+                        <li>Règle 3: Giron + 2(CM) = 22" à 25" (actuel: ${stepRule.rule3.value.toFixed(2)}")</li>
+                    </ul>
+                </div>
+                `;
+                resultContent.innerHTML += stepRuleInfo;
+            } else {
+                // Indiquer quelles règles du pas sont respectées
+                let stepRuleInfo = `
+                <div class="result-section">
+                    <p>✓ La règle du pas est respectée (${stepRule.validRuleCount}/3 règles satisfaites) :</p>
+                    <ul>
+                        <li>${stepRule.rule1.isValid ? "✓" : "⨯"} Règle 1: Giron + CM = 17" à 18" (actuel: ${stepRule.rule1.value.toFixed(2)}")</li>
+                        <li>${stepRule.rule2.isValid ? "✓" : "⨯"} Règle 2: Giron × CM = 71 po² à 74 po² (actuel: ${stepRule.rule2.value.toFixed(2)} po²)</li>
+                        <li>${stepRule.rule3.isValid ? "✓" : "⨯"} Règle 3: Giron + 2(CM) = 22" à 25" (actuel: ${stepRule.rule3.value.toFixed(2)}")</li>
+                    </ul>
+                </div>
+                `;
+                resultContent.innerHTML += stepRuleInfo;
+            }
         } else {
             result.classList.add('non-compliant');
             let issuesList = `<p>⚠ Non conforme au ${codeReference}.</p><p>Problèmes détectés:</p><ul>`;
@@ -862,8 +962,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 let formattedIssue = issue;
                 if (!isMetric) {
                     // Convertir les valeurs métriques en impériales pour l'affichage
-                    formattedIssue = issue.replace(/(\d+) mm/g, function(match, p1) {
-                        return metricToImperial(parseInt(p1)) + ' ';
+                    formattedIssue = issue.replace(/(\d+(?:\.\d+)?) mm/g, function(match, p1) {
+                        return metricToImperial(parseFloat(p1)) + ' (' + parseFloat(p1).toFixed(2) + ' mm)';
                     });
                 }
                 issuesList += `<li>${formattedIssue}</li>`;
@@ -1047,7 +1147,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 specificWarnings += `
                     <div class="warning">
-                        <p>⚠ La largeur minimale côté étroit (${narrowSideDisplay}) est inférieure au minimum requis (${minNarrowSideDisplay}) selon le ${codeReference}.</p>
+                        <p>⚠ La largeur minimale côté étroit ${narrowSideDisplay} (${minNarrowSideValue.toFixed(2)} mm) est inférieure au minimum requis (${minNarrowSide} mm) selon le ${codeReference}.</p>
                     </div>
                 `;
             }
@@ -1100,14 +1200,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const stepRuleSquareIdeal = isMetric ? stepRuleSquareIdealMetric : stepRuleSquareIdealImperial;
             const stepRule2RGIdeal = isMetric ? stepRule2RGIdealMetric : stepRule2RGIdealImperial;
             
-            const stepRuleFormula = isMetric ? "2R + G = 630 à 650 mm" : "2R + G = 24,8 à 25,6 pouces";
-            
             const explanationSection = `
                 <div class="result-section">
                     <h3>Règle du pas</h3>
-                    <p>La règle du pas optimale stipule que la somme de 2 fois la hauteur de contremarche (2R) plus la profondeur du giron (G) devrait idéalement être comprise entre ${stepRuleIdeal}, avec un optimum à ${isMetric ? "640 mm" : "25,2 pouces"}.</p>
-                    <div class="step-formula">${stepRuleFormula}</div>
-                    <p>Cette formule correspond au pas moyen d'un adulte et assure un confort optimal lors de l'utilisation de l'escalier.</p>
+                    <p>Les critères de confort pour un escalier sont vérifiés lorsqu'au moins 2 des 3 règles suivantes sont respectées :</p>
+                    <ol>
+                        <li>Giron + CM = 17" à 18" (${isMetric ? "432-457 mm" : "17-18 pouces"})</li>
+                        <li>Giron × CM = 71 po² à 74 po² (${isMetric ? "45800-47700 mm²" : "71-74 po²"})</li>
+                        <li>Giron + 2(CM) = 22" à 25" (${isMetric ? "559-635 mm" : "22-25 pouces"})</li>
+                    </ol>
+                    <p>Ces formules correspondent au pas moyen d'un adulte et assurent un confort optimal lors de l'utilisation de l'escalier.</p>
                 </div>
             `;
 
@@ -1122,7 +1224,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <th>Contremarches</th>
                                 <th>Hauteur contremarche</th>
                                 <th>Giron</th>
-                                <th>Règle du pas<br>(2R + G)</th>
+                                <th>Règles du pas respectées</th>
                                 <th>Longueur totale</th>
                             </tr>
                         </thead>
@@ -1133,19 +1235,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 const isOptimal = index === 0;
                 const className = isOptimal ? 'optimal-solution' : '';
                 
-                let riserHeightDisplay, treadDepthDisplay, stepValueDisplay, actualTotalRunDisplay;
+                let riserHeightDisplay, treadDepthDisplay, stepRuleDisplay, actualTotalRunDisplay;
                 
                 if (isMetric) {
                     riserHeightDisplay = formatNumber(solution.riserHeight) + ' mm';
                     treadDepthDisplay = formatNumber(solution.treadDepth) + ' mm';
-                    stepValueDisplay = formatNumber(solution.stepValue) + ' mm';
                     actualTotalRunDisplay = formatNumber(solution.treadDepth * solution.numTreads) + ' mm';
                 } else {
                     riserHeightDisplay = metricToImperial(solution.riserHeight);
                     treadDepthDisplay = metricToImperial(solution.treadDepth);
-                    stepValueDisplay = metricToImperial(solution.stepValue);
                     actualTotalRunDisplay = metricToImperial(solution.treadDepth * solution.numTreads);
                 }
+                
+                // Nombre de règles respectées pour la règle du pas
+                const validRules = solution.stepRule.validRuleCount;
+                const isStepRuleValid = solution.stepRule.isValid;
+                stepRuleDisplay = `${validRules}/3 ${isStepRuleValid ? "✓" : "⨯"}`;
                 
                 solutionsHtml += `
                     <tr class="${className}">
@@ -1153,7 +1258,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <td>${solution.numRisers}</td>
                         <td>${riserHeightDisplay}</td>
                         <td>${treadDepthDisplay}</td>
-                        <td>${stepValueDisplay}</td>
+                        <td>${stepRuleDisplay}</td>
                         <td>${actualTotalRunDisplay}</td>
                     </tr>
                 `;
@@ -1173,23 +1278,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 const totalRiseCalculation = bestSolution.riserHeight * bestSolution.numRisers;
                 const totalRunCalculation = bestSolution.treadDepth * bestSolution.numTreads;
                 
-                let formatRiserHeight, formatTreadDepth, formatStepValue, formatTotalRise, formatTotalRun, formatStairWidth;
+                let formatRiserHeight, formatTreadDepth, formatTotalRise, formatTotalRun, formatStairWidth;
                 
                 if (isMetric) {
                     formatRiserHeight = formatNumber(bestSolution.riserHeight) + ' mm';
                     formatTreadDepth = formatNumber(bestSolution.treadDepth) + ' mm';
-                    formatStepValue = formatNumber(bestSolution.stepValue) + ' mm';
                     formatTotalRise = formatNumber(totalRiseCalculation) + ' mm';
                     formatTotalRun = formatNumber(totalRunCalculation) + ' mm';
                     formatStairWidth = formatNumber(stairWidthValue) + ' mm';
                 } else {
                     formatRiserHeight = metricToImperial(bestSolution.riserHeight);
                     formatTreadDepth = metricToImperial(bestSolution.treadDepth);
-                    formatStepValue = metricToImperial(bestSolution.stepValue);
                     formatTotalRise = metricToImperial(totalRiseCalculation);
                     formatTotalRun = metricToImperial(totalRunCalculation);
                     formatStairWidth = metricToImperial(stairWidthValue);
                 }
+                
+                // Informations sur les règles du pas pour la meilleure solution
+                let stepRuleDetails = `
+                    <div class="result-section">
+                        <h4>Vérification de la règle du pas (solution optimale)</h4>
+                        <ul>
+                            <li>${bestSolution.stepRule.rule1.isValid ? "✓" : "⨯"} Règle 1: Giron + CM = ${bestSolution.stepRule.rule1.value.toFixed(2)}" (idéal: ${bestSolution.stepRule.rule1.min}"-${bestSolution.stepRule.rule1.max}")</li>
+                            <li>${bestSolution.stepRule.rule2.isValid ? "✓" : "⨯"} Règle 2: Giron × CM = ${bestSolution.stepRule.rule2.value.toFixed(2)} po² (idéal: ${bestSolution.stepRule.rule2.min}-${bestSolution.stepRule.rule2.max} po²)</li>
+                            <li>${bestSolution.stepRule.rule3.isValid ? "✓" : "⨯"} Règle 3: Giron + 2(CM) = ${bestSolution.stepRule.rule3.value.toFixed(2)}" (idéal: ${bestSolution.stepRule.rule3.min}"-${bestSolution.stepRule.rule3.max}")</li>
+                        </ul>
+                        <p>${bestSolution.stepRule.isValid ? "✓ Cette solution respecte les critères de confort (au moins 2 des 3 règles sont satisfaites)." : "⚠ Cette solution ne respecte pas pleinement les critères de confort (moins de 2 règles satisfaites)."}</p>
+                    </div>
+                `;
                 
                 detailsHtml = `
                     <div class="result-section">
@@ -1199,12 +1315,12 @@ document.addEventListener('DOMContentLoaded', function() {
                             <li>Nombre de marches: ${bestSolution.numTreads}</li>
                             <li>Hauteur de contremarche: ${formatRiserHeight}</li>
                             <li>Profondeur du giron: ${formatTreadDepth}</li>
-                            <li>Valeur du pas (2R + G): ${formatStepValue}</li>
                             <li>Hauteur totale: ${formatTotalRise}</li>
                             <li>Longueur totale: ${formatTotalRun}</li>
                             <li>Largeur recommandée: ${formatStairWidth} ${isWidthCompliant ? '' : '⚠'}</li>
                         </ul>
                     </div>
+                    ${stepRuleDetails}
                 `;
             }
             

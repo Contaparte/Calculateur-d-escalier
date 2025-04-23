@@ -478,22 +478,25 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Fonction pour afficher/masquer les options de marches rayonnantes
     function toggleRayonnanteOptions(tab) {
-        let stairConfigSelect, rayonnanteOptionsDiv;
-        
-        if (tab === 'calc') {
-            stairConfigSelect = document.getElementById('calcStairConfig');
-            rayonnanteOptionsDiv = document.getElementById('rayonnante-options-calc');
-        } else {
-            stairConfigSelect = document.getElementById('stairConfig');
-            rayonnanteOptionsDiv = document.getElementById('rayonnante-options-verification');
-        }
-        
+    let stairConfigSelect, rayonnanteOptionsDiv;
+    
+    if (tab === 'calc') {
+        stairConfigSelect = document.getElementById('calcStairConfig');
+        rayonnanteOptionsDiv = document.getElementById('rayonnante-options-calc');
+    } else {
+        stairConfigSelect = document.getElementById('stairConfig');
+        rayonnanteOptionsDiv = document.getElementById('rayonnante-options-verification');
+    }
+    
+    // Vérifier que les éléments existent avant de tenter d'y accéder
+    if (stairConfigSelect && rayonnanteOptionsDiv) {
         if (stairConfigSelect.value === "L" || stairConfigSelect.value === "U") {
             rayonnanteOptionsDiv.classList.remove('hidden');
         } else {
             rayonnanteOptionsDiv.classList.add('hidden');
         }
     }
+}
     
     // Ajouter des écouteurs d'événements pour la conversion entre métrique et impérial
     const metricInputPairs = [
@@ -1054,8 +1057,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialiser l'affichage en fonction des sélections initiales
     stairConfig.dispatchEvent(new Event('change'));
-    toggleRayonnanteOptions('verification');
-    toggleRayonnanteOptions('calc');
-    updatePlaceholders('verification');
-    updatePlaceholders('calculator');
+    
+    // Attendre que le DOM soit complètement chargé pour ces opérations
+    setTimeout(function() {
+        toggleRayonnanteOptions('verification');
+        toggleRayonnanteOptions('calc');
+        updatePlaceholders('verification');
+        updatePlaceholders('calculator');
+    }, 0);
 });

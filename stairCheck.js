@@ -332,6 +332,285 @@ function calculateOptimalStair(totalRise, totalRun, preferences) {
             if (stepRule.isValid) {
                 score *= 0.8; // Réduire le score pour favoriser les solutions conformes à la règle du pas
             }
+            
+            // Préparer l'affichage des résultats
+            calculatorResultContent.innerHTML = '';
+            
+            if (solutions.length === 0) {
+                calculatorResult.className = 'result non-compliant';
+                calculatorResultContent.innerHTML = `
+                    <p>⚠ Aucune solution conforme n'a été trouvée avec les dimensions spécifiées.</p>
+                    <p>Recommandations :</p>
+                    <ul>
+                        <li>Augmentez la longueur horizontale disponible</li>
+                        <li>Envisagez une configuration différente d'escalier</li>
+                        <li>Consultez un professionnel pour une solution sur mesure</li>
+                    </ul>
+                `;
+
+                // Visualiser l'escalier pour la meilleure solution
+                if (bestSolution) {
+                    const stairParams = {
+                        numRisers: bestSolution.numRisers,
+                        numTreads: bestSolution.numTreads,
+                        riserHeight: bestSolution.riserHeight,
+                        treadDepth: bestSolution.treadDepth,
+                        stairWidth: stairWidthValue
+                    };
+                    
+                    // Visualiser l'escalier après que le DOM a été mis à jour
+                    setTimeout(() => {
+                        visualizeStair('calcStairVisualization', stairConfigValue, stairParams);
+                    }, 0);
+                }
+            }
+            
+            calculatorResult.style.display = 'block';
+        });
+    }
+    
+    // Initialiser l'affichage en fonction des sélections initiales
+    if (stairConfig) stairConfig.dispatchEvent(new Event('change'));
+    if (calcStairConfig) calcStairConfig.dispatchEvent(new Event('change'));
+    updatePlaceholders('verification');
+    updatePlaceholders('calculator');
+});
+                
+                // Afficher les détails de la meilleure solution
+                const bestSolution = solutions[0];
+                let detailsHtml = '';
+                
+                if (bestSolution) {
+                    const totalRiseCalculation = bestSolution.riserHeight * bestSolution.numRisers;
+                    const totalRunCalculation = bestSolution.treadDepth * bestSolution.numTreads;
+                    
+                    let formatRiserHeight, formatTreadDepth, formatTotalRise, formatTotalRun, formatStairWidth;
+                    
+                    if (isMetric) {
+                        formatRiserHeight = formatNumber(bestSolution.riserHeight) + ' mm';
+                        formatTreadDepth = formatNumber(bestSolution.treadDepth) + ' mm';
+                        formatTotalRise = formatNumber(totalRiseCalculation) + ' mm';
+                        formatTotalRun = formatNumber(totalRunCalculation) + ' mm';
+                        formatStairWidth = formatNumber(stairWidthValue) + ' mm';
+                    }
+                
+                // Assembler le résultat final
+                calculatorResultContent.innerHTML = `
+                    <p class="success">✓ Solution conforme au ${codeReference} trouvée.</p>
+                    ${widthWarning}
+                    ${specificWarnings}
+                    ${explanationSection}
+                    ${solutionsHtml}
+                    ${detailsHtml}
+                    ${configNotes}
+                    <div class="result-section">
+                        <h3>Notes importantes</h3>
+                        <ul>
+                            <li>Ces calculs sont indicatifs et doivent être vérifiés par un professionnel.</li>
+                            <li>Les dimensions finales peuvent nécessiter des ajustements selon les matériaux utilisés.</li>
+                            <li>La hauteur et la profondeur des marches doivent être uniformes dans une même volée.</li>
+                            <li>N'oubliez pas les exigences concernant les mains courantes et garde-corps.</li>
+                        </ul>
+                    </div>
+                `; else {
+                        formatRiserHeight = metricToImperial(bestSolution.riserHeight);
+                        formatTreadDepth = metricToImperial(bestSolution.treadDepth);
+                        formatTotalRise = metricToImperial(totalRiseCalculation);
+                        formatTotalRun = metricToImperial(totalRunCalculation);
+                        formatStairWidth = metricToImperial(stairWidthValue);
+                    }
+                    
+                    // Informations sur les règles du pas pour la meilleure solution
+                    let stepRuleDetails = `
+                        <div class="result-section">
+                            <h4>Vérification de la règle du pas (solution optimale)</h4>
+                            <ul>
+                                <li>${bestSolution.stepRule.rule1.isValid ? "✓" : "⨯"} Règle 1: Giron + CM = ${bestSolution.stepRule.rule1.value.toFixed(2)}" (idéal: ${bestSolution.stepRule.rule1.min}"-${bestSolution.stepRule.rule1.max}")</li>
+                                <li>${bestSolution.stepRule.rule2.isValid ? "✓" : "⨯"} Règle 2: Giron × CM = ${bestSolution.stepRule.rule2.value.toFixed(2)} po² (idéal: ${bestSolution.stepRule.rule2.min}-${bestSolution.stepRule.rule2.max} po²)</li>
+                                <li>${bestSolution.stepRule.rule3.isValid ? "✓" : "⨯"} Règle 3: Giron + 2(CM) = ${bestSolution.stepRule.rule3.value.toFixed(2)}" (idéal: ${bestSolution.stepRule.rule3.min}"-${bestSolution.stepRule.rule3.max}")</li>
+                            </ul>
+                            <p>${bestSolution.stepRule.isValid ? "✓ Cette solution respecte les critères de confort (au moins 2 des 3 règles sont satisfaites)." : "⚠ Cette solution ne respecte pas pleinement les critères de confort (moins de 2 règles satisfaites)."}
+</p>
+                        </div>
+                    `;
+
+                    // Ajouter la visualisation de l'escalier
+                    detailsHtml += `
+                        <div class="result-section">
+                            <h3>Visualisation de l'escalier</h3>
+                            <div id="calcStairVisualization"></div>
+                        </div>
+                    `;
+                }
+                
+                // Ajouter des notes spécifiques selon le type d'escalier
+                let configNotes = '';
+                
+                if (stairConfigValue === 'spiral') {
+                    configNotes = `
+                        <div class="result-section">
+                            <h3>Notes sur l'escalier hélicoïdal</h3>
+                            <ul>
+                                <li>Les escaliers hélicoïdaux ne doivent pas être utilisés comme issues (CNB 9.8.4.7).</li>
+                                <li>Un escalier hélicoïdal ne peut servir de seul moyen d'évacuation que s'il ne dessert pas plus de 3 personnes.</li>
+                                <li>La largeur libre minimale entre mains courantes doit être de 660 mm.</li>
+                                <li>Le giron minimal doit être de 190 mm à 300 mm de l'axe de la main courante du côté étroit.</li>
+                            </ul>
+                        </div>
+                    `;
+                } else if (stairConfigValue === 'dancing_steps') {
+                    configNotes = `
+                        <div class="result-section">
+                            <h3>Notes sur les marches dansantes</h3>
+                            <ul>
+                                <li>Toutes les marches dansantes d'une même volée doivent avoir un angle constant.</li>
+                                <li>Le giron minimal mesuré à 300 mm de l'axe de la main courante doit être ${isMetric ? (minNarrowSide + ' mm') : metricToImperial(minNarrowSide)}.</li>
+                                <li>La hauteur et le giron doivent être uniformes lorsqu'ils sont mesurés à 300 mm de l'axe de la main courante.</li>
+                                <li>Toutes les marches dansantes d'une même volée doivent tourner dans la même direction.</li>
+                            </ul>
+                        </div>
+                    `;
+                } else if (stairConfigValue === 'l_shaped' && lShapedConfigValue === 'two_45deg') {
+                    configNotes = `
+                        <div class="result-section">
+                            <h3>Notes sur les marches rayonnantes</h3>
+                            <ul>
+                                <li>Une seule série de marches rayonnantes est autorisée entre deux planchers.</li>
+                                <li>Les marches rayonnantes à 45° doivent avoir un angle de rotation de 45° exactement.</li>
+                                <li>Ces marches doivent être uniformes dans leur dimension.</li>
+                            </ul>
+                        </div>
+                    `;
+                } else if (stairConfigValue === 'l_shaped' && lShapedConfigValue === 'three_30deg') {
+                    configNotes = `
+                        <div class="result-section">
+                            <h3>Notes sur les marches rayonnantes</h3>
+                            <ul>
+                                <li>Une seule série de marches rayonnantes est autorisée entre deux planchers.</li>
+                                <li>Les marches rayonnantes à 30° doivent avoir un angle de rotation de 30° exactement.</li>
+                                <li>Ces marches doivent être uniformes dans leur dimension.</li>
+                            </ul>
+                        </div>
+                    `;
+                }
+                    
+                    detailsHtml = `
+                        <div class="result-section">
+                            <h3>Détails de la solution optimale</h3>
+                            <ul>
+                                <li>Nombre de contremarches: ${bestSolution.numRisers}</li>
+                                <li>Nombre de marches: ${bestSolution.numTreads}</li>
+                                <li>Hauteur de contremarche: ${formatRiserHeight}</li>
+                                <li>Profondeur du giron: ${formatTreadDepth}</li>
+                                <li>Hauteur totale: ${formatTotalRise}</li>
+                                <li>Longueur totale: ${formatTotalRun}</li>
+                                <li>Largeur recommandée: ${formatStairWidth} ${isWidthCompliant ? '' : '⚠'}</li>
+                            </ul>
+                        </div>
+                        ${stepRuleDetails}
+                    `;
+
+                // Afficher les solutions
+                let solutionsHtml = `
+                    <div class="result-section">
+                        <h3>Meilleures configurations</h3>
+                        <table class="result-table">
+                            <thead>
+                                <tr>
+                                    <th>Solution</th>
+                                    <th>Contremarches</th>
+                                    <th>Hauteur contremarche</th>
+                                    <th>Giron</th>
+                                    <th>Règles du pas respectées</th>
+                                    <th>Longueur totale</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                solutions.forEach((solution, index) => {
+                    const isOptimal = index === 0;
+                    const className = isOptimal ? 'optimal-solution' : '';
+                    
+                    let riserHeightDisplay, treadDepthDisplay, stepRuleDisplay, actualTotalRunDisplay;
+                    
+                    if (isMetric) {
+                        riserHeightDisplay = formatNumber(solution.riserHeight) + ' mm';
+                        treadDepthDisplay = formatNumber(solution.treadDepth) + ' mm';
+                        actualTotalRunDisplay = formatNumber(solution.treadDepth * solution.numTreads) + ' mm';
+                    } else {
+                        riserHeightDisplay = metricToImperial(solution.riserHeight);
+                        treadDepthDisplay = metricToImperial(solution.treadDepth);
+                        actualTotalRunDisplay = metricToImperial(solution.treadDepth * solution.numTreads);
+                    }
+                    
+                    // Nombre de règles respectées pour la règle du pas
+                    const validRules = solution.stepRule.validRuleCount;
+                    const isStepRuleValid = solution.stepRule.isValid;
+                    stepRuleDisplay = `${validRules}/3 ${isStepRuleValid ? "✓" : "⨯"}`;
+                    
+                    solutionsHtml += `
+                        <tr class="${className}">
+                            <td>${isOptimal ? '✓ Optimale' : 'Alternative ' + index}</td>
+                            <td>${solution.numRisers}</td>
+                            <td>${riserHeightDisplay}</td>
+                            <td>${treadDepthDisplay}</td>
+                            <td>${stepRuleDisplay}</td>
+                            <td>${actualTotalRunDisplay}</td>
+                        </tr>
+                    `;
+                });
+                
+                solutionsHtml += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } else {
+                calculatorResult.className = 'result compliant';
+                
+                // Vérification de la largeur
+                let widthWarning = '';
+                if (!isWidthCompliant) {
+                    let widthValueDisplay = isMetric ? 
+                        `${formatNumber(stairWidthValue)} mm` : 
+                        metricToImperial(stairWidthValue);
+                    
+                    let minWidthDisplay = isMetric ? 
+                        `${minWidth} mm` : 
+                        metricToImperial(minWidth);
+                    
+                    widthWarning = `
+                        <div class="warning">
+                            <p>⚠ La largeur spécifiée (${widthValueDisplay}) est inférieure au minimum requis (${minWidthDisplay}) selon le ${codeReference}.</p>
+                        </div>
+                    `;
+                }
+                
+                // Afficher une explication de la règle du pas
+                const stepRuleIdealImperial = "17-18 pouces";
+                const stepRuleIdealMetric = "432-457 mm";
+                const stepRuleSquareIdealImperial = "71-74 po²";
+                const stepRuleSquareIdealMetric = "45800-47700 mm²";
+                const stepRule2RGIdealImperial = "22-25 pouces";
+                const stepRule2RGIdealMetric = "559-635 mm";
+                
+                const stepRuleIdeal = isMetric ? stepRuleIdealMetric : stepRuleIdealImperial;
+                const stepRuleSquareIdeal = isMetric ? stepRuleSquareIdealMetric : stepRuleSquareIdealImperial;
+                const stepRule2RGIdeal = isMetric ? stepRule2RGIdealMetric : stepRule2RGIdealImperial;
+                
+                const explanationSection = `
+                    <div class="result-section">
+                        <h3>Règle du pas</h3>
+                        <p>Les critères de confort pour un escalier sont vérifiés lorsqu'au moins 2 des 3 règles suivantes sont respectées :</p>
+                        <ol>
+                            <li>Giron + CM = 17" à 18" (${isMetric ? "432-457 mm" : "17-18 pouces"})</li>
+                            <li>Giron × CM = 71 po² à 74 po² (${isMetric ? "45800-47700 mm²" : "71-74 po²"})</li>
+                            <li>Giron + 2(CM) = 22" à 25" (${isMetric ? "559-635 mm" : "22-25 pouces"})</li>
+                        </ol>
+                        <p>Ces formules correspondent au pas moyen d'un adulte et assurent un confort optimal lors de l'utilisation de l'escalier.</p>
+                    </div>
+                `;
         } else {
             // Priorité à l'espace : utiliser au mieux l'espace disponible
             score = riserDeviation + treadDeviation * 2;
@@ -412,7 +691,7 @@ function drawStraightStair(canvas, stairParams) {
     const totalRun = numTreads * treadDepth;
     
     // Calculer l'échelle pour ajuster l'escalier au canvas
-    // Gardons une marge de 20px de chaque côté
+    // Gardons une marge de 40px de chaque côté
     const margin = 40;
     const availableWidth = width - 2 * margin;
     const availableHeight = height - 2 * margin;
@@ -426,28 +705,58 @@ function drawStraightStair(canvas, stairParams) {
     const startX = margin;
     const startY = height - margin;
     
+    // Ligne de sol
+    ctx.beginPath();
+    ctx.moveTo(startX - 20, startY);
+    ctx.lineTo(startX + totalRun * scale + 20, startY);
+    ctx.strokeStyle = '#777';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    
     // Dessiner les marches
     ctx.beginPath();
     ctx.moveTo(startX, startY);
     
-    // Dessiner la ligne de base
-    ctx.lineTo(startX + totalRun * scale, startY);
-    
     // Dessiner chaque marche
     for (let i = 0; i < numRisers; i++) {
-        const x = startX + (numTreads - i) * treadDepth * scale;
-        const y = startY - (i + 1) * riserHeight * scale;
+        const x1 = startX + i * treadDepth * scale;
+        const y1 = startY - (i + 1) * riserHeight * scale;
         
         // Ligne verticale (contremarche)
-        ctx.lineTo(x, y);
+        ctx.lineTo(x1, y1);
         
         // Ligne horizontale (giron) sauf pour la dernière marche
         if (i < numRisers - 1) {
-            ctx.lineTo(x - treadDepth * scale, y);
+            ctx.lineTo(x1 + treadDepth * scale, y1);
         }
     }
     
-    // Finir le dessin de l'escalier
+    // Dessiner le plancher supérieur
+    const topFloorX = startX + totalRun * scale;
+    const topFloorY = startY - totalRise * scale;
+    ctx.lineTo(topFloorX + 40, topFloorY);
+    
+    // Tracer l'escalier
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    // Dessiner une main courante
+    ctx.beginPath();
+    ctx.moveTo(startX, startY - riserHeight * scale - 60); // Placer la main courante à une hauteur appropriée
+    
+    // Suivre l'inclinaison de l'escalier
+    for (let i = 0; i <= numTreads; i++) {
+        const x = startX + i * treadDepth * scale;
+        const y = startY - i * riserHeight * scale - 60;
+        ctx.lineTo(x, y);
+    }
+    
+    // Prolonger la main courante horizontalement
+    ctx.lineTo(topFloorX + 30, topFloorY - 60);
+    
+    ctx.strokeStyle = '#555';
+    ctx.lineWidth = 1.5;
     ctx.stroke();
     
     // Ajouter des légendes
@@ -455,14 +764,51 @@ function drawStraightStair(canvas, stairParams) {
     ctx.fillStyle = '#333';
     
     // Légende pour la hauteur totale
-    ctx.fillText(`Hauteur: ${Math.round(totalRise)}mm`, startX, startY - totalRise * scale - 10);
+    ctx.fillText(`Hauteur: ${Math.round(totalRise)}mm`, startX - 30, startY - totalRise * scale / 2);
     
     // Légende pour la longueur totale
     ctx.fillText(`Longueur: ${Math.round(totalRun)}mm`, startX + totalRun * scale / 2 - 50, startY + 20);
     
     // Légende pour la hauteur d'une contremarche et le giron
-    ctx.fillText(`CM: ${Math.round(riserHeight)}mm`, startX + totalRun * scale + 5, startY - riserHeight * scale / 2);
-    ctx.fillText(`Giron: ${Math.round(treadDepth)}mm`, startX + totalRun * scale / 2 - 50, startY - riserHeight * scale - 10);
+    ctx.fillText(`CM: ${Math.round(riserHeight)}mm`, startX + 10, startY - riserHeight * scale / 2);
+    ctx.fillText(`Giron: ${Math.round(treadDepth)}mm`, startX + treadDepth * scale / 2 - 30, startY - riserHeight * scale - 10);
+    
+    // Informations générales
+    ctx.fillText(`Total: ${numRisers} contremarches, ${numTreads} girons`, startX, startY + 40);
+}
+
+// Fonction pour dessiner les marches rayonnantes
+function drawRadiusSteps(ctx, centerX, centerY, innerRadius, outerRadius, startAngle, endAngle, numSteps, scale = 1) {
+    const angleStep = (endAngle - startAngle) / numSteps;
+    
+    // Dessiner les marches rayonnantes
+    for (let i = 0; i < numSteps; i++) {
+        const angle1 = startAngle + i * angleStep;
+        const angle2 = startAngle + (i + 1) * angleStep;
+        
+        // Points de la marche rayonnante
+        const innerX1 = centerX + innerRadius * Math.cos(angle1);
+        const innerY1 = centerY + innerRadius * Math.sin(angle1);
+        const outerX1 = centerX + outerRadius * Math.cos(angle1);
+        const outerY1 = centerY + outerRadius * Math.sin(angle1);
+        const innerX2 = centerX + innerRadius * Math.cos(angle2);
+        const innerY2 = centerY + innerRadius * Math.sin(angle2);
+        const outerX2 = centerX + outerRadius * Math.cos(angle2);
+        const outerY2 = centerY + outerRadius * Math.sin(angle2);
+        
+        // Dessiner la marche
+        ctx.beginPath();
+        ctx.moveTo(innerX1, innerY1);
+        ctx.lineTo(outerX1, outerY1);
+        ctx.lineTo(outerX2, outerY2);
+        ctx.lineTo(innerX2, innerY2);
+        ctx.closePath();
+        
+        // Remplir avec une couleur légère alternée
+        ctx.fillStyle = i % 2 === 0 ? '#f5f5f5' : '#e5e5e5';
+        ctx.fill();
+        ctx.stroke();
+    }
 }
 
 // Fonction pour dessiner un escalier tournant (L ou U)
@@ -482,35 +828,38 @@ function drawTurningStair(canvas, stairParams, turnType) {
     // Calculer les dimensions pour le dessin
     const totalRise = numRisers * riserHeight;
     
-    // Définir le nombre de marches avant et après le virage
-    let beforeTurn, afterTurn;
+    // Définir le nombre de marches dans chaque section
+    let stepsBeforeTurn = 0, stepsInTurn = 0, stepsAfterTurn = 0;
+    let turnAngle = 0; // angle en radians pour les marches rayonnantes
     
     if (turnType === 'l_shaped') {
-        // Escalier en L - environ moitié/moitié
-        beforeTurn = Math.floor(numTreads / 2);
-        afterTurn = numTreads - beforeTurn;
+        // Escalier en L - environ 2/3 avant le virage, 1/3 après
+        stepsBeforeTurn = Math.floor(numTreads * 0.6);
+        stepsInTurn = 3; // Nombre de marches rayonnantes dans le virage
+        stepsAfterTurn = numTreads - stepsBeforeTurn - stepsInTurn;
+        turnAngle = Math.PI / 2; // 90 degrés
     } else if (turnType === 'u_shaped') {
-        // Escalier en U - environ tiers/tiers/tiers
-        beforeTurn = Math.floor(numTreads / 3);
-        afterTurn = numTreads - beforeTurn * 2;
+        // Escalier en U - environ 1/3 dans chaque section
+        stepsBeforeTurn = Math.floor(numTreads / 3);
+        stepsInTurn = 6; // Marches dans les deux virages
+        stepsAfterTurn = numTreads - stepsBeforeTurn - stepsInTurn;
+        turnAngle = Math.PI; // 180 degrés
     } else {
         // Par défaut, volée droite
-        beforeTurn = numTreads;
-        afterTurn = 0;
+        stepsBeforeTurn = numTreads;
+        stepsInTurn = 0;
+        stepsAfterTurn = 0;
     }
     
-    // Calculer les dimensions totales
-    const firstRunLength = beforeTurn * treadDepth;
-    const secondRunLength = afterTurn * treadDepth;
-    
+    // Calculer les dimensions pour le dessin
     let totalWidth, totalDepth;
     
     if (turnType === 'l_shaped') {
-        totalWidth = firstRunLength + stairWidth;
-        totalDepth = secondRunLength + stairWidth;
+        totalWidth = stepsBeforeTurn * treadDepth + stairWidth;
+        totalDepth = stepsAfterTurn * treadDepth + stairWidth;
     } else if (turnType === 'u_shaped') {
-        totalWidth = stairWidth * 2 + beforeTurn * treadDepth;
-        totalDepth = secondRunLength + stairWidth;
+        totalWidth = stepsBeforeTurn * treadDepth + stairWidth * 2;
+        totalDepth = Math.max(stepsAfterTurn * treadDepth, stairWidth) + stairWidth;
     } else {
         totalWidth = numTreads * treadDepth;
         totalDepth = stairWidth;
@@ -522,134 +871,469 @@ function drawTurningStair(canvas, stairParams, turnType) {
     const availableHeight = height - 2 * margin;
     
     const scale = Math.min(
-        availableWidth / Math.max(totalWidth, 1),
-        availableHeight / Math.max(totalRise, totalDepth)
-    );
+        availableWidth / Math.max(totalWidth, totalDepth),
+        availableHeight / Math.max(totalRise, totalWidth, totalDepth)
+    ) * 0.8; // Réduire un peu pour une meilleure visibilité
     
     // Position de départ (en bas à gauche)
-    const startX = margin;
-    const startY = height - margin;
+    const startX = width / 2 - (totalWidth * scale) / 2;
+    const startY = height / 2 + (totalDepth * scale) / 2;
     
     // Dessiner l'escalier en fonction du type
-    ctx.beginPath();
     ctx.strokeStyle = '#333';
     ctx.lineWidth = 2;
     
     if (turnType === 'l_shaped') {
         // Dessiner un escalier en L
         
-        // Première volée - horizontale
+        // 1. Première volée (droite) - montante vers la droite
+        for (let i = 0; i < stepsBeforeTurn; i++) {
+            const x1 = startX + i * treadDepth * scale;
+            const y1 = startY - riserHeight * (i + 1) * scale;
+            const x2 = x1 + treadDepth * scale;
+            const y2 = y1;
+            
+            // Dessiner la marche
+            ctx.beginPath();
+            ctx.moveTo(x1, startY - i * riserHeight * scale); // Point bas gauche
+            ctx.lineTo(x1, y1); // Point haut gauche
+            ctx.lineTo(x2, y2); // Point haut droit
+            ctx.lineTo(x2, startY - i * riserHeight * scale); // Point bas droit
+            ctx.closePath();
+            ctx.fillStyle = i % 2 === 0 ? '#f0f0f0' : '#e0e0e0';
+            ctx.fill();
+            ctx.stroke();
+        }
+        
+        // 2. Marches rayonnantes dans le virage
+        const cornerX = startX + stepsBeforeTurn * treadDepth * scale;
+        const cornerY = startY - stepsBeforeTurn * riserHeight * scale;
+        const radiusInner = stairWidth * scale * 0.2;
+        const radiusOuter = stairWidth * scale;
+        
+        // Dessiner les marches rayonnantes
+        drawRadiusSteps(
+            ctx, 
+            cornerX, 
+            cornerY, 
+            radiusInner, 
+            radiusOuter, 
+            -Math.PI/2, 
+            0, 
+            stepsInTurn,
+            scale
+        );
+        
+        // 3. Deuxième volée (droite) - montante vers le haut
+        for (let i = 0; i < stepsAfterTurn; i++) {
+            const x1 = cornerX + radiusOuter;
+            const y1 = cornerY - i * riserHeight * scale;
+            const y2 = y1 - riserHeight * scale;
+            
+            // Dessiner la marche
+            ctx.beginPath();
+            ctx.moveTo(x1, y1); // Point bas gauche
+            ctx.lineTo(x1 + stairWidth * scale, y1); // Point bas droit
+            ctx.lineTo(x1 + stairWidth * scale, y2); // Point haut droit
+            ctx.lineTo(x1, y2); // Point haut gauche
+            ctx.closePath();
+            ctx.fillStyle = (i + stepsBeforeTurn + stepsInTurn) % 2 === 0 ? '#f0f0f0' : '#e0e0e0';
+            ctx.fill();
+            ctx.stroke();
+        }
+        
+        // Dessiner les lignes principales de la cage d'escalier
+        ctx.beginPath();
+        // Ligne de base
         ctx.moveTo(startX, startY);
-        ctx.lineTo(startX + firstRunLength * scale, startY);
+        ctx.lineTo(cornerX + radiusOuter + stairWidth * scale, startY);
+        // Ligne du côté droit
+        ctx.moveTo(cornerX + radiusOuter + stairWidth * scale, startY);
+        ctx.lineTo(cornerX + radiusOuter + stairWidth * scale, cornerY - stepsAfterTurn * riserHeight * scale - 40);
+        // Ligne du mur gauche
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(startX, startY - (stepsBeforeTurn + 3) * riserHeight * scale);
+        // Ligne du mur supérieur
+        ctx.lineTo(cornerX + radiusOuter, cornerY - stepsAfterTurn * riserHeight * scale - 40);
+        ctx.strokeStyle = '#555';
+        ctx.stroke();
         
-        // Dessiner les marches de la première volée
-        for (let i = 0; i < beforeTurn; i++) {
-            const x1 = startX + (beforeTurn - i) * treadDepth * scale;
-            const y1 = startY - (i + 1) * riserHeight * scale;
-            
-            // Ligne verticale (contremarche)
-            ctx.lineTo(x1, y1);
-            
-            // Ligne horizontale (giron) sauf pour la dernière marche
-            if (i < beforeTurn - 1) {
-                ctx.lineTo(x1 - treadDepth * scale, y1);
-            }
+        // Main courante
+        ctx.beginPath();
+        // Première partie - montante vers la droite
+        ctx.moveTo(startX, startY - 40);
+        for (let i = 0; i <= stepsBeforeTurn; i++) {
+            ctx.lineTo(startX + i * treadDepth * scale, startY - i * riserHeight * scale - 40);
         }
         
-        // Palier ou virage
-        const landingX = startX + firstRunLength * scale;
-        const landingY = startY - beforeTurn * riserHeight * scale;
-        
-        ctx.lineTo(landingX + stairWidth * scale, landingY);
-        
-        // Deuxième volée - verticale
-        for (let i = 0; i < afterTurn; i++) {
-            const x2 = landingX + stairWidth * scale;
-            const y2 = landingY - (i + 1) * riserHeight * scale;
-            
-            // Ligne verticale (contremarche)
-            ctx.lineTo(x2, y2);
-            
-            // Ligne horizontale (giron)
-            if (i < afterTurn - 1) {
-                ctx.lineTo(x2 - treadDepth * scale, y2);
-            }
+        // Partie rayonnante
+        const handRailRadius = radiusInner + (radiusOuter - radiusInner) / 2;
+        for (let i = 0; i <= stepsInTurn; i++) {
+            const angle = -Math.PI/2 + (i / stepsInTurn) * Math.PI/2;
+            const x = cornerX + handRailRadius * Math.cos(angle);
+            const y = cornerY + handRailRadius * Math.sin(angle);
+            ctx.lineTo(x, y - 40);
         }
+        
+        // Deuxième partie - montante vers le haut
+        for (let i = 0; i <= stepsAfterTurn; i++) {
+            ctx.lineTo(cornerX + radiusOuter + stairWidth * scale / 2, cornerY - i * riserHeight * scale - 40);
+        }
+        
+        ctx.strokeStyle = '#777';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        
     } else if (turnType === 'u_shaped') {
         // Dessiner un escalier en U
         
-        // Première volée - vers le haut
-        ctx.moveTo(startX, startY);
-        
-        // Dessiner les marches de la première volée
-        for (let i = 0; i < beforeTurn; i++) {
+        // 1. Première volée (droite) - montante vers la droite
+        for (let i = 0; i < stepsBeforeTurn; i++) {
             const x1 = startX + i * treadDepth * scale;
-            const y1 = startY - (i + 1) * riserHeight * scale;
+            const y1 = startY - riserHeight * (i + 1) * scale;
+            const x2 = x1 + treadDepth * scale;
+            const y2 = y1;
             
-            // Ligne verticale (contremarche)
-            ctx.lineTo(x1, y1);
-            
-            // Ligne horizontale (giron)
-            if (i < beforeTurn - 1) {
-                ctx.lineTo(x1 + treadDepth * scale, y1);
-            }
+            // Dessiner la marche
+            ctx.beginPath();
+            ctx.moveTo(x1, startY - i * riserHeight * scale); // Point bas gauche
+            ctx.lineTo(x1, y1); // Point haut gauche
+            ctx.lineTo(x2, y2); // Point haut droit
+            ctx.lineTo(x2, startY - i * riserHeight * scale); // Point bas droit
+            ctx.closePath();
+            ctx.fillStyle = i % 2 === 0 ? '#f0f0f0' : '#e0e0e0';
+            ctx.fill();
+            ctx.stroke();
         }
         
-        // Premier palier
-        const firstLandingX = startX + beforeTurn * treadDepth * scale;
-        const firstLandingY = startY - beforeTurn * riserHeight * scale;
+        // 2. Premier virage
+        const corner1X = startX + stepsBeforeTurn * treadDepth * scale;
+        const corner1Y = startY - stepsBeforeTurn * riserHeight * scale;
+        const radiusInner1 = stairWidth * scale * 0.2;
+        const radiusOuter1 = stairWidth * scale;
         
-        ctx.lineTo(firstLandingX, firstLandingY);
-        ctx.lineTo(firstLandingX, firstLandingY - stairWidth * scale);
+        // Dessiner les marches rayonnantes du premier virage
+        drawRadiusSteps(
+            ctx, 
+            corner1X, 
+            corner1Y, 
+            radiusInner1, 
+            radiusOuter1, 
+            -Math.PI/2, 
+            0, 
+            3,
+            scale
+        );
         
-        // Deuxième volée - horizontale (au milieu)
-        for (let i = 0; i < beforeTurn; i++) {
-            const x2 = firstLandingX - i * treadDepth * scale;
-            const y2 = firstLandingY - stairWidth * scale - (i + 1) * riserHeight * scale;
+        // 3. Volée intermédiaire - montante vers la gauche
+        const midSteps = stepsInTurn - 6; // Retirer les marches utilisées dans les virages
+        for (let i = 0; i < midSteps; i++) {
+            const x1 = corner1X + radiusOuter1 - i * treadDepth * scale;
+            const y1 = corner1Y - 3 * riserHeight * scale - i * riserHeight * scale;
+            const x2 = x1 - treadDepth * scale;
+            const y2 = y1;
             
-            // Ligne verticale (contremarche)
-            ctx.lineTo(x2, y2);
-            
-            // Ligne horizontale (giron)
-            if (i < beforeTurn - 1) {
-                ctx.lineTo(x2 - treadDepth * scale, y2);
-            }
+            // Dessiner la marche
+            ctx.beginPath();
+            ctx.moveTo(x1, y1 + riserHeight * scale); // Point bas droit
+            ctx.lineTo(x1, y1); // Point haut droit
+            ctx.lineTo(x2, y2); // Point haut gauche
+            ctx.lineTo(x2, y2 + riserHeight * scale); // Point bas gauche
+            ctx.closePath();
+            ctx.fillStyle = (i + stepsBeforeTurn + 3) % 2 === 0 ? '#f0f0f0' : '#e0e0e0';
+            ctx.fill();
+            ctx.stroke();
         }
         
-        // Deuxième palier
-        const secondLandingX = firstLandingX - beforeTurn * treadDepth * scale;
-        const secondLandingY = firstLandingY - stairWidth * scale - beforeTurn * riserHeight * scale;
+        // 4. Deuxième virage
+        const corner2X = corner1X + radiusOuter1 - midSteps * treadDepth * scale;
+        const corner2Y = corner1Y - 3 * riserHeight * scale - midSteps * riserHeight * scale;
+        const radiusInner2 = stairWidth * scale * 0.2;
+        const radiusOuter2 = stairWidth * scale;
         
-        ctx.lineTo(secondLandingX, secondLandingY);
-        ctx.lineTo(secondLandingX - stairWidth * scale, secondLandingY);
+        // Dessiner les marches rayonnantes du deuxième virage
+        drawRadiusSteps(
+            ctx, 
+            corner2X, 
+            corner2Y, 
+            radiusInner2, 
+            radiusOuter2, 
+            0, 
+            Math.PI/2, 
+            3,
+            scale
+        );
         
-        // Troisième volée - vers le haut
-        for (let i = 0; i < afterTurn; i++) {
-            const x3 = secondLandingX - stairWidth * scale;
-            const y3 = secondLandingY - (i + 1) * riserHeight * scale;
+        // 5. Troisième volée - montante vers la droite
+        for (let i = 0; i < stepsAfterTurn; i++) {
+            const x1 = corner2X - radiusOuter2 + i * treadDepth * scale;
+            const y1 = corner2Y - radiusOuter2 - i * riserHeight * scale;
+            const x2 = x1 + treadDepth * scale;
+            const y2 = y1;
             
-            // Ligne verticale (contremarche)
-            ctx.lineTo(x3, y3);
-            
-            // Pas de ligne horizontale pour la dernière marche
-            if (i < afterTurn - 1) {
-                ctx.lineTo(x3, y3 - treadDepth * scale);
-            }
+            // Dessiner la marche
+            ctx.beginPath();
+            ctx.moveTo(x1, y1 + riserHeight * scale); // Point bas gauche
+            ctx.lineTo(x1, y1); // Point haut gauche
+            ctx.lineTo(x2, y2); // Point haut droit
+            ctx.lineTo(x2, y2 + riserHeight * scale); // Point bas droit
+            ctx.closePath();
+            ctx.fillStyle = (i + stepsBeforeTurn + midSteps + 6) % 2 === 0 ? '#f0f0f0' : '#e0e0e0';
+            ctx.fill();
+            ctx.stroke();
         }
+        
+        // Dessiner les lignes principales de la cage d'escalier
+        ctx.beginPath();
+        // Ligne de base
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(corner1X + radiusOuter1, startY);
+        // Côté droit
+        ctx.moveTo(corner1X + radiusOuter1, startY);
+        ctx.lineTo(corner1X + radiusOuter1, corner1Y - stairWidth * scale);
+        // Côté gauche
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(startX, corner2Y - radiusOuter2 - stepsAfterTurn * riserHeight * scale);
+        // Ligne intermédiaire
+        ctx.moveTo(corner2X - radiusOuter2, corner2Y - radiusOuter2);
+        ctx.lineTo(corner2X - radiusOuter2 + stepsAfterTurn * treadDepth * scale, corner2Y - radiusOuter2);
+        ctx.strokeStyle = '#555';
+        ctx.stroke();
+        
+        // Main courante
+        ctx.beginPath();
+        // Première partie
+        ctx.moveTo(startX + 20, startY - 40);
+        for (let i = 0; i <= stepsBeforeTurn; i++) {
+            ctx.lineTo(startX + i * treadDepth * scale + 20, startY - i * riserHeight * scale - 40);
+        }
+        
+        // Premier virage
+        const handRailRadius1 = radiusInner1 + (radiusOuter1 - radiusInner1) / 2;
+        for (let i = 0; i <= 3; i++) {
+            const angle = -Math.PI/2 + (i / 3) * Math.PI/2;
+            const x = corner1X + handRailRadius1 * Math.cos(angle);
+            const y = corner1Y + handRailRadius1 * Math.sin(angle);
+            ctx.lineTo(x, y - 40);
+        }
+        
+        // Partie intermédiaire
+        for (let i = 0; i <= midSteps; i++) {
+            ctx.lineTo(corner1X + radiusOuter1 - i * treadDepth * scale - 20, corner1Y - 3 * riserHeight * scale - i * riserHeight * scale - 40);
+        }
+        
+        // Deuxième virage
+        const handRailRadius2 = radiusInner2 + (radiusOuter2 - radiusInner2) / 2;
+        for (let i = 0; i <= 3; i++) {
+            const angle = 0 + (i / 3) * Math.PI/2;
+            const x = corner2X + handRailRadius2 * Math.cos(angle);
+            const y = corner2Y + handRailRadius2 * Math.sin(angle);
+            ctx.lineTo(x, y - 40);
+        }
+        
+        // Dernière partie
+        for (let i = 0; i <= stepsAfterTurn; i++) {
+            ctx.lineTo(corner2X - radiusOuter2 + i * treadDepth * scale + 20, corner2Y - radiusOuter2 - i * riserHeight * scale - 40);
+        }
+        
+        ctx.strokeStyle = '#777';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        
     } else {
-        // Escalier droit par défaut
+        // Si ce n'est ni un L ni un U, dessiner un escalier droit standard
         drawStraightStair(canvas, stairParams);
         return;
     }
     
-    // Tracer l'escalier
+    // Ajouter des légendes
+    ctx.font = '12px Arial';
+    ctx.fillStyle = '#333';
+    
+    // Informations générales
+    ctx.fillText(`Total: ${numRisers} contremarches, ${numTreads} girons`, startX, startY + 30);
+    ctx.fillText(`CM: ${Math.round(riserHeight)}mm, Giron: ${Math.round(treadDepth)}mm`, startX, startY + 50);
+}
+
+// Fonction pour dessiner un escalier avec marches dansantes
+function drawDancingSteps(canvas, stairParams) {
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+    
+    // Effacer le canvas
+    ctx.clearRect(0, 0, width, height);
+    
+    // Extraire les paramètres de l'escalier
+    const { numRisers, numTreads, riserHeight, treadDepth, stairWidth } = stairParams;
+    
+    // Calculer les dimensions pour le dessin
+    const totalRise = numRisers * riserHeight;
+    
+    // Distribuer les marches
+    const stepsBeforeTurn = Math.floor(numTreads * 0.4);
+    const dancingSteps = Math.floor(numTreads * 0.3);
+    const stepsAfterTurn = numTreads - stepsBeforeTurn - dancingSteps;
+    
+    // Calculer les dimensions totales
+    const totalWidth = stepsBeforeTurn * treadDepth + stairWidth * 1.5;
+    const totalDepth = stepsAfterTurn * treadDepth + stairWidth * 1.5;
+    
+    // Calculer l'échelle pour ajuster l'escalier au canvas
+    const margin = 40;
+    const availableWidth = width - 2 * margin;
+    const availableHeight = height - 2 * margin;
+    
+    const scale = Math.min(
+        availableWidth / Math.max(totalWidth, totalDepth),
+        availableHeight / Math.max(totalRise, totalWidth, totalDepth)
+    ) * 0.8; // Réduire un peu pour une meilleure visibilité
+    
+    // Position de départ (en bas à gauche)
+    const startX = width / 2 - (totalWidth * scale) / 2;
+    const startY = height / 2 + (totalDepth * scale) / 2;
+    
+    // Dessiner l'escalier
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 2;
+    
+    // 1. Première volée droite
+    for (let i = 0; i < stepsBeforeTurn; i++) {
+        const x1 = startX + i * treadDepth * scale;
+        const y1 = startY - riserHeight * (i + 1) * scale;
+        const x2 = x1 + treadDepth * scale;
+        const y2 = y1;
+        
+        // Dessiner la marche
+        ctx.beginPath();
+        ctx.moveTo(x1, startY - i * riserHeight * scale); // Point bas gauche
+        ctx.lineTo(x1, y1); // Point haut gauche
+        ctx.lineTo(x2, y2); // Point haut droit
+        ctx.lineTo(x2, startY - i * riserHeight * scale); // Point bas droit
+        ctx.closePath();
+        ctx.fillStyle = i % 2 === 0 ? '#f0f0f0' : '#e0e0e0';
+        ctx.fill();
+        ctx.stroke();
+    }
+    
+    // 2. Marches dansantes
+    const turnCenterX = startX + stepsBeforeTurn * treadDepth * scale + stairWidth * scale / 2;
+    const turnCenterY = startY - stepsBeforeTurn * riserHeight * scale - stairWidth * scale / 2;
+    const turnRadius = stairWidth * scale;
+    
+    // Dessiner les marches dansantes
+    const startAngle = -Math.PI/2;
+    const endAngle = 0;
+    
+    for (let i = 0; i < dancingSteps; i++) {
+        const angle1 = startAngle + (i / dancingSteps) * (endAngle - startAngle);
+        const angle2 = startAngle + ((i + 1) / dancingSteps) * (endAngle - startAngle);
+        
+        // Points de la marche dansante
+        const innerX1 = turnCenterX + turnRadius * 0.3 * Math.cos(angle1);
+        const innerY1 = turnCenterY + turnRadius * 0.3 * Math.sin(angle1);
+        const outerX1 = turnCenterX + turnRadius * Math.cos(angle1);
+        const outerY1 = turnCenterY + turnRadius * Math.sin(angle1);
+        const innerX2 = turnCenterX + turnRadius * 0.3 * Math.cos(angle2);
+        const innerY2 = turnCenterY + turnRadius * 0.3 * Math.sin(angle2);
+        const outerX2 = turnCenterX + turnRadius * Math.cos(angle2);
+        const outerY2 = turnCenterY + turnRadius * Math.sin(angle2);
+        
+        // Dessiner les lignes de la marche
+        ctx.beginPath();
+        ctx.moveTo(innerX1, innerY1 - i * riserHeight * scale / dancingSteps);
+        ctx.lineTo(outerX1, outerY1 - i * riserHeight * scale / dancingSteps);
+        ctx.lineTo(outerX2, outerY2 - (i + 1) * riserHeight * scale / dancingSteps);
+        ctx.lineTo(innerX2, innerY2 - (i + 1) * riserHeight * scale / dancingSteps);
+        ctx.closePath();
+        
+        // Remplir et tracer
+        ctx.fillStyle = (i + stepsBeforeTurn) % 2 === 0 ? '#f0f0f0' : '#e0e0e0';
+        ctx.fill();
+        ctx.stroke();
+    }
+    
+    // 3. Dernière volée droite
+    const lastStartX = turnCenterX + turnRadius;
+    const lastStartY = turnCenterY - dancingSteps * riserHeight * scale;
+    
+    for (let i = 0; i < stepsAfterTurn; i++) {
+        const x1 = lastStartX;
+        const y1 = lastStartY - i * riserHeight * scale;
+        const y2 = y1 - riserHeight * scale;
+        
+        // Dessiner la marche
+        ctx.beginPath();
+        ctx.moveTo(x1, y1); // Point bas gauche
+        ctx.lineTo(x1 + stairWidth * scale, y1); // Point bas droit
+        ctx.lineTo(x1 + stairWidth * scale, y2); // Point haut droit
+        ctx.lineTo(x1, y2); // Point haut gauche
+        ctx.closePath();
+        ctx.fillStyle = (i + stepsBeforeTurn + dancingSteps) % 2 === 0 ? '#f0f0f0' : '#e0e0e0';
+        ctx.fill();
+        ctx.stroke();
+    }
+    
+    // Dessiner les lignes principales de la cage d'escalier
+    ctx.beginPath();
+    // Ligne de base
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(lastStartX + stairWidth * scale, startY);
+    // Ligne du côté droit
+    ctx.moveTo(lastStartX + stairWidth * scale, startY);
+    ctx.lineTo(lastStartX + stairWidth * scale, lastStartY - stepsAfterTurn * riserHeight * scale - 40);
+    // Ligne du mur gauche
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(startX, startY - (stepsBeforeTurn + dancingSteps) * riserHeight * scale);
+    // Ligne du mur supérieur
+    ctx.lineTo(lastStartX, lastStartY - stepsAfterTurn * riserHeight * scale - 40);
+    ctx.strokeStyle = '#555';
+    ctx.stroke();
+    
+    // Main courante
+    ctx.beginPath();
+    ctx.moveTo(startX, startY - 40);
+    // Première section
+    for (let i = 0; i <= stepsBeforeTurn; i++) {
+        ctx.lineTo(startX + i * treadDepth * scale, startY - i * riserHeight * scale - 40);
+    }
+    // Section des marches dansantes
+    for (let i = 0; i <= dancingSteps; i++) {
+        const angle = startAngle + (i / dancingSteps) * (endAngle - startAngle);
+        const x = turnCenterX + turnRadius * 0.8 * Math.cos(angle);
+        const y = turnCenterY + turnRadius * 0.8 * Math.sin(angle) - i * riserHeight * scale / dancingSteps - 40;
+        ctx.lineTo(x, y);
+    }
+    // Dernière section
+    for (let i = 0; i <= stepsAfterTurn; i++) {
+        ctx.lineTo(lastStartX + stairWidth * scale / 2, lastStartY - i * riserHeight * scale - 40);
+    }
+    ctx.strokeStyle = '#777';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    
+    // Illustration du côté étroit des marches dansantes
+    ctx.beginPath();
+    ctx.moveTo(turnCenterX, turnCenterY - 60);
+    ctx.lineTo(turnCenterX + 20, turnCenterY - 60);
+    ctx.strokeStyle = '#ff6b6b';
+    ctx.lineWidth = 2;
     ctx.stroke();
     
     // Ajouter des légendes
     ctx.font = '12px Arial';
     ctx.fillStyle = '#333';
-    ctx.fillText(`Total: ${numRisers} contremarches, ${numTreads} girons`, startX, startY + 20);
-    ctx.fillText(`CM: ${Math.round(riserHeight)}mm, Giron: ${Math.round(treadDepth)}mm`, startX, startY + 40);
+    
+    // Informations générales
+    ctx.fillText(`Total: ${numRisers} contremarches, ${numTreads} girons`, startX, startY + 30);
+    ctx.fillText(`CM: ${Math.round(riserHeight)}mm, Giron: ${Math.round(treadDepth)}mm`, startX, startY + 50);
+    ctx.fillText(`Marches dansantes: ${dancingSteps}`, startX, startY + 70);
+    
+    // Légende pour le côté étroit
+    ctx.fillStyle = '#ff6b6b';
+    ctx.fillText('Côté étroit min: 300mm', turnCenterX - 40, turnCenterY - 80);
 }
 
 // Fonction pour dessiner un escalier hélicoïdal (spiral)
@@ -674,29 +1358,80 @@ function drawSpiralStair(canvas, stairParams) {
     const innerRadius = Math.min(width, height) * 0.1;
     const outerRadius = Math.min(width, height) * 0.4;
     
-    // Dessiner le noyau central
+    // Dessiner le noyau central (poteau)
     ctx.beginPath();
     ctx.arc(centerX, centerY, innerRadius, 0, Math.PI * 2);
-    ctx.fillStyle = '#ddd';
+    ctx.fillStyle = '#999';
     ctx.fill();
+    ctx.strokeStyle = '#666';
+    ctx.lineWidth = 2;
     ctx.stroke();
     
-    // Dessiner les marches en spirale
+    // Dessiner les marches en spirale avec une meilleure représentation 3D
     for (let i = 0; i < numRisers; i++) {
         const startAngle = (i / numRisers) * Math.PI * 2;
         const endAngle = ((i + 1) / numRisers) * Math.PI * 2;
         
-        // Dessiner une marche
+        // Calcul de la hauteur pour l'effet 3D
+        const heightOffset = (numRisers - i) * 1.5;
+        
+        // Dessiner une marche avec effet 3D
         ctx.beginPath();
         ctx.arc(centerX, centerY, innerRadius, startAngle, endAngle);
         ctx.arc(centerX, centerY, outerRadius, endAngle, startAngle, true);
         ctx.closePath();
         
-        // Remplir avec une couleur claire
-        ctx.fillStyle = i % 2 === 0 ? '#f5f5f5' : '#e5e5e5';
+        // Remplir avec une couleur qui dépend de la "hauteur"
+        const brightness = 150 + heightOffset;
+        ctx.fillStyle = `rgb(${brightness}, ${brightness}, ${brightness})`;
         ctx.fill();
+        
+        // Bordure de la marche
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 1;
         ctx.stroke();
+        
+        // Dessiner les lignes de profondeur pour un effet 3D
+        if (i % 2 === 0) {
+            ctx.beginPath();
+            const midAngle = (startAngle + endAngle) / 2;
+            ctx.moveTo(centerX + innerRadius * Math.cos(midAngle), centerY + innerRadius * Math.sin(midAngle));
+            ctx.lineTo(centerX + outerRadius * Math.cos(midAngle), centerY + outerRadius * Math.sin(midAngle));
+            ctx.strokeStyle = '#777';
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+        }
     }
+    
+    // Dessiner la main courante
+    ctx.beginPath();
+    for (let angle = 0; angle <= Math.PI * 2; angle += 0.05) {
+        const x = centerX + outerRadius * Math.cos(angle);
+        const y = centerY + outerRadius * Math.sin(angle);
+        if (angle === 0) {
+            ctx.moveTo(x, y);
+        } else {
+            ctx.lineTo(x, y);
+        }
+    }
+    ctx.strokeStyle = '#444';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    
+    // Dessiner une seconde main courante (intérieure)
+    ctx.beginPath();
+    for (let angle = 0; angle <= Math.PI * 2; angle += 0.05) {
+        const x = centerX + innerRadius * 0.9 * Math.cos(angle);
+        const y = centerY + innerRadius * 0.9 * Math.sin(angle);
+        if (angle === 0) {
+            ctx.moveTo(x, y);
+        } else {
+            ctx.lineTo(x, y);
+        }
+    }
+    ctx.strokeStyle = '#555';
+    ctx.lineWidth = 2;
+    ctx.stroke();
     
     // Dessiner une flèche pour indiquer le sens de montée
     ctx.beginPath();
@@ -723,8 +1458,6 @@ function drawSpiralStair(canvas, stairParams) {
     ctx.strokeStyle = '#ff6b6b';
     ctx.lineWidth = 2;
     ctx.stroke();
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = '#333';
     
     // Ajouter des légendes
     ctx.font = '12px Arial';
@@ -732,6 +1465,30 @@ function drawSpiralStair(canvas, stairParams) {
     ctx.fillText(`Escalier hélicoïdal: ${numRisers} marches`, centerX - 80, centerY + outerRadius + 30);
     ctx.fillText(`Hauteur contremarche: ${Math.round(riserHeight)}mm`, centerX - 80, centerY + outerRadius + 50);
     ctx.fillText(`Largeur: ${Math.round(stairWidth)}mm`, centerX - 80, centerY + outerRadius + 70);
+    
+    // Ajouter une légende pour le diamètre
+    const diameter = outerRadius * 2;
+    ctx.fillText(`Diamètre extérieur: ${Math.round(diameter * 3.5)}mm`, centerX - 80, centerY + outerRadius + 90);
+    
+    // Dessiner une ligne de mesure pour le diamètre
+    ctx.beginPath();
+    ctx.moveTo(centerX - outerRadius, centerY + outerRadius + 15);
+    ctx.lineTo(centerX + outerRadius, centerY + outerRadius + 15);
+    ctx.strokeStyle = '#777';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    
+    // Ajouter des flèches aux extrémités de la ligne de mesure
+    ctx.beginPath();
+    ctx.moveTo(centerX - outerRadius, centerY + outerRadius + 15);
+    ctx.lineTo(centerX - outerRadius + 5, centerY + outerRadius + 10);
+    ctx.moveTo(centerX - outerRadius, centerY + outerRadius + 15);
+    ctx.lineTo(centerX - outerRadius + 5, centerY + outerRadius + 20);
+    ctx.moveTo(centerX + outerRadius, centerY + outerRadius + 15);
+    ctx.lineTo(centerX + outerRadius - 5, centerY + outerRadius + 10);
+    ctx.moveTo(centerX + outerRadius, centerY + outerRadius + 15);
+    ctx.lineTo(centerX + outerRadius - 5, centerY + outerRadius + 20);
+    ctx.stroke();
 }
 
 // Fonction principale pour visualiser l'escalier
@@ -766,8 +1523,7 @@ function visualizeStair(containerId, stairConfig, stairParams) {
             break;
             
         case 'dancing_steps':
-            // Pour les marches dansantes, on utilise une visualisation similaire à celle des escaliers tournants
-            drawTurningStair(canvas, stairParams, 'l_shaped');
+            drawDancingSteps(canvas, stairParams);
             break;
             
         default:
@@ -1149,6 +1905,116 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (!isValid) return;
             
+            // Calculer les solutions optimales
+            const preferences = {
+                buildingType: buildingTypeValue,
+                stairType: stairTypeValue,
+                stairConfig: stairConfigValue,
+                lShapedConfig: lShapedConfigValue,
+                dancingStepsConfig: dancingStepsConfigValue,
+                spiralConfig: spiralConfigValue,
+                idealRiser: idealRiserValue,
+                idealTread: idealTreadValue,
+                priority: priorityComfort.checked ? 'comfort' : 'space'
+            };
+            
+            const solutions = calculateOptimalStair(totalRiseValue, totalRunValue, preferences);
+            
+            // Définir les limites selon le CNB 2015 pour vérification
+            let minRiser, maxRiser, minTread, maxTread, minWidth, minNarrowSide, minSpiralWidth;
+            let codeReference = 'CNB 2015';
+            
+            if (buildingTypeValue === 'part3') {
+                codeReference = 'CNB 2015 Partie 3';
+                minRiser = 125;
+                maxRiser = 180;
+                minTread = 280;
+                maxTread = Infinity;
+                minWidth = 1100;
+                minNarrowSide = 240; // Pour marches dansantes dans une issue
+                minSpiralWidth = 660; // Pour escalier hélicoïdal
+                
+                if (stairConfigValue === 'spiral') {
+                    maxRiser = 240;
+                }
+            } else {
+                codeReference = 'CNB 2015 Partie 9';
+                
+                if (stairTypeValue === 'private') {
+                    minRiser = 125;
+                    maxRiser = 200;
+                    minTread = 255;
+                    maxTread = 355;
+                    minWidth = 860;
+                    minNarrowSide = 150; // Pour marches dansantes privées
+                } else {
+                    minRiser = 125;
+                    maxRiser = 180;
+                    minTread = 280;
+                    maxTread = Infinity;
+                    minWidth = 900;
+                    minNarrowSide = dancingStepsConfigValue === 'exit' ? 240 : 150; // Selon le type de marches dansantes
+                }
+                
+                minSpiralWidth = 660; // Pour escalier hélicoïdal
+                
+                if (stairConfigValue === 'spiral') {
+                    maxRiser = 240;
+                }
+            }
+            
+            // Vérifier la largeur de l'escalier
+            const isWidthCompliant = stairWidthValue >= minWidth;
+            
+            // Vérifications spécifiques selon le type d'escalier
+            let specificWarnings = '';
+            
+            if (stairConfigValue === 'spiral') {
+                const isSpiralWidthCompliant = spiralWidthValue >= minSpiralWidth;
+                
+                if (!isSpiralWidthCompliant) {
+                    let spiralWidthDisplay = isMetric ? 
+                        `${formatNumber(spiralWidthValue)} mm` : 
+                        metricToImperial(spiralWidthValue);
+                    
+                    let minSpiralWidthDisplay = isMetric ? 
+                        `${minSpiralWidth} mm` : 
+                        metricToImperial(minSpiralWidth);
+                    
+                    specificWarnings += `
+                        <div class="warning">
+                            <p>⚠ La largeur libre entre mains courantes (${spiralWidthDisplay}) est inférieure au minimum requis (${minSpiralWidthDisplay}) selon le ${codeReference}.</p>
+                        </div>
+                    `;
+                }
+                
+                if (spiralConfigValue === 'primary' && stairTypeValue === 'common') {
+                    specificWarnings += `
+                        <div class="warning">
+                            <p>⚠ Un escalier hélicoïdal ne peut servir de seul moyen d'évacuation que s'il ne dessert pas plus de 3 personnes (CNB 2015 9.8.4.7).</p>
+                        </div>
+                    `;
+                }
+            } else if (stairConfigValue === 'dancing_steps') {
+                const isNarrowSideCompliant = minNarrowSideValue >= minNarrowSide;
+                
+                if (!isNarrowSideCompliant) {
+                    let narrowSideDisplay = isMetric ? 
+                        `${formatNumber(minNarrowSideValue)} mm` : 
+                        metricToImperial(minNarrowSideValue);
+                    
+                    let minNarrowSideDisplay = isMetric ? 
+                        `${minNarrowSide} mm` : 
+                        metricToImperial(minNarrowSide);
+                    
+                    specificWarnings += `
+                        <div class="warning">
+                            <p>⚠ La largeur minimale côté étroit ${narrowSideDisplay} (${minNarrowSideValue.toFixed(2)} mm) est inférieure au minimum requis (${minNarrowSide} mm) selon le ${codeReference}.</p>
+                        </div>
+                    `;
+                }
+            }
+            
             // Définir les limites selon le CNB 2015
             let minRiser, maxRiser, minTread, maxTread, minNarrowSide, minWidth, minHeadroom, minSpiralWidth;
             let codeReference = 'CNB 2015'; // Référence par défaut
@@ -1239,171 +2105,161 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             
-            // Ajustement supplémentaire pour les escaliers d'issue
-            if (stairUseValue === 'exit') {
-                if (isBuildingPart3) {
-                    // Ajustements spécifiques aux issues de la partie 3
-                    minWidth = 1100; // 1100 mm minimum pour une issue
-                    
-                    if (config === 'dancing_steps') {
-                        minNarrowSide = 240; // 240 mm pour une issue
-                    }
-                } else {
-                    // Ajustements spécifiques aux issues de la partie 9
-                    minWidth = 900; // 900 mm minimum pour une issue dans la partie 9
-                }
-            }
-            
-            // Vérifier la conformité
-            let issues = [];
-            let isCompliant = true;
-            
-            // Vérification de la hauteur de contremarche
-            if (riserHeightValue < minRiser) {
-                issues.push(`La hauteur de contremarche (${riserHeightValue} mm) est inférieure au minimum requis (${minRiser} mm).`);
-                isCompliant = false;
-            } else if (riserHeightValue > maxRiser) {
-                issues.push(`La hauteur de contremarche (${riserHeightValue} mm) dépasse le maximum autorisé (${maxRiser} mm).`);
-                isCompliant = false;
-            }
-            
-            // Vérification du giron
-            if (treadDepthValue < minTread) {
-                issues.push(`Le giron (${treadDepthValue} mm) est inférieur au minimum requis (${minTread} mm).`);
-                isCompliant = false;
-            } else if (treadDepthValue > maxTread && maxTread !== Infinity) {
-                issues.push(`Le giron (${treadDepthValue} mm) dépasse le maximum autorisé (${maxTread} mm).`);
-                isCompliant = false;
-            }
-            
-            // Vérification de la règle du pas
-            const stepRule = checkStepRule(riserHeightValue, treadDepthValue);
-            if (!stepRule.isValid) {
-                let stepsIssue = "La règle du pas n'est pas respectée (moins de 2 des 3 règles sont satisfaites) :";
-                
-                // Détailler les règles du pas qui ne sont pas respectées
-                if (!stepRule.rule1.isValid) {
-                    stepsIssue += `<br>- Règle 1 : Giron + CM = ${stepRule.rule1.value.toFixed(2)}" (devrait être entre ${stepRule.rule1.min}" et ${stepRule.rule1.max}")`;
-                }
-                if (!stepRule.rule2.isValid) {
-                    stepsIssue += `<br>- Règle 2 : Giron × CM = ${stepRule.rule2.value.toFixed(2)} po² (devrait être entre ${stepRule.rule2.min} po² et ${stepRule.rule2.max} po²)`;
-                }
-                if (!stepRule.rule3.isValid) {
-                    stepsIssue += `<br>- Règle 3 : Giron + 2(CM) = ${stepRule.rule3.value.toFixed(2)}" (devrait être entre ${stepRule.rule3.min}" et ${stepRule.rule3.max}")`;
-                }
-                
-                issues.push(stepsIssue);
-                // Ne pas marquer comme non conforme car c'est juste une recommandation
-            }
-            
-            // Vérification de la largeur minimale côté étroit (pour escalier avec marches dansantes)
-            if (config === 'dancing_steps' && narrowSideValue < minNarrowSide) {
-                const narrowSideImperialValue = metricToImperial(narrowSideValue);
-                issues.push(`La largeur minimale côté étroit ${narrowSideImperialValue} (${narrowSideValue.toFixed(2)} mm) est inférieure au minimum requis (${minNarrowSide} mm) selon le ${codeReference}.`);
-                isCompliant = false;
-            }
-            
-            // Vérification de la largeur de l'escalier
-            if (stairWidthValue < minWidth) {
-                issues.push(`La largeur de l'escalier (${stairWidthValue} mm) est inférieure au minimum requis (${minWidth} mm).`);
-                isCompliant = false;
-            }
-            
-            // Vérification de la hauteur libre
-            if (headroomValue < minHeadroom) {
-                issues.push(`La hauteur libre (${headroomValue} mm) est inférieure au minimum requis (${minHeadroom} mm).`);
-                isCompliant = false;
-            }
-            
-            // Vérification de la largeur libre entre mains courantes (pour escalier hélicoïdal)
-            if (config === 'spiral' && spiralWidthValue < minSpiralWidth) {
-                issues.push(`La largeur libre entre mains courantes (${spiralWidthValue} mm) est inférieure au minimum requis (${minSpiralWidth} mm).`);
-                isCompliant = false;
-            }
-            
-            // Vérification spécifique pour les escaliers hélicoïdaux servant d'issue
-            if (config === 'spiral' && stairUseValue === 'exit') {
-                issues.push(`Les escaliers hélicoïdaux ne doivent pas être utilisés comme issues (CNB 2015 9.8.4.7).`);
-                isCompliant = false;
-            }
-            
-            // Vérification pour escalier hélicoïdal comme seul moyen d'évacuation pour plus de 3 personnes
-            if (config === 'spiral' && spiralConfigValue === 'primary' && type === 'common') {
-                issues.push(`Un escalier hélicoïdal ne peut servir de seul moyen d'évacuation que s'il ne dessert pas plus de 3 personnes (CNB 2015 9.8.4.7).`);
-                isCompliant = false;
-            }
-            
-            // Afficher le résultat
-            resultContent.innerHTML = '';
-            result.className = 'result';
-            
-            if (isCompliant) {
-                result.classList.add('compliant');
-                resultContent.innerHTML = `<p class="success">✓ Conforme au ${codeReference}.</p>`;
-                
-                // Si la conformité est vérifiée mais que la règle du pas n'est pas respectée
-                if (!stepRule.isValid) {
-                    let stepRuleInfo = `
-                    <div class="warning">
-                        <p>⚠ Note: La règle du pas n'est pas entièrement respectée (${stepRule.validRuleCount}/3 règles satisfaites). Pour un confort optimal, il est recommandé de respecter au moins 2 des 3 règles suivantes :</p>
-                        <ul>
-                            <li>Règle 1: Giron + CM = 17" à 18" (actuel: ${stepRule.rule1.value.toFixed(2)}")</li>
-                            <li>Règle 2: Giron × CM = 71 po² à 74 po² (actuel: ${stepRule.rule2.value.toFixed(2)} po²)</li>
-                            <li>Règle 3: Giron + 2(CM) = 22" à 25" (actuel: ${stepRule.rule3.value.toFixed(2)}")</li>
-                        </ul>
-                    </div>
-                    `;
-                    resultContent.innerHTML += stepRuleInfo;
-                } else {
-                    // Indiquer quelles règles du pas sont respectées
-                    let stepRuleInfo = `
-                    <div class="result-section">
-                        <p>✓ La règle du pas est respectée (${stepRule.validRuleCount}/3 règles satisfaites) :</p>
-                        <ul>
-                            <li>${stepRule.rule1.isValid ? "✓" : "⨯"} Règle 1: Giron + CM = 17" à 18" (actuel: ${stepRule.rule1.value.toFixed(2)}")</li>
-                            <li>${stepRule.rule2.isValid ? "✓" : "⨯"} Règle 2: Giron × CM = 71 po² à 74 po² (actuel: ${stepRule.rule2.value.toFixed(2)} po²)</li>
-                            <li>${stepRule.rule3.isValid ? "✓" : "⨯"} Règle 3: Giron + 2(CM) = 22" à 25" (actuel: ${stepRule.rule3.value.toFixed(2)}")</li>
-                        </ul>
-                    </div>
-                    `;
-                    resultContent.innerHTML += stepRuleInfo;
-                }
-            } else {
-                result.classList.add('non-compliant');
-                let issuesList = `<p>⚠ Non conforme au ${codeReference}.</p><p>Problèmes détectés:</p><ul>`;
-                issues.forEach(issue => {
-                    let formattedIssue = issue;
-                    if (!isMetric) {
-                        // Convertir les valeurs métriques en impériales pour l'affichage
-                        formattedIssue = issue.replace(/(\d+(?:\.\d+)?) mm/g, function(match, p1) {
-                            return metricToImperial(parseFloat(p1)) + ' (' + parseFloat(p1).toFixed(2) + ' mm)';
-                        });
-                    }
-                    issuesList += `<li>${formattedIssue}</li>`;
-                });
-                issuesList += '</ul>';
-                resultContent.innerHTML = issuesList;
-            }
-            
-            // Ajouter la visualisation de l'escalier
-            resultContent.innerHTML += '<div class="result-section"><h3>Visualisation de l\'escalier</h3><div id="stairVisualization"></div></div>';
-            
-            // Estimer le nombre de marches pour la visualisation
-            let numRisers = Math.ceil(2000 / riserHeightValue); // Estimation approximative
-            
-            // Paramètres pour la visualisation
-            const stairParams = {
-                numRisers: numRisers,
-                numTreads: numRisers - 1,
-                riserHeight: riserHeightValue,
-                treadDepth: treadDepthValue,
-                stairWidth: stairWidthValue
-            };
-            
-            // Visualiser l'escalier
-            visualizeStair('stairVisualization', config, stairParams);
-            
-            result.style.display = 'block';
+            // Ajustements spécifiques aux issues de la partie 9
+        minWidth = 900; // 900 mm minimum pour une issue dans la partie 9
+    }
+}
+
+// Vérifier la conformité
+let issues = [];
+let isCompliant = true;
+
+// Vérification de la hauteur de contremarche
+if (riserHeightValue < minRiser) {
+    issues.push(`La hauteur de contremarche (${riserHeightValue} mm) est inférieure au minimum requis (${minRiser} mm).`);
+    isCompliant = false;
+} else if (riserHeightValue > maxRiser) {
+    issues.push(`La hauteur de contremarche (${riserHeightValue} mm) dépasse le maximum autorisé (${maxRiser} mm).`);
+    isCompliant = false;
+}
+
+// Vérification du giron
+if (treadDepthValue < minTread) {
+    issues.push(`Le giron (${treadDepthValue} mm) est inférieur au minimum requis (${minTread} mm).`);
+    isCompliant = false;
+} else if (treadDepthValue > maxTread && maxTread !== Infinity) {
+    issues.push(`Le giron (${treadDepthValue} mm) dépasse le maximum autorisé (${maxTread} mm).`);
+    isCompliant = false;
+}
+
+// Vérification de la règle du pas
+const stepRule = checkStepRule(riserHeightValue, treadDepthValue);
+if (!stepRule.isValid) {
+    let stepsIssue = "La règle du pas n'est pas respectée (moins de 2 des 3 règles sont satisfaites) :";
+    
+    // Détailler les règles du pas qui ne sont pas respectées
+    if (!stepRule.rule1.isValid) {
+        stepsIssue += `<br>- Règle 1 : Giron + CM = ${stepRule.rule1.value.toFixed(2)}" (devrait être entre ${stepRule.rule1.min}" et ${stepRule.rule1.max}")`;
+    }
+    if (!stepRule.rule2.isValid) {
+        stepsIssue += `<br>- Règle 2 : Giron × CM = ${stepRule.rule2.value.toFixed(2)} po² (devrait être entre ${stepRule.rule2.min} po² et ${stepRule.rule2.max} po²)`;
+    }
+    if (!stepRule.rule3.isValid) {
+        stepsIssue += `<br>- Règle 3 : Giron + 2(CM) = ${stepRule.rule3.value.toFixed(2)}" (devrait être entre ${stepRule.rule3.min}" et ${stepRule.rule3.max}")`;
+    }
+    
+    issues.push(stepsIssue);
+    // Ne pas marquer comme non conforme car c'est juste une recommandation
+}
+
+// Vérification de la largeur minimale côté étroit (pour escalier avec marches dansantes)
+if (config === 'dancing_steps' && narrowSideValue < minNarrowSide) {
+    const narrowSideImperialValue = metricToImperial(narrowSideValue);
+    issues.push(`La largeur minimale côté étroit ${narrowSideImperialValue} (${narrowSideValue.toFixed(2)} mm) est inférieure au minimum requis (${minNarrowSide} mm) selon le ${codeReference}.`);
+    isCompliant = false;
+}
+
+// Vérification de la largeur de l'escalier
+if (stairWidthValue < minWidth) {
+    issues.push(`La largeur de l'escalier (${stairWidthValue} mm) est inférieure au minimum requis (${minWidth} mm).`);
+    isCompliant = false;
+}
+
+// Vérification de la hauteur libre
+if (headroomValue < minHeadroom) {
+    issues.push(`La hauteur libre (${headroomValue} mm) est inférieure au minimum requis (${minHeadroom} mm).`);
+    isCompliant = false;
+}
+
+// Vérification de la largeur libre entre mains courantes (pour escalier hélicoïdal)
+if (config === 'spiral' && spiralWidthValue < minSpiralWidth) {
+    issues.push(`La largeur libre entre mains courantes (${spiralWidthValue} mm) est inférieure au minimum requis (${minSpiralWidth} mm).`);
+    isCompliant = false;
+}
+
+// Vérification spécifique pour les escaliers hélicoïdaux servant d'issue
+if (config === 'spiral' && stairUseValue === 'exit') {
+    issues.push(`Les escaliers hélicoïdaux ne doivent pas être utilisés comme issues (CNB 2015 9.8.4.7).`);
+    isCompliant = false;
+}
+
+// Vérification pour escalier hélicoïdal comme seul moyen d'évacuation pour plus de 3 personnes
+if (config === 'spiral' && spiralConfigValue === 'primary' && type === 'common') {
+    issues.push(`Un escalier hélicoïdal ne peut servir de seul moyen d'évacuation que s'il ne dessert pas plus de 3 personnes (CNB 2015 9.8.4.7).`);
+    isCompliant = false;
+}
+
+// Afficher le résultat
+resultContent.innerHTML = '';
+result.className = 'result';
+
+if (isCompliant) {
+    result.classList.add('compliant');
+    resultContent.innerHTML = `<p class="success">✓ Conforme au ${codeReference}.</p>`;
+    
+    // Si la conformité est vérifiée mais que la règle du pas n'est pas respectée
+    if (!stepRule.isValid) {
+        let stepRuleInfo = `
+        <div class="warning">
+            <p>⚠ Note: La règle du pas n'est pas entièrement respectée (${stepRule.validRuleCount}/3 règles satisfaites). Pour un confort optimal, il est recommandé de respecter au moins 2 des 3 règles suivantes :</p>
+            <ul>
+                <li>Règle 1: Giron + CM = 17" à 18" (actuel: ${stepRule.rule1.value.toFixed(2)}")</li>
+                <li>Règle 2: Giron × CM = 71 po² à 74 po² (actuel: ${stepRule.rule2.value.toFixed(2)} po²)</li>
+                <li>Règle 3: Giron + 2(CM) = 22" à 25" (actuel: ${stepRule.rule3.value.toFixed(2)}")</li>
+            </ul>
+        </div>
+        `;
+        resultContent.innerHTML += stepRuleInfo;
+    } else {
+        // Indiquer quelles règles du pas sont respectées
+        let stepRuleInfo = `
+        <div class="result-section">
+            <p>✓ La règle du pas est respectée (${stepRule.validRuleCount}/3 règles satisfaites) :</p>
+            <ul>
+                <li>${stepRule.rule1.isValid ? "✓" : "⨯"} Règle 1: Giron + CM = 17" à 18" (actuel: ${stepRule.rule1.value.toFixed(2)}")</li>
+                <li>${stepRule.rule2.isValid ? "✓" : "⨯"} Règle 2: Giron × CM = 71 po² à 74 po² (actuel: ${stepRule.rule2.value.toFixed(2)} po²)</li>
+                <li>${stepRule.rule3.isValid ? "✓" : "⨯"} Règle 3: Giron + 2(CM) = 22" à 25" (actuel: ${stepRule.rule3.value.toFixed(2)}")</li>
+            </ul>
+        </div>
+        `;
+        resultContent.innerHTML += stepRuleInfo;
+    }
+} else {
+    result.classList.add('non-compliant');
+    let issuesList = `<p>⚠ Non conforme au ${codeReference}.</p><p>Problèmes détectés:</p><ul>`;
+    issues.forEach(issue => {
+        let formattedIssue = issue;
+        if (!isMetric) {
+            // Convertir les valeurs métriques en impériales pour l'affichage
+            formattedIssue = issue.replace(/(\d+(?:\.\d+)?) mm/g, function(match, p1) {
+                return metricToImperial(parseFloat(p1)) + ' (' + parseFloat(p1).toFixed(2) + ' mm)';
+            });
+        }
+        issuesList += `<li>${formattedIssue}</li>`;
+    });
+    issuesList += '</ul>';
+    resultContent.innerHTML = issuesList;
+}
+
+// Ajouter la visualisation de l'escalier
+resultContent.innerHTML += '<div class="result-section"><h3>Visualisation de l\'escalier</h3><div id="stairVisualization"></div></div>';
+
+// Estimer le nombre de marches pour la visualisation
+let numRisers = Math.ceil(2000 / riserHeightValue); // Estimation approximative
+
+// Paramètres pour la visualisation
+const stairParams = {
+    numRisers: numRisers,
+    numTreads: numRisers - 1,
+    riserHeight: riserHeightValue,
+    treadDepth: treadDepthValue,
+    stairWidth: stairWidthValue
+};
+
+// Visualiser l'escalier
+visualizeStair('stairVisualization', config, stairParams);
+
+result.style.display = 'block';
         });
     }
     
@@ -1737,7 +2593,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <li>${bestSolution.stepRule.rule3.isValid ? "✓" : "⨯"} Règle 3: Giron + 2(CM) = ${bestSolution.stepRule.rule3.value.toFixed(2)}" (idéal: ${bestSolution.stepRule.rule3.min}"-${bestSolution.stepRule.rule3.max}")</li>
                             </ul>
                             <p>${bestSolution.stepRule.isValid ? "✓ Cette solution respecte les critères de confort (au moins 2 des 3 règles sont satisfaites)." : "⚠ Cette solution ne respecte pas pleinement les critères de confort (moins de 2 règles satisfaites)."}
-                        </p>
+</p>
                         </div>
                     `;
                     

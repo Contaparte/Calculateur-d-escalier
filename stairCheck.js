@@ -378,6 +378,420 @@ function formatNumber(number) {
     return number % 1 === 0 ? number.toFixed(0) : number.toFixed(1);
 }
 
+// Fonction pour créer un canvas pour visualiser l'escalier
+function createStairCanvas(containerId, width, height) {
+    const container = document.getElementById(containerId);
+    if (!container) return null;
+    
+    // Vérifier si un canvas existe déjà
+    let canvas = container.querySelector('#stairCanvas');
+    if (canvas) {
+        // Si le canvas existe, simplement mettre à jour ses dimensions
+        canvas.width = width;
+        canvas.height = height;
+    } else {
+        // Créer un nouveau canvas
+        canvas = document.createElement('canvas');
+        canvas.id = 'stairCanvas';
+        canvas.width = width;
+        canvas.height = height;
+        canvas.style.border = '1px solid #ccc';
+        canvas.style.marginTop = '20px';
+        canvas.style.marginBottom = '20px';
+        canvas.style.display = 'block';
+        canvas.style.maxWidth = '100%';
+        canvas.style.height = 'auto';
+        
+        // Ajouter le canvas au conteneur
+        container.appendChild(canvas);
+    }
+    
+    return canvas;
+}
+
+// Fonction pour dessiner un escalier droit
+function drawStraightStair(canvas, stairParams) {
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+    
+    // Effacer le canvas
+    ctx.clearRect(0, 0, width, height);
+    
+    // Extraire les paramètres de l'escalier
+    const { numRisers, numTreads, riserHeight, treadDepth, stairWidth } = stairParams;
+    
+    // Calculer les dimensions pour le dessin
+    const totalRise = numRisers * riserHeight;
+    const totalRun = numTreads * treadDepth;
+    
+    // Calculer l'échelle pour ajuster l'escalier au canvas
+    // Gardons une marge de 20px de chaque côté
+    const margin = 40;
+    const availableWidth = width - 2 * margin;
+    const availableHeight = height - 2 * margin;
+    
+    const scale = Math.min(
+        availableWidth / totalRun,
+        availableHeight / totalRise
+    );
+    
+    // Position de départ (en bas à gauche)
+    const startX = margin;
+    const startY = height - margin;
+    
+    // Dessiner les marches
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    
+    // Dessiner la ligne de base
+    ctx.lineTo(startX + totalRun * scale, startY);
+    
+    // Dessiner chaque marche
+    for (let i = 0; i < numRisers; i++) {
+        const x = startX + (numTreads - i) * treadDepth * scale;
+        const y = startY - (i + 1) * riserHeight * scale;
+        
+        // Ligne verticale (contremarche)
+        ctx.lineTo(x, y);
+        
+        // Ligne horizontale (giron) sauf pour la dernière marche
+        if (i < numRisers - 1) {
+            ctx.lineTo(x - treadDepth * scale, y);
+        }
+    }
+    
+    // Finir le dessin de l'escalier
+    ctx.stroke();
+    
+    // Ajouter des légendes
+    ctx.font = '12px Arial';
+    ctx.fillStyle = '#333';
+    
+    // Légende pour la hauteur totale
+    ctx.fillText(`Hauteur: ${Math.round(totalRise)}mm`, startX, startY - totalRise * scale - 10);
+    
+    // Légende pour la longueur totale
+    ctx.fillText(`Longueur: ${Math.round(totalRun)}mm`, startX + totalRun * scale / 2 - 50, startY + 20);
+    
+    // Légende pour la hauteur d'une contremarche et le giron
+    ctx.fillText(`CM: ${Math.round(riserHeight)}mm`, startX + totalRun * scale + 5, startY - riserHeight * scale / 2);
+    ctx.fillText(`Giron: ${Math.round(treadDepth)}mm`, startX + totalRun * scale / 2 - 50, startY - riserHeight * scale - 10);
+}
+
+// Fonction pour dessiner un escalier tournant (L ou U)
+function drawTurningStair(canvas, stairParams, turnType) {
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+    
+    // Effacer le canvas
+    ctx.clearRect(0, 0, width, height);
+    
+    // Extraire les paramètres de l'escalier
+    const { numRisers, numTreads, riserHeight, treadDepth, stairWidth } = stairParams;
+    
+    // Calculer les dimensions pour le dessin
+    const totalRise = numRisers * riserHeight;
+    
+    // Définir le nombre de marches avant et après le virage
+    let beforeTurn, afterTurn;
+    
+    if (turnType === 'l_shaped') {
+        // Escalier en L - environ moitié/moitié
+        beforeTurn = Math.floor(numTreads / 2);
+        afterTurn = numTreads - beforeTurn;
+    } else if (turnType === 'u_shaped') {
+        // Escalier en U - environ tiers/tiers/tiers
+        beforeTurn = Math.floor(numTreads / 3);
+        afterTurn = numTreads - beforeTurn * 2;
+    } else {
+        // Par défaut, volée droite
+        beforeTurn = numTreads;
+        afterTurn = 0;
+    }
+    
+    // Calculer les dimensions totales
+    const firstRunLength = beforeTurn * treadDepth;
+    const secondRunLength = afterTurn * treadDepth;
+    
+    let totalWidth, totalDepth;
+    
+    if (turnType === 'l_shaped') {
+        totalWidth = firstRunLength + stairWidth;
+        totalDepth = secondRunLength + stairWidth;
+    } else if (turnType === 'u_shaped') {
+        totalWidth = stairWidth * 2 + beforeTurn * treadDepth;
+        totalDepth = secondRunLength + stairWidth;
+    } else {
+        totalWidth = numTreads * treadDepth;
+        totalDepth = stairWidth;
+    }
+    
+    // Calculer l'échelle pour ajuster l'escalier au canvas
+    const margin = 40;
+    const availableWidth = width - 2 * margin;
+    const availableHeight = height - 2 * margin;
+    
+    const scale = Math.min(
+        availableWidth / Math.max(totalWidth, 1),
+        availableHeight / Math.max(totalRise, totalDepth)
+    );
+    
+    // Position de départ (en bas à gauche)
+    const startX = margin;
+    const startY = height - margin;
+    
+    // Dessiner l'escalier en fonction du type
+    ctx.beginPath();
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 2;
+    
+    if (turnType === 'l_shaped') {
+        // Dessiner un escalier en L
+        
+        // Première volée - horizontale
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(startX + firstRunLength * scale, startY);
+        
+        // Dessiner les marches de la première volée
+        for (let i = 0; i < beforeTurn; i++) {
+            const x1 = startX + (beforeTurn - i) * treadDepth * scale;
+            const y1 = startY - (i + 1) * riserHeight * scale;
+            
+            // Ligne verticale (contremarche)
+            ctx.lineTo(x1, y1);
+            
+            // Ligne horizontale (giron) sauf pour la dernière marche
+            if (i < beforeTurn - 1) {
+                ctx.lineTo(x1 - treadDepth * scale, y1);
+            }
+        }
+        
+        // Palier ou virage
+        const landingX = startX + firstRunLength * scale;
+        const landingY = startY - beforeTurn * riserHeight * scale;
+        
+        ctx.lineTo(landingX + stairWidth * scale, landingY);
+        
+        // Deuxième volée - verticale
+        for (let i = 0; i < afterTurn; i++) {
+            const x2 = landingX + stairWidth * scale;
+            const y2 = landingY - (i + 1) * riserHeight * scale;
+            
+            // Ligne verticale (contremarche)
+            ctx.lineTo(x2, y2);
+            
+            // Ligne horizontale (giron)
+            if (i < afterTurn - 1) {
+                ctx.lineTo(x2 - treadDepth * scale, y2);
+            }
+        }
+    } else if (turnType === 'u_shaped') {
+        // Dessiner un escalier en U
+        
+        // Première volée - vers le haut
+        ctx.moveTo(startX, startY);
+        
+        // Dessiner les marches de la première volée
+        for (let i = 0; i < beforeTurn; i++) {
+            const x1 = startX + i * treadDepth * scale;
+            const y1 = startY - (i + 1) * riserHeight * scale;
+            
+            // Ligne verticale (contremarche)
+            ctx.lineTo(x1, y1);
+            
+            // Ligne horizontale (giron)
+            if (i < beforeTurn - 1) {
+                ctx.lineTo(x1 + treadDepth * scale, y1);
+            }
+        }
+        
+        // Premier palier
+        const firstLandingX = startX + beforeTurn * treadDepth * scale;
+        const firstLandingY = startY - beforeTurn * riserHeight * scale;
+        
+        ctx.lineTo(firstLandingX, firstLandingY);
+        ctx.lineTo(firstLandingX, firstLandingY - stairWidth * scale);
+        
+        // Deuxième volée - horizontale (au milieu)
+        for (let i = 0; i < beforeTurn; i++) {
+            const x2 = firstLandingX - i * treadDepth * scale;
+            const y2 = firstLandingY - stairWidth * scale - (i + 1) * riserHeight * scale;
+            
+            // Ligne verticale (contremarche)
+            ctx.lineTo(x2, y2);
+            
+            // Ligne horizontale (giron)
+            if (i < beforeTurn - 1) {
+                ctx.lineTo(x2 - treadDepth * scale, y2);
+            }
+        }
+        
+        // Deuxième palier
+        const secondLandingX = firstLandingX - beforeTurn * treadDepth * scale;
+        const secondLandingY = firstLandingY - stairWidth * scale - beforeTurn * riserHeight * scale;
+        
+        ctx.lineTo(secondLandingX, secondLandingY);
+        ctx.lineTo(secondLandingX - stairWidth * scale, secondLandingY);
+        
+        // Troisième volée - vers le haut
+        for (let i = 0; i < afterTurn; i++) {
+            const x3 = secondLandingX - stairWidth * scale;
+            const y3 = secondLandingY - (i + 1) * riserHeight * scale;
+            
+            // Ligne verticale (contremarche)
+            ctx.lineTo(x3, y3);
+            
+            // Pas de ligne horizontale pour la dernière marche
+            if (i < afterTurn - 1) {
+                ctx.lineTo(x3, y3 - treadDepth * scale);
+            }
+        }
+    } else {
+        // Escalier droit par défaut
+        drawStraightStair(canvas, stairParams);
+        return;
+    }
+    
+    // Tracer l'escalier
+    ctx.stroke();
+    
+    // Ajouter des légendes
+    ctx.font = '12px Arial';
+    ctx.fillStyle = '#333';
+    ctx.fillText(`Total: ${numRisers} contremarches, ${numTreads} girons`, startX, startY + 20);
+    ctx.fillText(`CM: ${Math.round(riserHeight)}mm, Giron: ${Math.round(treadDepth)}mm`, startX, startY + 40);
+}
+
+// Fonction pour dessiner un escalier hélicoïdal (spiral)
+function drawSpiralStair(canvas, stairParams) {
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+    
+    // Effacer le canvas
+    ctx.clearRect(0, 0, width, height);
+    
+    // Extraire les paramètres de l'escalier
+    const { numRisers, riserHeight, stairWidth } = stairParams;
+    
+    // Calculer le centre de l'escalier hélicoïdal
+    const centerX = width / 2;
+    const centerY = height / 2;
+    
+    // Rayon intérieur et extérieur
+    const innerRadius = Math.min(width, height) * 0.1;
+    const outerRadius = Math.min(width, height) * 0.4;
+    
+    // Dessiner le noyau central
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, innerRadius, 0, Math.PI * 2);
+    ctx.fillStyle = '#ddd';
+    ctx.fill();
+    ctx.stroke();
+    
+    // Dessiner les marches en spirale
+    for (let i = 0; i < numRisers; i++) {
+        const startAngle = (i / numRisers) * Math.PI * 2;
+        const endAngle = ((i + 1) / numRisers) * Math.PI * 2;
+        
+        // Dessiner une marche
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, innerRadius, startAngle, endAngle);
+        ctx.arc(centerX, centerY, outerRadius, endAngle, startAngle, true);
+        ctx.closePath();
+        
+        // Remplir avec une couleur claire
+        ctx.fillStyle = i % 2 === 0 ? '#f5f5f5' : '#e5e5e5';
+        ctx.fill();
+        ctx.stroke();
+    }
+    
+    // Dessiner une flèche pour indiquer le sens de montée
+    ctx.beginPath();
+    const arrowAngle = Math.PI / 4;  // 45 degrés
+    const arrowX1 = centerX + (innerRadius + outerRadius) / 2 * Math.cos(arrowAngle);
+    const arrowY1 = centerY + (innerRadius + outerRadius) / 2 * Math.sin(arrowAngle);
+    ctx.moveTo(arrowX1, arrowY1);
+    
+    // Pointe de la flèche
+    const arrowLength = 30;
+    const arrowX2 = arrowX1 + arrowLength * Math.cos(arrowAngle - Math.PI / 6);
+    const arrowY2 = arrowY1 + arrowLength * Math.sin(arrowAngle - Math.PI / 6);
+    
+    ctx.lineTo(arrowX2, arrowY2);
+    
+    // Dessiner la tête de la flèche
+    const headSize = 10;
+    ctx.lineTo(arrowX2 - headSize * Math.cos(arrowAngle - Math.PI / 3), 
+               arrowY2 - headSize * Math.sin(arrowAngle - Math.PI / 3));
+    ctx.moveTo(arrowX2, arrowY2);
+    ctx.lineTo(arrowX2 - headSize * Math.cos(arrowAngle + Math.PI / 3), 
+               arrowY2 - headSize * Math.sin(arrowAngle + Math.PI / 3));
+    
+    ctx.strokeStyle = '#ff6b6b';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#333';
+    
+    // Ajouter des légendes
+    ctx.font = '12px Arial';
+    ctx.fillStyle = '#333';
+    ctx.fillText(`Escalier hélicoïdal: ${numRisers} marches`, centerX - 80, centerY + outerRadius + 30);
+    ctx.fillText(`Hauteur contremarche: ${Math.round(riserHeight)}mm`, centerX - 80, centerY + outerRadius + 50);
+    ctx.fillText(`Largeur: ${Math.round(stairWidth)}mm`, centerX - 80, centerY + outerRadius + 70);
+}
+
+// Fonction principale pour visualiser l'escalier
+function visualizeStair(containerId, stairConfig, stairParams) {
+    // Définir les dimensions du canvas
+    const width = 500;
+    const height = 400;
+    
+    // Créer ou récupérer le canvas
+    const canvas = createStairCanvas(containerId, width, height);
+    if (!canvas) return;
+    
+    // Dessiner l'escalier en fonction du type
+    switch (stairConfig) {
+        case 'straight':
+            drawStraightStair(canvas, stairParams);
+            break;
+            
+        case 'l_shaped':
+        case 'turning_30':
+        case 'turning_45':
+        case 'turning_60':
+            drawTurningStair(canvas, stairParams, 'l_shaped');
+            break;
+            
+        case 'u_shaped':
+            drawTurningStair(canvas, stairParams, 'u_shaped');
+            break;
+            
+        case 'spiral':
+            drawSpiralStair(canvas, stairParams);
+            break;
+            
+        case 'dancing_steps':
+            // Pour les marches dansantes, on utilise une visualisation similaire à celle des escaliers tournants
+            drawTurningStair(canvas, stairParams, 'l_shaped');
+            break;
+            
+        default:
+            // Par défaut, dessiner un escalier droit
+            drawStraightStair(canvas, stairParams);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Éléments du formulaire de vérification
     const measurementSystem = document.getElementById('measurementSystem');
@@ -972,6 +1386,24 @@ document.addEventListener('DOMContentLoaded', function() {
             resultContent.innerHTML = issuesList;
         }
         
+        // Ajouter la visualisation de l'escalier
+        resultContent.innerHTML += '<div class="result-section"><h3>Visualisation de l\'escalier</h3><div id="stairVisualization"></div></div>';
+        
+        // Estimer le nombre de marches pour la visualisation
+        let numRisers = Math.ceil(2000 / riserHeightValue); // Estimation approximative
+        
+        // Paramètres pour la visualisation
+        const stairParams = {
+            numRisers: numRisers,
+            numTreads: numRisers - 1,
+            riserHeight: riserHeightValue,
+            treadDepth: treadDepthValue,
+            stairWidth: stairWidthValue
+        };
+        
+        // Visualiser l'escalier
+        visualizeStair('stairVisualization', config, stairParams);
+        
         result.style.display = 'block';
     });
     
@@ -1306,102 +1738,3 @@ document.addEventListener('DOMContentLoaded', function() {
                         <p>${bestSolution.stepRule.isValid ? "✓ Cette solution respecte les critères de confort (au moins 2 des 3 règles sont satisfaites)." : "⚠ Cette solution ne respecte pas pleinement les critères de confort (moins de 2 règles satisfaites)."}</p>
                     </div>
                 `;
-                
-                detailsHtml = `
-                    <div class="result-section">
-                        <h3>Détails de la solution optimale</h3>
-                        <ul>
-                            <li>Nombre de contremarches: ${bestSolution.numRisers}</li>
-                            <li>Nombre de marches: ${bestSolution.numTreads}</li>
-                            <li>Hauteur de contremarche: ${formatRiserHeight}</li>
-                            <li>Profondeur du giron: ${formatTreadDepth}</li>
-                            <li>Hauteur totale: ${formatTotalRise}</li>
-                            <li>Longueur totale: ${formatTotalRun}</li>
-                            <li>Largeur recommandée: ${formatStairWidth} ${isWidthCompliant ? '' : '⚠'}</li>
-                        </ul>
-                    </div>
-                    ${stepRuleDetails}
-                `;
-            }
-            
-            // Ajouter des notes spécifiques selon le type d'escalier
-            let configNotes = '';
-            
-            if (stairConfigValue === 'spiral') {
-                configNotes = `
-                    <div class="result-section">
-                        <h3>Notes sur l'escalier hélicoïdal</h3>
-                        <ul>
-                            <li>Les escaliers hélicoïdaux ne doivent pas être utilisés comme issues (CNB 9.8.4.7).</li>
-                            <li>Un escalier hélicoïdal ne peut servir de seul moyen d'évacuation que s'il ne dessert pas plus de 3 personnes.</li>
-                            <li>La largeur libre minimale entre mains courantes doit être de 660 mm.</li>
-                            <li>Le giron minimal doit être de 190 mm à 300 mm de l'axe de la main courante du côté étroit.</li>
-                        </ul>
-                    </div>
-                `;
-            } else if (stairConfigValue === 'dancing_steps') {
-                configNotes = `
-                    <div class="result-section">
-                        <h3>Notes sur les marches dansantes</h3>
-                        <ul>
-                            <li>Toutes les marches dansantes d'une même volée doivent avoir un angle constant.</li>
-                            <li>Le giron minimal mesuré à 300 mm de l'axe de la main courante doit être ${isMetric ? (minNarrowSide + ' mm') : metricToImperial(minNarrowSide)}.</li>
-                            <li>La hauteur et le giron doivent être uniformes lorsqu'ils sont mesurés à 300 mm de l'axe de la main courante.</li>
-                            <li>Toutes les marches dansantes d'une même volée doivent tourner dans la même direction.</li>
-                        </ul>
-                    </div>
-                `;
-            } else if (stairConfigValue === 'l_shaped' && lShapedConfigValue === 'two_45deg') {
-                configNotes = `
-                    <div class="result-section">
-                        <h3>Notes sur les marches rayonnantes</h3>
-                        <ul>
-                            <li>Une seule série de marches rayonnantes est autorisée entre deux planchers.</li>
-                            <li>Les marches rayonnantes à 45° doivent avoir un angle de rotation de 45° exactement.</li>
-                            <li>Ces marches doivent être uniformes dans leur dimension.</li>
-                        </ul>
-                    </div>
-                `;
-            } else if (stairConfigValue === 'l_shaped' && lShapedConfigValue === 'three_30deg') {
-                configNotes = `
-                    <div class="result-section">
-                        <h3>Notes sur les marches rayonnantes</h3>
-                        <ul>
-                            <li>Une seule série de marches rayonnantes est autorisée entre deux planchers.</li>
-                            <li>Les marches rayonnantes à 30° doivent avoir un angle de rotation de 30° exactement.</li>
-                            <li>Ces marches doivent être uniformes dans leur dimension.</li>
-                        </ul>
-                    </div>
-                `;
-            }
-            
-            // Assembler le résultat final
-            calculatorResultContent.innerHTML = `
-                <p class="success">✓ Solution conforme au ${codeReference} trouvée.</p>
-                ${widthWarning}
-                ${specificWarnings}
-                ${explanationSection}
-                ${solutionsHtml}
-                ${detailsHtml}
-                ${configNotes}
-                <div class="result-section">
-                    <h3>Notes importantes</h3>
-                    <ul>
-                        <li>Ces calculs sont indicatifs et doivent être vérifiés par un professionnel.</li>
-                        <li>Les dimensions finales peuvent nécessiter des ajustements selon les matériaux utilisés.</li>
-                        <li>La hauteur et la profondeur des marches doivent être uniformes dans une même volée.</li>
-                        <li>N'oubliez pas les exigences concernant les mains courantes et garde-corps.</li>
-                    </ul>
-                </div>
-            `;
-        }
-        
-        calculatorResult.style.display = 'block';
-    });
-    
-    // Initialiser l'affichage en fonction des sélections initiales
-    stairConfig.dispatchEvent(new Event('change'));
-    calcStairConfig.dispatchEvent(new Event('change'));
-    updatePlaceholders('verification');
-    updatePlaceholders('calculator');
-});

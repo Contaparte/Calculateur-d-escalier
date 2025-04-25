@@ -2414,11 +2414,16 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Largeur libre entre mains courantes (escalier hélicoïdal) (9.8.4.7)
-            if (config === 'spiral') {
-                minSpiralWidth = 660; // 660 mm
-                maxRiser = 240; // 240 mm pour escalier hélicoïdal
-            }
+        if (config === 'spiral') {
+            minSpiralWidth = 660; // 660 mm
+            maxRiser = 240; // 240 mm pour escalier hélicoïdal
         }
+    } // <- Cette accolade fermante est manquante dans votre code
+
+    // Maintenant, procéder à la vérification de conformité
+    checkCompliance();
+});
+
 }
         
         // Maintenant, procéder à la vérification de conformité

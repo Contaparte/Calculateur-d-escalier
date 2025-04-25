@@ -1738,3 +1738,23 @@ document.addEventListener('DOMContentLoaded', function() {
                         <p>${bestSolution.stepRule.isValid ? "✓ Cette solution respecte les critères de confort (au moins 2 des 3 règles sont satisfaites)." : "⚠ Cette solution ne respecte pas pleinement les critères de confort (moins de 2 règles satisfaites)."}</p>
                     </div>
                 `;
+                
+                detailsHtml = `
+                    <div class="result-section">
+                        <h3>Détails de la solution optimale</h3>
+                        <ul>
+                            <li>Nombre de contremarches: ${bestSolution.numRisers}</li>
+                            <li>Nombre de marches: ${bestSolution.numTreads}</li>
+                            <li>Hauteur de contremarche: ${formatRiserHeight}</li>
+                            <li>Profondeur du giron: ${formatTreadDepth}</li>
+                            <li>Hauteur totale: ${formatTotalRise}</li>
+                            <li>Longueur totale: ${formatTotalRun}</li>
+                            <li>Largeur recommandée: ${formatStairWidth} ${isWidthCompliant ? '' : '⚠'}</li>
+                        </ul>
+                    </div>
+                    ${stepRuleDetails}
+                    
+                    <div class="result-section">
+                        <h3>Visualisation de l'escalier</h3>
+                        <div id="calcStairVisualization"></div>
+                    </div>

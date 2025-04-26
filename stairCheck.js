@@ -2567,27 +2567,34 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // Vérifier la conformité
-        let issues = [];
-        let isCompliant = true;
-        
-        // Vérification de la hauteur de contremarche
-        if (riserHeightValue < minRiser) {
-            issues.push(`La hauteur de contremarche (${riserHeightValue} mm) est inférieure au minimum requis (${minRiser} mm).`);
-            isCompliant = false;
-        } else if (riserHeightValue > maxRiser) {
-            issues.push(`La hauteur de contremarche (${riserHeightValue} mm) dépasse le maximum autorisé (${maxRiser} mm).`);
-            isCompliant = false;
+        // Largeur libre entre mains courantes (escalier hélicoïdal) (9.8.4.7)
+        if (config === 'spiral') {
+            minSpiralWidth = 660; // 660 mm
+            maxRiser = 240; // 240 mm pour escalier hélicoïdal
         }
-        
-        // Vérification du giron
-        if (treadDepthValue < minTread) {
-            issues.push(`Le giron (${treadDepthValue} mm) est inférieur au minimum requis (${minTread} mm).`);
-            isCompliant = false;
-        } else if (treadDepthValue > maxTread && maxTread !== Infinity) {
-            issues.push(`Le giron (${treadDepthValue} mm) dépasse le maximum autorisé (${maxTread} mm).`);
-            isCompliant = false;
-        }
+    }
+    
+    // Vérifier la conformité
+    let issues = [];
+    let isCompliant = true;
+    
+    // Vérification de la hauteur de contremarche
+    if (riserHeightValue < minRiser) {
+        issues.push(`La hauteur de contremarche (${riserHeightValue} mm) est inférieure au minimum requis (${minRiser} mm).`);
+        isCompliant = false;
+    } else if (riserHeightValue > maxRiser) {
+        issues.push(`La hauteur de contremarche (${riserHeightValue} mm) dépasse le maximum autorisé (${maxRiser} mm).`);
+        isCompliant = false;
+    }
+    
+    // Vérification du giron
+    if (treadDepthValue < minTread) {
+        issues.push(`Le giron (${treadDepthValue} mm) est inférieur au minimum requis (${minTread} mm).`);
+        isCompliant = false;
+    } else if (treadDepthValue > maxTread && maxTread !== Infinity) {
+        issues.push(`Le giron (${treadDepthValue} mm) dépasse le maximum autorisé (${maxTread} mm).`);
+        isCompliant = false;
+    }
         
         // Vérification de la règle du pas
         const stepRule = checkStepRule(riserHeightValue, treadDepthValue);

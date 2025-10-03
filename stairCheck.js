@@ -1350,23 +1350,83 @@ document.addEventListener('DOMContentLoaded', function() {
             let detailsHtml = '';
             
             if (bestSolution) {
+                // Calculs de vérification EXACTS
                 const totalRiseCalculation = bestSolution.riserHeight * bestSolution.numRisers;
-                const totalRunCalculation = bestSolution.treadDepth * bestSolution.numTreads;
+                const actualTotalRunCalculation = bestSolution.actualTotalRun || (bestSolution.treadDepth * bestSolution.numTreads);
                 
-                let formatRiserHeight, formatTreadDepth, formatTotalRise, formatTotalRun, formatStairWidth;
+                // Vérifier la précision
+                const riseError = Math.abs(totalRiseCalculation - totalRiseValue);
+                const runError = Math.abs(actualTotalRunCalculation - totalRunValue);
+                
+                let formatRiserHeight, formatTreadDepth, formatTotalRise, formatActualTotalRun, formatInputTotalRun, formatStairWidth;
+                let formatRiserExact, formatTreadExact; // Valeurs exactes en décimal
                 
                 if (isMetric) {
-                    formatRiserHeight = formatNumber(bestSolution.riserHeight) + ' mm';
-                    formatTreadDepth = formatNumber(bestSolution.treadDepth) + ' mm';
-                    formatTotalRise = formatNumber(totalRiseCalculation) + ' mm';
-                    formatTotalRun = formatNumber(totalRunCalculation) + ' mm';
+                    // En métrique, afficher avec 2 décimales pour la précision
+                    formatRiserHeight = bestSolution.riserHeight.toFixed(2) + ' mm';
+                    formatTreadDepth = bestSolution.treadDepth.toFixed(2) + ' mm';
+                    formatRiserExact = bestSolution.riserHeight.toFixed(2) + ' mm';
+                    formatTreadExact = bestSolution.treadDepth.toFixed(2) + ' mm';
+                    formatTotalRise = totalRiseCalculation.toFixed(2) + ' mm';
+                    formatActualTotalRun = actualTotalRunCalculation.toFixed(2) + ' mm';
+                    formatInputTotalRun = totalRiseValue.toFixed(2) + ' mm';
                     formatStairWidth = formatNumber(stairWidthValue) + ' mm';
                 } else {
+                    // En impérial, afficher la valeur décimale ET la fraction
+                    const riserInches = bestSolution.riserHeight / 25.4;
+                    const treadInches = bestSolution.treadDepth / 25.4;
+                    
+                    formatRiserExact = riserInches.toFixed(4) + '"';
+                    formatTreadExact = treadInches.toFixed(4) + '"';
+                    
+                    // Fraction approximative (1/16")
                     formatRiserHeight = metricToImperial(bestSolution.riserHeight);
                     formatTreadDepth = metricToImperial(bestSolution.treadDepth);
+                    
                     formatTotalRise = metricToImperial(totalRiseCalculation);
-                    formatTotalRun = metricToImperial(totalRunCalculation);
+                    formatActualTotalRun = metricToImperial(actualTotalRunCalculation);
+                    formatInputTotalRun = metricToImperial(totalRiseValue);
                     formatStairWidth = metricToImperial(stairWidthValue);
+                }
+                
+                // Formule de vérification pour contremarches
+                let riserVerification = '';
+                if (isMetric) {
+                    riserVerification = `
+                        <div class="step-formula">
+                            Vérification : ${bestSolution.numRisers} contremarches × ${bestSolution.riserHeight.toFixed(2)} mm = ${totalRiseCalculation.toFixed(2)} mm
+                            ${riseError < 0.1 ? '✓ Exact' : `⚠ Écart de ${riseError.toFixed(2)} mm`}
+                        </div>
+                    `;
+                } else {
+                    const riserInches = bestSolution.riserHeight / 25.4;
+                    const totalRiseInches = totalRiseCalculation / 25.4;
+                    riserVerification = `
+                        <div class="step-formula">
+                            Vérification : ${bestSolution.numRisers} contremarches × ${riserInches.toFixed(4)}" = ${totalRiseInches.toFixed(4)}"
+                            ${riseError < 2.5 ? '✓ Exact' : `⚠ Écart de ${(riseError/25.4).toFixed(4)}"`}
+                        </div>
+                    `;
+                }
+                
+                // Formule de vérification pour girons
+                let treadVerification = '';
+                if (isMetric) {
+                    treadVerification = `
+                        <div class="step-formula">
+                            Vérification : ${bestSolution.numTreads} marches × ${bestSolution.treadDepth.toFixed(2)} mm = ${(bestSolution.treadDepth * bestSolution.numTreads).toFixed(2)} mm
+                            ${runError < 0.1 ? '✓ Exact' : `⚠ Écart de ${runError.toFixed(2)} mm`}
+                        </div>
+                    `;
+                } else {
+                    const treadInches = bestSolution.treadDepth / 25.4;
+                    const totalRunInches = (bestSolution.treadDepth * bestSolution.numTreads) / 25.4;
+                    treadVerification = `
+                        <div class="step-formula">
+                            Vérification : ${bestSolution.numTreads} marches × ${treadInches.toFixed(4)}" = ${totalRunInches.toFixed(4)}"
+                            ${runError < 2.5 ? '✓ Exact' : `⚠ Écart de ${(runError/25.4).toFixed(4)}"`}
+                        </div>
+                    `;
                 }
                 
                 // Informations sur les règles du pas pour la meilleure solution
@@ -1374,26 +1434,52 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="result-section">
                         <h4>Vérification de la règle du pas (solution optimale)</h4>
                         <ul>
-                            <li>${bestSolution.stepRule.rule1.isValid ? "✓" : "⨯"} Règle 1: Giron + CM = ${bestSolution.stepRule.rule1.value.toFixed(2)}" (idéal: ${bestSolution.stepRule.rule1.min}"-${bestSolution.stepRule.rule1.max}")</li>
-                            <li>${bestSolution.stepRule.rule2.isValid ? "✓" : "⨯"} Règle 2: Giron × CM = ${bestSolution.stepRule.rule2.value.toFixed(2)} po² (idéal: ${bestSolution.stepRule.rule2.min}-${bestSolution.stepRule.rule2.max} po²)</li>
-                            <li>${bestSolution.stepRule.rule3.isValid ? "✓" : "⨯"} Règle 3: Giron + 2(CM) = ${bestSolution.stepRule.rule3.value.toFixed(2)}" (idéal: ${bestSolution.stepRule.rule3.min}"-${bestSolution.stepRule.rule3.max}")</li>
+                            <li>${bestSolution.stepRule.rule1.isValid ? "✓" : "⚠"} Règle 1: Giron + CM = ${bestSolution.stepRule.rule1.value.toFixed(2)}" (idéal: ${bestSolution.stepRule.rule1.min}"-${bestSolution.stepRule.rule1.max}")</li>
+                            <li>${bestSolution.stepRule.rule2.isValid ? "✓" : "⚠"} Règle 2: Giron × CM = ${bestSolution.stepRule.rule2.value.toFixed(2)} po² (idéal: ${bestSolution.stepRule.rule2.min}-${bestSolution.stepRule.rule2.max} po²)</li>
+                            <li>${bestSolution.stepRule.rule3.isValid ? "✓" : "⚠"} Règle 3: Giron + 2(CM) = ${bestSolution.stepRule.rule3.value.toFixed(2)}" (idéal: ${bestSolution.stepRule.rule3.min}"-${bestSolution.stepRule.rule3.max}")</li>
                         </ul>
                         <p>${bestSolution.stepRule.isValid ? "✓ Cette solution respecte les critères de confort (au moins 2 des 3 règles sont satisfaites)." : "⚠ Cette solution ne respecte pas pleinement les critères de confort (moins de 2 règles satisfaites)."}</p>
                     </div>
                 `;
                 
+                // Informations de base
+                let marchesInfo = `<li>Nombre de marches: ${bestSolution.numTreads}`;
+                if (bestSolution.numRadiatingSteps > 0) {
+                    marchesInfo += ` (${bestSolution.numRectangularTreads} rectangulaires + ${bestSolution.numRadiatingSteps} rayonnantes)`;
+                }
+                marchesInfo += `</li>`;
+                
                 detailsHtml = `
                     <div class="result-section">
                         <h3>Détails de la solution optimale</h3>
+                        <h4>Dimensions exactes (à utiliser pour le traçage) :</h4>
+                        <ul>
+                            <li><strong>Hauteur de contremarche :</strong> ${formatRiserExact} ${isMetric ? '' : '(≈ ' + formatRiserHeight + ')'}</li>
+                            <li><strong>Profondeur du giron :</strong> ${formatTreadExact} ${isMetric ? '' : '(≈ ' + formatTreadDepth + ')'}</li>
+                        </ul>
+                        ${riserVerification}
+                        ${treadVerification}
+                        <h4>Récapitulatif :</h4>
                         <ul>
                             <li>Nombre de contremarches: ${bestSolution.numRisers}</li>
-                            <li>Nombre de marches: ${bestSolution.numTreads}</li>
-                            <li>Hauteur de contremarche: ${formatRiserHeight}</li>
-                            <li>Profondeur du giron: ${formatTreadDepth}</li>
-                            <li>Hauteur totale: ${formatTotalRise}</li>
-                            <li>Longueur totale: ${formatTotalRun}</li>
+                            ${marchesInfo}
+                            <li>Hauteur totale calculée: ${formatTotalRise}</li>
+                            <li>Longueur totale calculée: ${formatActualTotalRun}</li>
                             <li>Largeur recommandée: ${formatStairWidth} ${isWidthCompliant ? '' : '⚠'}</li>
                         </ul>
+                        ${bestSolution.numRadiatingSteps > 0 ? `
+                            <p><strong>Note:</strong> Pour les marches rayonnantes, le giron indiqué (${formatTreadExact}) doit être mesuré à 300 mm de l'axe de la main courante du côté étroit, conformément au CNB 2015.</p>
+                        ` : ''}
+                        <div class="warning">
+                            <p><strong>Important pour le traçage :</strong></p>
+                            <ul>
+                                <li>Utilisez les valeurs <strong>exactes en décimales</strong> ci-dessus pour le traçage CAD</li>
+                                <li>Les fractions (ex: ${isMetric ? '' : formatRiserHeight + ', ' + formatTreadDepth}) sont des approximations au 1/16" le plus proche</li>
+                                <li>En construction réelle, le CNB 2015 permet une tolérance de ±5mm entre marches adjacentes et ±10mm dans la volée</li>
+                                <li>La somme de toutes les contremarches doit donner exactement la hauteur totale</li>
+                                <li>La somme de tous les girons doit donner exactement la longueur totale</li>
+                            </ul>
+                        </div>
                     </div>
                     ${stepRuleDetails}
                 `;

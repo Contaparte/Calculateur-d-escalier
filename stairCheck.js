@@ -238,6 +238,7 @@ function calculateOptimalStair(totalRise, totalRun, preferences) {
         // Ajustement pour escalier hélicoïdal
         if (stairConfig === 'spiral') {
             maxRiser = 240; // 240 mm pour escalier hélicoïdal
+            minTread = 190; // Giron minimal à 300mm de l'axe pour hélicoïdal
         }
     } else {
         // Règles pour les bâtiments régis par la partie 9
@@ -256,6 +257,7 @@ function calculateOptimalStair(totalRise, totalRun, preferences) {
         // Ajustement pour escalier hélicoïdal
         if (stairConfig === 'spiral') {
             maxRiser = 240; // 240 mm pour escalier hélicoïdal
+            minTread = 190; // Giron minimal à 300mm de l'axe pour hélicoïdal
         }
     }
     
@@ -264,8 +266,9 @@ function calculateOptimalStair(totalRise, totalRun, preferences) {
     const optimalStep = 640;
     const maxStep = 650;
     
-    // Ajustement pour les configurations avec marches rayonnantes ou tournantes
-    let adjustedTotalRun = totalRun;
+    // Calcul du nombre de marches rayonnantes et de leur impact géométrique
+    let numRadiatingSteps = 0;
+    let radiatingStepAngle = 0;
     let configurationType = stairConfig;
     
     // Si c'est une volée tournante à 90° (en "L"), vérifier le type de configuration
@@ -273,30 +276,24 @@ function calculateOptimalStair(totalRise, totalRun, preferences) {
         configurationType = lShapedConfig;
     }
     
-    // Ajuster la longueur totale en fonction du type de configuration
-    if (configurationType === 'two_45deg' || 
-        configurationType === 'three_30deg' || 
-        stairConfig === 'turning_30' || 
-        stairConfig === 'turning_45' || 
-        stairConfig === 'turning_60' || 
-        stairConfig === 'dancing_steps') {
-        
-        // Utiliser la valeur idéale du giron comme référence, sinon prendre une valeur par défaut
-        const standardTread = (idealTread > 0) ? idealTread : 280; // valeur par défaut
-        
-        if (configurationType === 'two_45deg' || stairConfig === 'turning_45') {
-            // Deux marches rayonnantes à 45° prennent environ 1.5 fois l'espace d'une marche standard
-            adjustedTotalRun = totalRun - (0.5 * standardTread);
-        } else if (configurationType === 'three_30deg' || stairConfig === 'turning_30') {
-            // Trois marches rayonnantes à 30° prennent environ 2.1 fois l'espace de marches standard
-            adjustedTotalRun = totalRun - (1.1 * standardTread);
-        } else if (stairConfig === 'turning_60') {
-            // Volée tournante à 60° (2 marches rayonnantes de 30°)
-            adjustedTotalRun = totalRun - (0.6 * standardTread);
-        } else if (stairConfig === 'dancing_steps') {
-            // Pour les marches dansantes, ajustement approximatif
-            adjustedTotalRun = totalRun - (1.0 * standardTread);
-        }
+    // Déterminer le nombre et l'angle des marches rayonnantes
+    if (configurationType === 'two_45deg' || stairConfig === 'turning_45') {
+        numRadiatingSteps = 2;
+        radiatingStepAngle = 45;
+    } else if (configurationType === 'three_30deg' || stairConfig === 'turning_30') {
+        numRadiatingSteps = 3;
+        radiatingStepAngle = 30;
+    } else if (stairConfig === 'turning_60') {
+        numRadiatingSteps = 2;
+        radiatingStepAngle = 30;
+    } else if (stairConfig === 'l_shaped' && lShapedConfig === 'standard_landing') {
+        // Palier standard : pas de marches rayonnantes, mais soustraire la longueur du palier
+        // Un palier standard doit avoir au moins 900mm (partie 9 commun) ou 860mm (privé)
+        numRadiatingSteps = 0;
+    } else if (stairConfig === 'dancing_steps') {
+        // Pour les marches dansantes, on ne peut pas calculer précisément sans connaître l'angle
+        // On utilisera une approximation conservative
+        numRadiatingSteps = 0; // Traité séparément
     }
     
     // Nombre théorique de marches
@@ -319,8 +316,56 @@ function calculateOptimalStair(totalRise, totalRun, preferences) {
         
         if (numTreads <= 0) continue;
         
-        // Utiliser la longueur ajustée pour les escaliers avec marches rayonnantes
-        const treadDepth = adjustedTotalRun / numTreads;
+        // Calculer la longueur disponible pour les marches rectangulaires
+        let availableRunForRectangular = totalRun;
+        let numRectangularTreads = numTreads;
+        
+        // Ajustement pour les marches rayonnantes
+        if (numRadiatingSteps > 0 && radiatingStepAngle > 0) {
+            // Les marches rayonnantes sont comptées dans le nombre total de marches
+            numRectangularTreads = numTreads - numRadiatingSteps;
+            
+            // Pour calculer la projection horizontale des marches rayonnantes :
+            // On utilise la formule pour un virage avec marches rayonnantes
+            // La projection dépend du rayon intérieur et du giron à 300mm de l'axe
+            
+            // Approximation : pour des marches rayonnantes, la projection horizontale
+            // est d'environ 0.7 fois le giron standard par marche rayonnante
+            // (ceci est une approximation basée sur la géométrie typique)
+            const estimatedRadiatingProjection = 0.7;
+            
+            // On soustrait l'espace pris par les marches rayonnantes
+            // En utilisant d'abord une estimation du giron
+            const estimatedTread = totalRun / numTreads;
+            availableRunForRectangular = totalRun - (numRadiatingSteps * estimatedTread * estimatedRadiatingProjection);
+        } else if (stairConfig === 'l_shaped' && lShapedConfig === 'standard_landing') {
+            // Soustraire la longueur du palier
+            const landingLength = stairType === 'private' ? 860 : 900;
+            availableRunForRectangular = totalRun - landingLength;
+            // Pour un escalier en L avec palier, on a 2 volées
+            // Le calcul reste le même mais on doit tenir compte du palier
+        } else if (stairConfig === 'u_shaped') {
+            // Pour un escalier en U, soustraire la longueur du palier central
+            const landingLength = stairType === 'private' ? 860 : 1100;
+            availableRunForRectangular = totalRun - landingLength;
+        } else if (stairConfig === 'dancing_steps') {
+            // Pour les marches dansantes, utiliser une approximation conservative
+            // On suppose que les marches dansantes prennent environ 80% de l'espace
+            // d'une marche rectangulaire équivalente en projection
+            availableRunForRectangular = totalRun * 0.95; // Facteur de correction conservateur
+        }
+        
+        // S'assurer que la longueur disponible est positive
+        if (availableRunForRectangular <= 0 || numRectangularTreads < 0) continue;
+        
+        // Calculer le giron en fonction du nombre de marches rectangulaires
+        let treadDepth;
+        if (numRectangularTreads > 0) {
+            treadDepth = availableRunForRectangular / numRectangularTreads;
+        } else {
+            // Cas particulier où toutes les marches sont rayonnantes
+            treadDepth = availableRunForRectangular / numTreads;
+        }
         
         // Vérifier si le giron est dans les limites
         if (treadDepth < minTread || (maxTread !== Infinity && treadDepth > maxTread)) continue;
@@ -352,9 +397,24 @@ function calculateOptimalStair(totalRise, totalRun, preferences) {
             score = riserDeviation + treadDeviation * 2;
         }
         
+        // Calculer la longueur totale réelle de l'escalier pour vérification
+        let actualTotalRun = treadDepth * numRectangularTreads;
+        if (numRadiatingSteps > 0) {
+            actualTotalRun += treadDepth * numRadiatingSteps * 0.7; // Projection des marches rayonnantes
+        }
+        if (stairConfig === 'l_shaped' && lShapedConfig === 'standard_landing') {
+            const landingLength = stairType === 'private' ? 860 : 900;
+            actualTotalRun += landingLength;
+        } else if (stairConfig === 'u_shaped') {
+            const landingLength = stairType === 'private' ? 860 : 1100;
+            actualTotalRun += landingLength;
+        }
+        
         solutions.push({
             numRisers,
             numTreads,
+            numRectangularTreads,
+            numRadiatingSteps,
             riserHeight,
             treadDepth,
             stepValue,
@@ -362,7 +422,8 @@ function calculateOptimalStair(totalRise, totalRun, preferences) {
             score,
             riserDeviation,
             treadDeviation,
-            stepDeviation
+            stepDeviation,
+            actualTotalRun
         });
     }
     

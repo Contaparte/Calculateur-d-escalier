@@ -35,14 +35,18 @@ function metricToImperial(mmValue) {
         result += feet + '\'';
     }
     
-    if (wholePart > 0 || fractionalPart > 0) {
+    // Vérifier si la partie fractionnaire est très petite (erreur d'arrondi)
+    const isFractionalPartNegligible = Math.abs(fractionalPart) < 0.001;
+    const isWholePartZeroAndNoFeet = wholePart === 0 && feet === 0;
+    
+    if (wholePart > 0 || fractionalPart > 0.001 || isWholePartZeroAndNoFeet) {
         if (feet > 0) result += ' ';
         
-        if (wholePart > 0) {
+        if (wholePart > 0 || (fractionalPart < 0.001 && (wholePart > 0 || feet === 0))) {
             result += wholePart;
         }
         
-        if (fractionalPart > 0) {
+        if (fractionalPart > 0.001) { // Ignorer les fractions très petites dues aux erreurs d'arrondi
             // Convertir la fraction décimale en fraction
             const numerator = Math.round(fractionalPart * 16);
             const denominator = 16;
@@ -59,7 +63,7 @@ function metricToImperial(mmValue) {
         }
         
         result += '"';
-    } else if (feet === 0) {
+    } else if (feet === 0 && wholePart === 0) {
         result = '0"';
     }
     
@@ -76,43 +80,43 @@ function imperialToMetric(imperialValue) {
     // Formats possibles: "6'2", "6' 2", "6 2", "6-2", "6 ft 2 in", "6'2\"", "6'-2", "6'-2 1/4", etc.
     imperialValue = imperialValue.toString().trim();
     
-    // Adapté spécifiquement au format "6'-9 1/4""
+    // AdaptĂ© spĂ©cifiquement au format "6'-9 1/4""
     const specialFormat = imperialValue.match(/^(\d+(?:\.\d+)?)'[-\s]*(\d+(?:\.\d+)?)(?:\s+(\d+)\/(\d+))?(?:\s*(?:"|in|inch|inches))?$/);
     if (specialFormat) {
-        console.log("Format spécial détecté:", specialFormat);
+        console.log("Format spĂ©cial dĂ©tectĂ©:", specialFormat);
         const feet = parseFloat(specialFormat[1]) || 0;
         const inches = parseFloat(specialFormat[2]) || 0;
         const fraction = specialFormat[3] && specialFormat[4] ? 
             parseFloat(specialFormat[3]) / parseFloat(specialFormat[4]) : 0;
         const totalInches = feet * 12 + inches + fraction;
         console.log(`Conversion: ${feet} pieds + ${inches} pouces + ${fraction} fraction = ${totalInches} pouces`);
-        return Math.round(totalInches * 25.4);
+        return totalInches * 25.4; // Ne PAS arrondir pour garder la précision maximale
     }
     
     // Pour les valeurs simples en pouces (comme "10" ou "10 in")
     if (/^(\d+(?:\.\d+)?)(?:\s*(?:in|inch|inches|"))?$/.test(imperialValue)) {
         const inches = parseFloat(imperialValue);
         console.log("Format pouces simple:", inches);
-        return Math.round(inches * 25.4);
+        return inches * 25.4; // Ne PAS arrondir pour garder la précision maximale
     }
     
-    // Formats supplémentaires pour 6'-9 1/4"
+    // Formats supplĂ©mentaires pour 6'-9 1/4"
     const formatsSpeciaux = [
-        /^(\d+)['´][-\s]*(\d+)(?:\s+(\d+)\/(\d+))?["]?$/,  // 6'-9 1/4"
-        /^(\d+)['´][-\s]*(\d+)(?:\s+(\d+)\/(\d+))?$/      // 6'-9 1/4
+        /^(\d+)['Â´][-\s]*(\d+)(?:\s+(\d+)\/(\d+))?["]?$/,  // 6'-9 1/4"
+        /^(\d+)['Â´][-\s]*(\d+)(?:\s+(\d+)\/(\d+))?$/      // 6'-9 1/4
     ];
     
     for (let pattern of formatsSpeciaux) {
         const match = imperialValue.match(pattern);
         if (match) {
-            console.log("Format spécifique trouvé:", match);
+            console.log("Format spĂ©cifique trouvĂ©:", match);
             const feet = parseInt(match[1]) || 0;
             const inches = parseInt(match[2]) || 0;
             const fraction = match[3] && match[4] ? 
                 parseInt(match[3]) / parseInt(match[4]) : 0;
             const totalInches = feet * 12 + inches + fraction;
             console.log(`Format direct: ${feet} pieds + ${inches} pouces + ${fraction} fraction = ${totalInches} pouces`);
-            return Math.round(totalInches * 25.4);
+            return totalInches * 25.4; // Ne PAS arrondir pour garder la précision maximale
         }
     }
     
@@ -127,25 +131,25 @@ function imperialToMetric(imperialValue) {
     for (let pattern of patterns) {
         const match = imperialValue.match(pattern);
         if (match) {
-            console.log("Pattern standard trouvé:", match);
+            console.log("Pattern standard trouvĂ©:", match);
             const feet = parseFloat(match[1]) || 0;
             const inches = match[2] ? parseFloat(match[2]) : 0;
             const totalInches = feet * 12 + inches;
             console.log(`Standard: ${feet} pieds + ${inches} pouces = ${totalInches} pouces`);
-            return Math.round(totalInches * 25.4);
+            return totalInches * 25.4; // Ne PAS arrondir pour garder la précision maximale
         }
     }
     
     // Pour les fractions (par exemple, "6 1/2")
     const fractionMatch = imperialValue.match(/^(\d+(?:\.\d+)?)(?:\s*)(\d+)\/(\d+)(?:\s*(?:"|in|inch|inches))?$/);
     if (fractionMatch) {
-        console.log("Fraction trouvée:", fractionMatch);
+        console.log("Fraction trouvĂ©e:", fractionMatch);
         const wholeNumber = parseFloat(fractionMatch[1]) || 0;
         const numerator = parseFloat(fractionMatch[2]);
         const denominator = parseFloat(fractionMatch[3]);
         const inches = wholeNumber + (numerator / denominator);
         console.log(`Fraction: ${wholeNumber} + ${numerator}/${denominator} = ${inches} pouces`);
-        return Math.round(inches * 25.4);
+        return inches * 25.4; // Ne PAS arrondir pour garder la précision maximale
     }
     
     // Pour les pieds avec fractions de pouce (par exemple "6' 1/2")
@@ -157,7 +161,7 @@ function imperialToMetric(imperialValue) {
         const denominator = parseFloat(feetWithFractionMatch[3]);
         const totalInches = feet * 12 + (numerator / denominator);
         console.log(`Pieds+fraction: ${feet} pieds + ${numerator}/${denominator} = ${totalInches} pouces`);
-        return Math.round(totalInches * 25.4);
+        return totalInches * 25.4; // Ne PAS arrondir pour garder la précision maximale
     }
     
     // Si aucun format ne correspond
@@ -434,9 +438,19 @@ function calculateOptimalStair(totalRise, totalRun, preferences) {
     return solutions.slice(0, 3);
 }
 
-// Formatage des nombres avec 1 décimale si nécessaire
+// Formatage des nombres avec précision appropriée
 function formatNumber(number) {
-    return number % 1 === 0 ? number.toFixed(0) : number.toFixed(1);
+    // Pour éviter les problèmes d'arrondi en virgule flottante
+    // On arrondit à 2 décimales pour les calculs intermédiaires
+    const rounded = Math.round(number * 100) / 100;
+    
+    // Si le nombre est très proche d'un entier (à 0.01 près), l'afficher comme entier
+    if (Math.abs(rounded - Math.round(rounded)) < 0.01) {
+        return Math.round(rounded).toFixed(0);
+    }
+    
+    // Sinon, afficher avec 1 décimale
+    return rounded.toFixed(1);
 }
 
 document.addEventListener('DOMContentLoaded', function() {

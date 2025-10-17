@@ -203,10 +203,15 @@ function calculateOptimalStair(totalRise, totalRun, preferences) {
     const optimalStep = 640;
     let solutions = [];
     
-    // Calculer nombre théorique de contremarches
+    // Calculer nombre théorique de contremarches avec une marge plus large
     const theoreticalRisers = totalRise / (idealRiser > 0 ? idealRiser : (minRiser + maxRiser) / 2);
-    const minRisersToTry = Math.max(3, Math.floor(theoreticalRisers - 3));
-    const maxRisersToTry = Math.ceil(theoreticalRisers + 3);
+    const minRisersToTry = Math.max(3, Math.floor(theoreticalRisers - 6));
+    const maxRisersToTry = Math.ceil(theoreticalRisers + 6);
+    
+    // Debug: afficher la plage de recherche en console
+    console.log(`Recherche de ${minRisersToTry} à ${maxRisersToTry} contremarches`);
+    console.log(`Hauteur totale: ${totalRise}mm, Longueur totale: ${totalRun}mm`);
+    console.log(`Limites: Contremarche [${minRiser}, ${maxRiser}]mm, Giron [${minTread}, ${maxTread === Infinity ? '∞' : maxTread}]mm`);
     
     for (let numRisers = minRisersToTry; numRisers <= maxRisersToTry; numRisers++) {
         // PRÉCISION CRITIQUE: Diviser la hauteur totale exactement
@@ -217,34 +222,32 @@ function calculateOptimalStair(totalRise, totalRun, preferences) {
         const numTreads = numRisers - 1;
         if (numTreads <= 0) continue;
         
-        // Calculer longueur disponible
+        // Calculer longueur disponible pour marches rectangulaires
         let availableRunForRectangular = totalRun;
         let numRectangularTreads = numTreads;
+        let actualLandingLength = 0;
         
         if (numRadiatingSteps > 0) {
             numRectangularTreads = numTreads - numRadiatingSteps;
-            // Projection géométrique marches rayonnantes (approximation conservatrice)
-            const estimatedTread = totalRun / numTreads;
-            availableRunForRectangular = totalRun - (numRadiatingSteps * estimatedTread * 0.7);
+            if (numRectangularTreads < 0) continue;
+            // Pour marches rayonnantes, on estime qu'elles occupent ~70% de la projection
+            const estimatedRadiatingRun = (totalRun / numTreads) * numRadiatingSteps * 0.7;
+            availableRunForRectangular = totalRun - estimatedRadiatingRun;
         } else if (stairConfig === 'l_shaped' && lShapedConfig === 'standard_landing') {
-            const landingLength = stairType === 'private' ? 860 : 900;
-            availableRunForRectangular = totalRun - landingLength;
+            actualLandingLength = stairType === 'private' ? 860 : 900;
+            availableRunForRectangular = totalRun - actualLandingLength;
         } else if (stairConfig === 'u_shaped') {
-            const landingLength = stairType === 'private' ? 860 : 1100;
-            availableRunForRectangular = totalRun - landingLength;
+            actualLandingLength = stairType === 'private' ? 860 : 1100;
+            availableRunForRectangular = totalRun - actualLandingLength;
         } else if (stairConfig === 'dancing_steps') {
-            availableRunForRectangular = totalRun * 0.95;
+            availableRunForRectangular = totalRun;
         }
         
-        if (availableRunForRectangular <= 0 || numRectangularTreads < 0) continue;
+        // Vérifier que la longueur est positive
+        if (availableRunForRectangular <= 0) continue;
         
         // PRÉCISION CRITIQUE: Diviser la longueur exactement
-        let treadDepth;
-        if (numRectangularTreads > 0) {
-            treadDepth = availableRunForRectangular / numRectangularTreads;
-        } else {
-            treadDepth = availableRunForRectangular / numTreads;
-        }
+        const treadDepth = availableRunForRectangular / numRectangularTreads;
         
         if (treadDepth < minTread || (maxTread !== Infinity && treadDepth > maxTread)) continue;
         
@@ -263,16 +266,16 @@ function calculateOptimalStair(totalRise, totalRun, preferences) {
             score = riserDeviation + treadDeviation * 2;
         }
         
-        // Calculer longueur totale réelle
+        // Calculer longueur totale réelle pour vérification
         let actualTotalRun = treadDepth * numRectangularTreads;
+        
+        // Ajouter la projection des marches rayonnantes si applicable
         if (numRadiatingSteps > 0) {
             actualTotalRun += treadDepth * numRadiatingSteps * 0.7;
         }
-        if (stairConfig === 'l_shaped' && lShapedConfig === 'standard_landing') {
-            actualTotalRun += stairType === 'private' ? 860 : 900;
-        } else if (stairConfig === 'u_shaped') {
-            actualTotalRun += stairType === 'private' ? 860 : 1100;
-        }
+        
+        // Ajouter la longueur du palier si applicable
+        actualTotalRun += actualLandingLength;
         
         solutions.push({
             numRisers,
@@ -844,7 +847,30 @@ document.addEventListener('DOMContentLoaded', function() {
         const solutions = calculateOptimalStair(totalRiseValue, totalRunValue, preferences);
         
         if (!solutions || solutions.length === 0) {
-            calculatorResultContent.innerHTML = '<p>⚠ Aucune solution conforme trouvée. Vérifiez les dimensions.</p>';
+            // Diagnostics pour aider l'utilisateur
+            const avgRiser = totalRiseValue / (totalRunValue / 280); // Estimation avec giron standard
+            const avgTread = totalRunValue / (totalRiseValue / 175); // Estimation avec contremarche standard
+            
+            let diagnostic = '<p>⚠ Aucune solution conforme trouvée avec ces dimensions.</p>';
+            diagnostic += '<div class="warning"><p><strong>Diagnostic :</strong></p><ul>';
+            
+            if (avgRiser < 125) {
+                diagnostic += '<li>La hauteur totale est trop faible pour la longueur disponible</li>';
+            } else if (avgRiser > (stairTypeValue === 'private' ? 200 : 180)) {
+                diagnostic += '<li>La hauteur totale est trop élevée pour la longueur disponible</li>';
+            }
+            
+            if (avgTread < (stairTypeValue === 'private' ? 255 : 280)) {
+                diagnostic += '<li>La longueur disponible est trop courte - augmentez-la ou réduisez la hauteur</li>';
+            }
+            
+            diagnostic += '</ul><p><strong>Suggestions :</strong></p><ul>';
+            diagnostic += `<li>Pour une hauteur de ${(totalRiseValue/1000).toFixed(2)} m, une longueur d'au moins ${Math.ceil((totalRiseValue/175)*280/100)*100} mm est recommandée</li>`;
+            diagnostic += '<li>Essayez un escalier avec palier intermédiaire</li>';
+            diagnostic += '<li>Vérifiez que vous avez sélectionné le bon type d\'escalier (Privé vs Commun)</li>';
+            diagnostic += '</ul></div>';
+            
+            calculatorResultContent.innerHTML = diagnostic;
             calculatorResult.style.display = 'block';
             return;
         }

@@ -1,5 +1,5 @@
 // ==================== CALCULATEUR D'ESCALIER CNB 2015 ====================
-// Version corrigée avec précision mathématique améliorée
+// Version corrigée - Calculs précis et affichage correct
 
 // ==================== FONCTIONS DE CONVERSION ====================
 
@@ -203,18 +203,12 @@ function calculateOptimalStair(totalRise, totalRun, preferences) {
     const optimalStep = 640;
     let solutions = [];
     
-    // Calculer nombre théorique de contremarches avec une marge plus large
+    // Calculer nombre théorique de contremarches
     const theoreticalRisers = totalRise / (idealRiser > 0 ? idealRiser : (minRiser + maxRiser) / 2);
     const minRisersToTry = Math.max(3, Math.floor(theoreticalRisers - 6));
     const maxRisersToTry = Math.ceil(theoreticalRisers + 6);
     
-    // Debug: afficher la plage de recherche en console
-    console.log(`Recherche de ${minRisersToTry} à ${maxRisersToTry} contremarches`);
-    console.log(`Hauteur totale: ${totalRise}mm, Longueur totale: ${totalRun}mm`);
-    console.log(`Limites: Contremarche [${minRiser}, ${maxRiser}]mm, Giron [${minTread}, ${maxTread === Infinity ? '∞' : maxTread}]mm`);
-    
     for (let numRisers = minRisersToTry; numRisers <= maxRisersToTry; numRisers++) {
-        // PRÉCISION CRITIQUE: Diviser la hauteur totale exactement
         const riserHeight = totalRise / numRisers;
         
         if (riserHeight < minRiser || riserHeight > maxRiser) continue;
@@ -222,7 +216,7 @@ function calculateOptimalStair(totalRise, totalRun, preferences) {
         const numTreads = numRisers - 1;
         if (numTreads <= 0) continue;
         
-        // Calculer longueur disponible pour marches rectangulaires
+        // Calculer longueur disponible
         let availableRunForRectangular = totalRun;
         let numRectangularTreads = numTreads;
         let actualLandingLength = 0;
@@ -230,7 +224,6 @@ function calculateOptimalStair(totalRise, totalRun, preferences) {
         if (numRadiatingSteps > 0) {
             numRectangularTreads = numTreads - numRadiatingSteps;
             if (numRectangularTreads < 0) continue;
-            // Pour marches rayonnantes, on estime qu'elles occupent ~70% de la projection
             const estimatedRadiatingRun = (totalRun / numTreads) * numRadiatingSteps * 0.7;
             availableRunForRectangular = totalRun - estimatedRadiatingRun;
         } else if (stairConfig === 'l_shaped' && lShapedConfig === 'standard_landing') {
@@ -239,14 +232,10 @@ function calculateOptimalStair(totalRise, totalRun, preferences) {
         } else if (stairConfig === 'u_shaped') {
             actualLandingLength = stairType === 'private' ? 860 : 1100;
             availableRunForRectangular = totalRun - actualLandingLength;
-        } else if (stairConfig === 'dancing_steps') {
-            availableRunForRectangular = totalRun;
         }
         
-        // Vérifier que la longueur est positive
         if (availableRunForRectangular <= 0) continue;
         
-        // PRÉCISION CRITIQUE: Diviser la longueur exactement
         const treadDepth = availableRunForRectangular / numRectangularTreads;
         
         if (treadDepth < minTread || (maxTread !== Infinity && treadDepth > maxTread)) continue;
@@ -266,15 +255,11 @@ function calculateOptimalStair(totalRise, totalRun, preferences) {
             score = riserDeviation + treadDeviation * 2;
         }
         
-        // Calculer longueur totale réelle pour vérification
+        // Calculer longueur totale réelle
         let actualTotalRun = treadDepth * numRectangularTreads;
-        
-        // Ajouter la projection des marches rayonnantes si applicable
         if (numRadiatingSteps > 0) {
             actualTotalRun += treadDepth * numRadiatingSteps * 0.7;
         }
-        
-        // Ajouter la longueur du palier si applicable
         actualTotalRun += actualLandingLength;
         
         solutions.push({
@@ -290,7 +275,8 @@ function calculateOptimalStair(totalRise, totalRun, preferences) {
             riserDeviation,
             treadDeviation,
             stepDeviation,
-            actualTotalRun
+            actualTotalRun,
+            actualLandingLength
         });
     }
     
@@ -366,60 +352,34 @@ document.addEventListener('DOMContentLoaded', function() {
     // Placeholders
     const placeholders = {
         metrique: {
-            "totalRun": "Ex: 3500 mm",
-            "totalRunImperial": "Ex: 11'6\"",
-            "totalRise": "Ex: 3000 mm",
-            "totalRiseImperial": "Ex: 10'2\"",
-            "stairDesiredWidth": "Ex: 900 mm",
-            "stairDesiredWidthImperial": "Ex: 36\"",
-            "idealRiser": "Ex: 180 mm",
-            "idealRiserImperial": "Ex: 7\"",
-            "idealTread": "Ex: 280 mm",
-            "idealTreadImperial": "Ex: 11\"",
-            "calcMinNarrowSide": "Ex: 150 mm",
-            "calcMinNarrowSideImperial": "Ex: 6\"",
-            "calcSpiralWidth": "Ex: 660 mm",
-            "calcSpiralWidthImperial": "Ex: 26\"",
-            "stairWidth": "Ex: 900 mm",
-            "stairWidthImperial": "Ex: 36\"",
-            "headroom": "Ex: 2050 mm",
-            "headroomImperial": "Ex: 6'8\"",
-            "riserHeight": "Ex: 180 mm",
-            "riserHeightImperial": "Ex: 7\"",
-            "treadDepth": "Ex: 280 mm",
-            "treadDepthImperial": "Ex: 11\"",
-            "narrowSide": "Ex: 150 mm",
-            "narrowSideImperial": "Ex: 6\"",
-            "spiralWidth": "Ex: 660 mm",
-            "spiralWidthImperial": "Ex: 26\""
+            "totalRun": "Ex: 3500 mm", "totalRunImperial": "Ex: 11'6\"",
+            "totalRise": "Ex: 3000 mm", "totalRiseImperial": "Ex: 10'2\"",
+            "stairDesiredWidth": "Ex: 900 mm", "stairDesiredWidthImperial": "Ex: 36\"",
+            "idealRiser": "Ex: 180 mm", "idealRiserImperial": "Ex: 7\"",
+            "idealTread": "Ex: 280 mm", "idealTreadImperial": "Ex: 11\"",
+            "calcMinNarrowSide": "Ex: 150 mm", "calcMinNarrowSideImperial": "Ex: 6\"",
+            "calcSpiralWidth": "Ex: 660 mm", "calcSpiralWidthImperial": "Ex: 26\"",
+            "stairWidth": "Ex: 900 mm", "stairWidthImperial": "Ex: 36\"",
+            "headroom": "Ex: 2050 mm", "headroomImperial": "Ex: 6'8\"",
+            "riserHeight": "Ex: 180 mm", "riserHeightImperial": "Ex: 7\"",
+            "treadDepth": "Ex: 280 mm", "treadDepthImperial": "Ex: 11\"",
+            "narrowSide": "Ex: 150 mm", "narrowSideImperial": "Ex: 6\"",
+            "spiralWidth": "Ex: 660 mm", "spiralWidthImperial": "Ex: 26\""
         },
         imperial: {
-            "totalRun": "Ex: 3500 mm",
-            "totalRunImperial": "Ex: 11'6\"",
-            "totalRise": "Ex: 3000 mm",
-            "totalRiseImperial": "Ex: 10'2\"",
-            "stairDesiredWidth": "Ex: 900 mm",
-            "stairDesiredWidthImperial": "Ex: 36\"",
-            "idealRiser": "Ex: 180 mm",
-            "idealRiserImperial": "Ex: 7\"",
-            "idealTread": "Ex: 280 mm",
-            "idealTreadImperial": "Ex: 11\"",
-            "calcMinNarrowSide": "Ex: 150 mm",
-            "calcMinNarrowSideImperial": "Ex: 6\"",
-            "calcSpiralWidth": "Ex: 660 mm",
-            "calcSpiralWidthImperial": "Ex: 26\"",
-            "stairWidth": "Ex: 900 mm",
-            "stairWidthImperial": "Ex: 36\"",
-            "headroom": "Ex: 2050 mm",
-            "headroomImperial": "Ex: 6'8\"",
-            "riserHeight": "Ex: 180 mm",
-            "riserHeightImperial": "Ex: 7\"",
-            "treadDepth": "Ex: 280 mm",
-            "treadDepthImperial": "Ex: 11\"",
-            "narrowSide": "Ex: 150 mm",
-            "narrowSideImperial": "Ex: 6\"",
-            "spiralWidth": "Ex: 660 mm",
-            "spiralWidthImperial": "Ex: 26\""
+            "totalRun": "Ex: 11'6\"", "totalRunImperial": "Ex: 11'6\"",
+            "totalRise": "Ex: 10'2\"", "totalRiseImperial": "Ex: 10'2\"",
+            "stairDesiredWidth": "Ex: 36\"", "stairDesiredWidthImperial": "Ex: 36\"",
+            "idealRiser": "Ex: 7\"", "idealRiserImperial": "Ex: 7\"",
+            "idealTread": "Ex: 11\"", "idealTreadImperial": "Ex: 11\"",
+            "calcMinNarrowSide": "Ex: 6\"", "calcMinNarrowSideImperial": "Ex: 6\"",
+            "calcSpiralWidth": "Ex: 26\"", "calcSpiralWidthImperial": "Ex: 26\"",
+            "stairWidth": "Ex: 36\"", "stairWidthImperial": "Ex: 36\"",
+            "headroom": "Ex: 6'8\"", "headroomImperial": "Ex: 6'8\"",
+            "riserHeight": "Ex: 7\"", "riserHeightImperial": "Ex: 7\"",
+            "treadDepth": "Ex: 11\"", "treadDepthImperial": "Ex: 11\"",
+            "narrowSide": "Ex: 6\"", "narrowSideImperial": "Ex: 6\"",
+            "spiralWidth": "Ex: 26\"", "spiralWidthImperial": "Ex: 26\""
         }
     };
     
@@ -847,27 +807,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const solutions = calculateOptimalStair(totalRiseValue, totalRunValue, preferences);
         
         if (!solutions || solutions.length === 0) {
-            // Diagnostics pour aider l'utilisateur
-            const avgRiser = totalRiseValue / (totalRunValue / 280); // Estimation avec giron standard
-            const avgTread = totalRunValue / (totalRiseValue / 175); // Estimation avec contremarche standard
+            const avgRiser = totalRiseValue / (totalRunValue / 280);
             
-            let diagnostic = '<p>⚠ Aucune solution conforme trouvée avec ces dimensions.</p>';
-            diagnostic += '<div class="warning"><p><strong>Diagnostic :</strong></p><ul>';
-            
-            if (avgRiser < 125) {
-                diagnostic += '<li>La hauteur totale est trop faible pour la longueur disponible</li>';
-            } else if (avgRiser > (stairTypeValue === 'private' ? 200 : 180)) {
-                diagnostic += '<li>La hauteur totale est trop élevée pour la longueur disponible</li>';
-            }
-            
-            if (avgTread < (stairTypeValue === 'private' ? 255 : 280)) {
-                diagnostic += '<li>La longueur disponible est trop courte - augmentez-la ou réduisez la hauteur</li>';
-            }
-            
-            diagnostic += '</ul><p><strong>Suggestions :</strong></p><ul>';
-            diagnostic += `<li>Pour une hauteur de ${(totalRiseValue/1000).toFixed(2)} m, une longueur d'au moins ${Math.ceil((totalRiseValue/175)*280/100)*100} mm est recommandée</li>`;
-            diagnostic += '<li>Essayez un escalier avec palier intermédiaire</li>';
-            diagnostic += '<li>Vérifiez que vous avez sélectionné le bon type d\'escalier (Privé vs Commun)</li>';
+            let diagnostic = '<p>⚠ Aucune solution conforme trouvée.</p>';
+            diagnostic += '<div class="warning"><p><strong>Suggestions :</strong></p><ul>';
+            diagnostic += `<li>Pour ${(totalRiseValue/1000).toFixed(2)} m de hauteur, longueur min ≈ ${Math.ceil((totalRiseValue/175)*280/100)*100} mm</li>`;
+            diagnostic += '<li>Essayez un escalier avec palier</li>';
+            diagnostic += '<li>Vérifiez le type (Privé vs Commun)</li>';
             diagnostic += '</ul></div>';
             
             calculatorResultContent.innerHTML = diagnostic;
@@ -898,22 +844,22 @@ document.addEventListener('DOMContentLoaded', function() {
         const formatRiserExact = isMetric ? `${bestSolution.riserHeight.toFixed(2)} mm` : `${(bestSolution.riserHeight / 25.4).toFixed(4)}"`;
         const formatTreadExact = isMetric ? `${bestSolution.treadDepth.toFixed(2)} mm` : `${(bestSolution.treadDepth / 25.4).toFixed(4)}"`;
         
-        // VÉRIFICATIONS MATHÉMATIQUES EXACTES
+        // VÉRIFICATIONS MATHÉMATIQUES
         const totalRiseCalculation = bestSolution.riserHeight * bestSolution.numRisers;
         const riseError = Math.abs(totalRiseCalculation - totalRiseValue);
         
         const totalRunCalculation = bestSolution.treadDepth * bestSolution.numTreads;
-        const runError = Math.abs(totalRunCalculation - totalRunValue);
+        const runError = Math.abs(totalRunCalculation - (totalRunValue - bestSolution.actualLandingLength));
         
         const formatTotalRise = isMetric ? `${totalRiseCalculation.toFixed(2)} mm` : metricToImperial(totalRiseCalculation);
-        const formatActualTotalRun = isMetric ? `${bestSolution.actualTotalRun.toFixed(2)} mm` : metricToImperial(bestSolution.actualTotalRun);
+        const formatTreadRun = isMetric ? `${totalRunCalculation.toFixed(2)} mm` : metricToImperial(totalRunCalculation);
         const formatStairWidth = isMetric ? `${stairWidthValue.toFixed(0)} mm` : metricToImperial(stairWidthValue);
         
         let riserVerification = '';
         if (isMetric) {
             riserVerification = `
                 <div class="step-formula">
-                    Vérification: ${bestSolution.numRisers} × ${bestSolution.riserHeight.toFixed(2)} mm = ${totalRiseCalculation.toFixed(2)} mm
+                    Vérification: ${bestSolution.numRisers} contremarches × ${bestSolution.riserHeight.toFixed(2)} mm = ${totalRiseCalculation.toFixed(2)} mm
                     ${riseError < 0.1 ? '✓ Exact' : `⚠ Écart ${riseError.toFixed(2)} mm`}
                 </div>`;
         } else {
@@ -921,7 +867,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const totalRiseInches = totalRiseCalculation / 25.4;
             riserVerification = `
                 <div class="step-formula">
-                    Vérification: ${bestSolution.numRisers} × ${riserInches.toFixed(4)}" = ${totalRiseInches.toFixed(4)}"
+                    Vérification: ${bestSolution.numRisers} contremarches × ${riserInches.toFixed(4)}" = ${totalRiseInches.toFixed(4)}"
                     ${riseError < 2.5 ? '✓ Exact' : `⚠ Écart ${(riseError/25.4).toFixed(4)}"`}
                 </div>`;
         }
@@ -930,7 +876,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (isMetric) {
             treadVerification = `
                 <div class="step-formula">
-                    Vérification: ${bestSolution.numTreads} × ${bestSolution.treadDepth.toFixed(2)} mm = ${totalRunCalculation.toFixed(2)} mm
+                    Vérification: ${bestSolution.numTreads} girons × ${bestSolution.treadDepth.toFixed(2)} mm = ${totalRunCalculation.toFixed(2)} mm
                     ${runError < 0.1 ? '✓ Exact' : `⚠ Écart ${runError.toFixed(2)} mm`}
                 </div>`;
         } else {
@@ -938,14 +884,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const totalRunInches = totalRunCalculation / 25.4;
             treadVerification = `
                 <div class="step-formula">
-                    Vérification: ${bestSolution.numTreads} × ${treadInches.toFixed(4)}" = ${totalRunInches.toFixed(4)}"
+                    Vérification: ${bestSolution.numTreads} girons × ${treadInches.toFixed(4)}" = ${totalRunInches.toFixed(4)}"
                     ${runError < 2.5 ? '✓ Exact' : `⚠ Écart ${(runError/25.4).toFixed(4)}"`}
                 </div>`;
         }
         
         let stepRuleDetails = `
             <div class="result-section">
-                <h4>Règle du pas (solution optimale)</h4>
+                <h4>Règle du pas</h4>
                 <ul>
                     <li>${bestSolution.stepRule.rule1.isValid ? "✓" : "⚠"} Règle 1: ${bestSolution.stepRule.rule1.value.toFixed(2)}" (17"-18")</li>
                     <li>${bestSolution.stepRule.rule2.isValid ? "✓" : "⚠"} Règle 2: ${bestSolution.stepRule.rule2.value.toFixed(2)} po² (71-74 po²)</li>
@@ -966,20 +912,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 ${treadVerification}
                 <h4>Récapitulatif:</h4>
                 <ul>
-                    <li>Contremarches: ${bestSolution.numRisers}</li>
-                    <li>Marches: ${bestSolution.numTreads}</li>
-                    <li>Hauteur totale: ${formatTotalRise}</li>
-                    <li>Longueur totale: ${formatActualTotalRun}</li>
-                    <li>Largeur: ${formatStairWidth} ${isWidthCompliant ? '✓' : '⚠'}</li>
+                    <li><strong>Contremarches:</strong> ${bestSolution.numRisers}</li>
+                    <li><strong>Girons (marches):</strong> ${bestSolution.numTreads}</li>
+                    <li><strong>Hauteur totale:</strong> ${formatTotalRise}</li>
+                    <li><strong>Longueur des girons:</strong> ${formatTreadRun}</li>
+                    <li><strong>Largeur:</strong> ${formatStairWidth} ${isWidthCompliant ? '✓' : '⚠'}</li>
                 </ul>
                 <div class="warning">
                     <p><strong>Important traçage:</strong></p>
                     <ul>
-                        <li>Utilisez les <strong>valeurs exactes décimales</strong> ci-dessus</li>
+                        <li>Utilisez les valeurs <strong>exactes décimales</strong> ci-dessus</li>
                         <li>Fractions = approximations au 1/16" près</li>
-                        <li>Tolérance CNB 2015: ±5mm entre marches, ±10mm dans volée</li>
+                        <li>${bestSolution.numRisers} contremarches + ${bestSolution.numTreads} girons</li>
+                        <li>Le dernier giron = plancher de l'étage (non compté)</li>
                         <li>Somme contremarches = hauteur totale exacte</li>
-                        <li>Somme girons = longueur totale exacte</li>
+                        <li>Somme girons = longueur horizontale exacte</li>
                     </ul>
                 </div>
             </div>
@@ -1019,9 +966,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         <thead>
                             <tr>
                                 <th>Solution</th>
-                                <th>Contremarches</th>
+                                <th>CM</th>
                                 <th>Hauteur CM</th>
-                                <th>Giron</th>
+                                <th>Girons</th>
+                                <th>Profondeur</th>
                                 <th>Règles</th>
                             </tr>
                         </thead>
@@ -1037,6 +985,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <td>${index + 1}${index === 0 ? ' ★' : ''}</td>
                         <td>${sol.numRisers}</td>
                         <td>${riserStr}</td>
+                        <td>${sol.numTreads}</td>
                         <td>${treadStr}</td>
                         <td>${sol.stepRule.validRuleCount}/3 ${sol.stepRule.isValid ? '✓' : '⚠'}</td>
                     </tr>`;

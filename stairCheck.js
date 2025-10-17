@@ -1,4 +1,4 @@
-// ==================== CALCULATEUR D'ESCALIER CNB 2015 ====================
+// ==================== CALCULATEUR D'ESCALIER CNB 2025 ====================
 // Version corrigée - Calculs précis et affichage correct
 
 // ==================== FONCTIONS DE CONVERSION ====================
@@ -181,7 +181,7 @@ function calculateOptimalStair(totalRise, totalRun, preferences) {
         priority
     } = preferences;
     
-    // Définir les limites CNB 2015
+    // Définir les limites CNB 2025
     let minRiser, maxRiser, minTread, maxTread;
     
     if (buildingType === 'part3') {
@@ -580,12 +580,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (!isValid) return;
         
-        // Définir limites CNB 2015
+        // Définir limites CNB 2020
         let minRiser, maxRiser, minTread, maxTread, minNarrowSide, minWidth, minHeadroom, minSpiralWidth;
-        let codeReference = 'CNB 2015';
+        let codeReference = 'CNB 2020';
         
         if (isBuildingPart3) {
-            codeReference = 'CNB 2015 Partie 3';
+            codeReference = 'CNB 2020 Partie 3';
             minRiser = 125;
             maxRiser = 180;
             minTread = 280;
@@ -603,7 +603,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 maxRiser = 240;
             }
         } else {
-            codeReference = 'CNB 2015 Partie 9';
+            codeReference = 'CNB 2020 Partie 9';
             
             if (type === 'private') {
                 minRiser = 125;
@@ -845,7 +845,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         const bestSolution = solutions[0];
-        const codeReference = buildingTypeValue === 'part3' ? 'CNB 2015 Partie 3' : 'CNB 2015 Partie 9';
+        const codeReference = buildingTypeValue === 'part3' ? 'CNB 2020 Partie 3' : 'CNB 2020 Partie 9';
         
         // Vérifier largeur
         let minWidth = 900;

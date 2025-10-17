@@ -55,6 +55,29 @@ function metricToImperial(mmValue) {
     return result;
 }
 
+function metricToImperialPrecise(mmValue) {
+    if (!mmValue) return '';
+    
+    const inches = mmValue / 25.4;
+    const wholePart = Math.floor(inches);
+    const fractionalPart = inches - wholePart;
+    
+    // Convertir en 64èmes
+    const fraction64 = Math.round(fractionalPart * 64);
+    
+    if (fraction64 === 0) {
+        return `${wholePart}" (${inches.toFixed(6)}")`;
+    }
+    
+    // Simplifier la fraction
+    const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
+    const divisor = gcd(fraction64, 64);
+    const numerator = fraction64 / divisor;
+    const denominator = 64 / divisor;
+    
+    return `${wholePart} ${numerator}/${denominator}" (${inches.toFixed(6)}")`;
+}
+
 function imperialToMetric(imperialValue) {
     if (!imperialValue) return null;
     
@@ -841,8 +864,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Formatage résultats avec précision maximale
         const formatRiserHeight = isMetric ? `${bestSolution.riserHeight.toFixed(2)} mm` : metricToImperial(bestSolution.riserHeight);
         const formatTreadDepth = isMetric ? `${bestSolution.treadDepth.toFixed(2)} mm` : metricToImperial(bestSolution.treadDepth);
-        const formatRiserExact = isMetric ? `${bestSolution.riserHeight.toFixed(2)} mm` : `${(bestSolution.riserHeight / 25.4).toFixed(6)}"`;
-        const formatTreadExact = isMetric ? `${bestSolution.treadDepth.toFixed(2)} mm` : `${(bestSolution.treadDepth / 25.4).toFixed(6)}"`;
+        const formatRiserExact = isMetric ? `${bestSolution.riserHeight.toFixed(2)} mm` : metricToImperialPrecise(bestSolution.riserHeight);
+        const formatTreadExact = isMetric ? `${bestSolution.treadDepth.toFixed(2)} mm` : metricToImperialPrecise(bestSolution.treadDepth);
         
         // VÉRIFICATIONS MATHÉMATIQUES EXACTES
         const totalRiseCalculation = bestSolution.riserHeight * bestSolution.numRisers;
@@ -912,8 +935,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 <h3>Solution optimale</h3>
                 <h4>Dimensions de traçage (valeurs exactes):</h4>
                 <ul>
-                    <li><strong>Hauteur contremarche:</strong> ${formatRiserExact} ${isMetric ? '' : '(≈ ' + formatRiserHeight + ')'}</li>
-                    <li><strong>Profondeur giron:</strong> ${formatTreadExact} ${isMetric ? '' : '(≈ ' + formatTreadDepth + ')'}</li>
+                    <li><strong>Hauteur contremarche:</strong> ${formatRiserExact}</li>
+                    <li><strong>Profondeur giron:</strong> ${formatTreadExact}</li>
                 </ul>
                 ${riserVerification}
                 ${treadVerification}
@@ -928,8 +951,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="warning">
                     <p><strong>Important traçage:</strong></p>
                     <ul>
-                        <li>Utilisez les valeurs <strong>exactes décimales</strong> ci-dessus</li>
-                        <li>Fractions = approximations au 1/16" près</li>
+                        <li>Utilisez les ${isMetric ? 'valeurs exactes' : 'valeurs décimales entre parenthèses'} ci-dessus</li>
+                        <li>${isMetric ? 'Tolérance' : 'Fractions au 1/64" = guides de construction'}</li>
                         <li>${bestSolution.numRisers} contremarches + ${bestSolution.numTreads} girons</li>
                         <li>Le dernier giron = plancher de l'étage (non compté)</li>
                         <li>Somme contremarches = hauteur totale exacte</li>

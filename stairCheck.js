@@ -838,21 +838,26 @@ document.addEventListener('DOMContentLoaded', function() {
             widthWarning = `<div class="warning"><p>⚠ Largeur ${stairWidthValue.toFixed(0)} mm < minimum ${minWidth} mm</p></div>`;
         }
         
-        // Formatage résultats
+        // Formatage résultats avec précision maximale
         const formatRiserHeight = isMetric ? `${bestSolution.riserHeight.toFixed(2)} mm` : metricToImperial(bestSolution.riserHeight);
         const formatTreadDepth = isMetric ? `${bestSolution.treadDepth.toFixed(2)} mm` : metricToImperial(bestSolution.treadDepth);
-        const formatRiserExact = isMetric ? `${bestSolution.riserHeight.toFixed(2)} mm` : `${(bestSolution.riserHeight / 25.4).toFixed(4)}"`;
-        const formatTreadExact = isMetric ? `${bestSolution.treadDepth.toFixed(2)} mm` : `${(bestSolution.treadDepth / 25.4).toFixed(4)}"`;
+        const formatRiserExact = isMetric ? `${bestSolution.riserHeight.toFixed(2)} mm` : `${(bestSolution.riserHeight / 25.4).toFixed(6)}"`;
+        const formatTreadExact = isMetric ? `${bestSolution.treadDepth.toFixed(2)} mm` : `${(bestSolution.treadDepth / 25.4).toFixed(6)}"`;
         
-        // VÉRIFICATIONS MATHÉMATIQUES
+        // VÉRIFICATIONS MATHÉMATIQUES EXACTES
         const totalRiseCalculation = bestSolution.riserHeight * bestSolution.numRisers;
         const riseError = Math.abs(totalRiseCalculation - totalRiseValue);
         
-        const totalRunCalculation = bestSolution.treadDepth * bestSolution.numTreads;
-        const runError = Math.abs(totalRunCalculation - (totalRunValue - bestSolution.actualLandingLength));
+        // Pour la longueur, calculer seulement la longueur des girons (sans palier)
+        const totalTreadRunCalculation = bestSolution.treadDepth * bestSolution.numTreads;
+        const availableForTreads = totalRunValue - bestSolution.actualLandingLength;
+        const runError = Math.abs(totalTreadRunCalculation - availableForTreads);
         
         const formatTotalRise = isMetric ? `${totalRiseCalculation.toFixed(2)} mm` : metricToImperial(totalRiseCalculation);
-        const formatTreadRun = isMetric ? `${totalRunCalculation.toFixed(2)} mm` : metricToImperial(totalRunCalculation);
+        const formatTreadRun = isMetric ? `${totalTreadRunCalculation.toFixed(2)} mm` : metricToImperial(totalTreadRunCalculation);
+        const formatTotalRunWithLanding = isMetric ? 
+            `${(totalTreadRunCalculation + bestSolution.actualLandingLength).toFixed(2)} mm` : 
+            metricToImperial(totalTreadRunCalculation + bestSolution.actualLandingLength);
         const formatStairWidth = isMetric ? `${stairWidthValue.toFixed(0)} mm` : metricToImperial(stairWidthValue);
         
         let riserVerification = '';
@@ -876,16 +881,18 @@ document.addEventListener('DOMContentLoaded', function() {
         if (isMetric) {
             treadVerification = `
                 <div class="step-formula">
-                    Vérification: ${bestSolution.numTreads} girons × ${bestSolution.treadDepth.toFixed(2)} mm = ${totalRunCalculation.toFixed(2)} mm
-                    ${runError < 0.1 ? '✓ Exact' : `⚠ Écart ${runError.toFixed(2)} mm`}
+                    Vérification: ${bestSolution.numTreads} girons × ${bestSolution.treadDepth.toFixed(4)} mm = ${totalTreadRunCalculation.toFixed(4)} mm
+                    ${runError < 0.01 ? '✓ Exact' : `⚠ Écart ${runError.toFixed(4)} mm`}
                 </div>`;
         } else {
             const treadInches = bestSolution.treadDepth / 25.4;
-            const totalRunInches = totalRunCalculation / 25.4;
+            const totalRunInches = totalTreadRunCalculation / 25.4;
+            const targetRunInches = availableForTreads / 25.4;
             treadVerification = `
                 <div class="step-formula">
-                    Vérification: ${bestSolution.numTreads} girons × ${treadInches.toFixed(4)}" = ${totalRunInches.toFixed(4)}"
-                    ${runError < 2.5 ? '✓ Exact' : `⚠ Écart ${(runError/25.4).toFixed(4)}"`}
+                    Vérification: ${bestSolution.numTreads} girons × ${treadInches.toFixed(6)}" = ${totalRunInches.toFixed(6)}"
+                    ${runError < 0.254 ? '✓ Exact' : `⚠ Écart ${(runError/25.4).toFixed(6)}"`}
+                    <br>Cible: ${targetRunInches.toFixed(6)}"
                 </div>`;
         }
         

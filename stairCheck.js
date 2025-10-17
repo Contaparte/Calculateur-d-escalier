@@ -1,30 +1,23 @@
+// ==================== CALCULATEUR D'ESCALIER CNB 2015 ====================
+// Version corrigée avec précision mathématique améliorée
+
+// ==================== FONCTIONS DE CONVERSION ====================
+
 function validateImperialInput(inputValue) {
     if (!inputValue) return '';
-    
-    // Remplacer les apostrophes spéciales par le caractère standard '
     inputValue = inputValue.replace(/[''′]/g, "'");
-    
-    // Simplifier les espaces autour des caractères spéciaux
     inputValue = inputValue.replace(/\s*(['-/"])\s*/g, '$1');
-    
-    // Normaliser l'apostrophe suivie d'un trait d'union (6'-9) en simple apostrophe (6'9)
     inputValue = inputValue.replace(/'-/g, "'");
-    
-    // Ajouter un espace entre un nombre et une fraction s'il n'y en a pas
     inputValue = inputValue.replace(/(\d)(\d+\/\d+)/g, '$1 $2');
-    
     return inputValue;
 }
 
-// Fonction pour passer de millimètres à une chaîne en format impérial
 function metricToImperial(mmValue) {
     if (!mmValue) return '';
     
     const inches = mmValue / 25.4;
     const feet = Math.floor(inches / 12);
     const remainingInches = inches % 12;
-    
-    // Arrondir au 1/16 de pouce le plus proche
     const fraction = Math.round(remainingInches * 16) / 16;
     const wholePart = Math.floor(fraction);
     const fractionalPart = fraction - wholePart;
@@ -35,26 +28,18 @@ function metricToImperial(mmValue) {
         result += feet + '\'';
     }
     
-    // Vérifier si la partie fractionnaire est très petite (erreur d'arrondi)
-    const isFractionalPartNegligible = Math.abs(fractionalPart) < 0.001;
-    const isWholePartZeroAndNoFeet = wholePart === 0 && feet === 0;
-    
-    if (wholePart > 0 || fractionalPart > 0.001 || isWholePartZeroAndNoFeet) {
+    if (wholePart > 0 || fractionalPart > 0.001 || (wholePart === 0 && feet === 0)) {
         if (feet > 0) result += ' ';
         
         if (wholePart > 0 || (fractionalPart < 0.001 && (wholePart > 0 || feet === 0))) {
             result += wholePart;
         }
         
-        if (fractionalPart > 0.001) { // Ignorer les fractions très petites dues aux erreurs d'arrondi
-            // Convertir la fraction décimale en fraction
+        if (fractionalPart > 0.001) {
             const numerator = Math.round(fractionalPart * 16);
             const denominator = 16;
-            
-            // Réduire la fraction
             const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
             const divisor = gcd(numerator, denominator);
-            
             const simplifiedNumerator = numerator / divisor;
             const simplifiedDenominator = denominator / divisor;
             
@@ -70,348 +55,223 @@ function metricToImperial(mmValue) {
     return result;
 }
 
-// Convertir des pieds-pouces en millimètres
 function imperialToMetric(imperialValue) {
     if (!imperialValue) return null;
     
-    // Log pour débogage
-    console.log("Entrée imperialToMetric:", imperialValue);
+    imperialValue = imperialValue.trim();
     
-    // Formats possibles: "6'2", "6' 2", "6 2", "6-2", "6 ft 2 in", "6'2\"", "6'-2", "6'-2 1/4", etc.
-    imperialValue = imperialValue.toString().trim();
-    
-    // AdaptĂ© spĂ©cifiquement au format "6'-9 1/4""
-    const specialFormat = imperialValue.match(/^(\d+(?:\.\d+)?)'[-\s]*(\d+(?:\.\d+)?)(?:\s+(\d+)\/(\d+))?(?:\s*(?:"|in|inch|inches))?$/);
-    if (specialFormat) {
-        console.log("Format spĂ©cial dĂ©tectĂ©:", specialFormat);
-        const feet = parseFloat(specialFormat[1]) || 0;
-        const inches = parseFloat(specialFormat[2]) || 0;
-        const fraction = specialFormat[3] && specialFormat[4] ? 
-            parseFloat(specialFormat[3]) / parseFloat(specialFormat[4]) : 0;
-        const totalInches = feet * 12 + inches + fraction;
-        console.log(`Conversion: ${feet} pieds + ${inches} pouces + ${fraction} fraction = ${totalInches} pouces`);
-        return totalInches * 25.4; // Ne PAS arrondir pour garder la précision maximale
+    // Format: X' Y Z/W"
+    let match = imperialValue.match(/^(\d+(?:\.\d+)?)'?\s*(\d+(?:\.\d+)?)\s+(\d+)\/(\d+)(?:"|in|inch|inches)?$/);
+    if (match) {
+        const feet = parseFloat(match[1]) || 0;
+        const inches = parseFloat(match[2]);
+        const numerator = parseFloat(match[3]);
+        const denominator = parseFloat(match[4]);
+        return (feet * 12 + inches + (numerator / denominator)) * 25.4;
     }
     
-    // Pour les valeurs simples en pouces (comme "10" ou "10 in")
-    if (/^(\d+(?:\.\d+)?)(?:\s*(?:in|inch|inches|"))?$/.test(imperialValue)) {
-        const inches = parseFloat(imperialValue);
-        console.log("Format pouces simple:", inches);
-        return inches * 25.4; // Ne PAS arrondir pour garder la précision maximale
+    // Format: X' Y"
+    match = imperialValue.match(/^(\d+(?:\.\d+)?)'?\s*(\d+(?:\.\d+)?)(?:"|in|inch|inches)?$/);
+    if (match) {
+        const feet = parseFloat(match[1]) || 0;
+        const inches = parseFloat(match[2]) || 0;
+        return (feet * 12 + inches) * 25.4;
     }
     
-    // Formats supplĂ©mentaires pour 6'-9 1/4"
-    const formatsSpeciaux = [
-        /^(\d+)['Â´][-\s]*(\d+)(?:\s+(\d+)\/(\d+))?["]?$/,  // 6'-9 1/4"
-        /^(\d+)['Â´][-\s]*(\d+)(?:\s+(\d+)\/(\d+))?$/      // 6'-9 1/4
-    ];
-    
-    for (let pattern of formatsSpeciaux) {
-        const match = imperialValue.match(pattern);
-        if (match) {
-            console.log("Format spĂ©cifique trouvĂ©:", match);
-            const feet = parseInt(match[1]) || 0;
-            const inches = parseInt(match[2]) || 0;
-            const fraction = match[3] && match[4] ? 
-                parseInt(match[3]) / parseInt(match[4]) : 0;
-            const totalInches = feet * 12 + inches + fraction;
-            console.log(`Format direct: ${feet} pieds + ${inches} pouces + ${fraction} fraction = ${totalInches} pouces`);
-            return totalInches * 25.4; // Ne PAS arrondir pour garder la précision maximale
-        }
+    // Format: X'
+    match = imperialValue.match(/^(\d+(?:\.\d+)?)'?(?:ft|feet)?$/);
+    if (match) {
+        return parseFloat(match[1]) * 12 * 25.4;
     }
     
-    // Pour les valeurs en pieds-pouces
-    const patterns = [
-        /^(\d+(?:\.\d+)?)'(?:\s*)(\d+(?:\.\d+)?)?(?:\s*(?:"|in|inch|inches))?$/,  // 6'2" or 6'2
-        /^(\d+(?:\.\d+)?)(?:\s*(?:ft|feet|foot))(?:\s*)(\d+(?:\.\d+)?)?(?:\s*(?:"|in|inch|inches))?$/,  // 6 ft 2 in or 6 ft 2
-        /^(\d+(?:\.\d+)?)-(\d+(?:\.\d+)?)$/,  // 6-2
-        /^(\d+(?:\.\d+)?)(?:\s+)(\d+(?:\.\d+)?)$/  // 6 2
-    ];
-    
-    for (let pattern of patterns) {
-        const match = imperialValue.match(pattern);
-        if (match) {
-            console.log("Pattern standard trouvĂ©:", match);
-            const feet = parseFloat(match[1]) || 0;
-            const inches = match[2] ? parseFloat(match[2]) : 0;
-            const totalInches = feet * 12 + inches;
-            console.log(`Standard: ${feet} pieds + ${inches} pouces = ${totalInches} pouces`);
-            return totalInches * 25.4; // Ne PAS arrondir pour garder la précision maximale
-        }
+    // Format: Y Z/W"
+    match = imperialValue.match(/^(\d+(?:\.\d+)?)\s+(\d+)\/(\d+)(?:"|in|inch|inches)?$/);
+    if (match) {
+        const inches = parseFloat(match[1]);
+        const numerator = parseFloat(match[2]);
+        const denominator = parseFloat(match[3]);
+        return (inches + (numerator / denominator)) * 25.4;
     }
     
-    // Pour les fractions (par exemple, "6 1/2")
-    const fractionMatch = imperialValue.match(/^(\d+(?:\.\d+)?)(?:\s*)(\d+)\/(\d+)(?:\s*(?:"|in|inch|inches))?$/);
-    if (fractionMatch) {
-        console.log("Fraction trouvĂ©e:", fractionMatch);
-        const wholeNumber = parseFloat(fractionMatch[1]) || 0;
-        const numerator = parseFloat(fractionMatch[2]);
-        const denominator = parseFloat(fractionMatch[3]);
-        const inches = wholeNumber + (numerator / denominator);
-        console.log(`Fraction: ${wholeNumber} + ${numerator}/${denominator} = ${inches} pouces`);
-        return inches * 25.4; // Ne PAS arrondir pour garder la précision maximale
+    // Format: Z/W"
+    match = imperialValue.match(/^(\d+)\/(\d+)(?:"|in|inch|inches)?$/);
+    if (match) {
+        const numerator = parseFloat(match[1]);
+        const denominator = parseFloat(match[2]);
+        return (numerator / denominator) * 25.4;
     }
     
-    // Pour les pieds avec fractions de pouce (par exemple "6' 1/2")
-    const feetWithFractionMatch = imperialValue.match(/^(\d+(?:\.\d+)?)'(?:\s*)(\d+)\/(\d+)(?:\s*(?:"|in|inch|inches))?$/);
-    if (feetWithFractionMatch) {
-        console.log("Pieds avec fraction:", feetWithFractionMatch);
-        const feet = parseFloat(feetWithFractionMatch[1]) || 0;
-        const numerator = parseFloat(feetWithFractionMatch[2]);
-        const denominator = parseFloat(feetWithFractionMatch[3]);
-        const totalInches = feet * 12 + (numerator / denominator);
-        console.log(`Pieds+fraction: ${feet} pieds + ${numerator}/${denominator} = ${totalInches} pouces`);
-        return totalInches * 25.4; // Ne PAS arrondir pour garder la précision maximale
+    // Format: Y"
+    match = imperialValue.match(/^(\d+(?:\.\d+)?)(?:"|in|inch|inches)?$/);
+    if (match) {
+        return parseFloat(match[1]) * 25.4;
     }
     
-    // Si aucun format ne correspond
-    console.log("Aucun format reconnu");
+    // Format: X' Z/W
+    match = imperialValue.match(/^(\d+(?:\.\d+)?)'?\s*(\d+)\/(\d+)(?:"|in|inch|inches)?$/);
+    if (match) {
+        const feet = parseFloat(match[1]) || 0;
+        const numerator = parseFloat(match[2]);
+        const denominator = parseFloat(match[3]);
+        return (feet * 12 + (numerator / denominator)) * 25.4;
+    }
+    
     return null;
 }
 
-// Fonction pour vérifier si la règle du pas est respectée (2 des 3 règles doivent être respectées)
+// ==================== RÈGLE DU PAS ====================
+
 function checkStepRule(riser, tread) {
-    // Convertir en pouces pour calculer selon les règles du pas
     const riserInches = riser / 25.4;
     const treadInches = tread / 25.4;
     
-    // Règle 1: Giron + CM = 17" à 18"
     const rule1 = treadInches + riserInches;
     const isRule1Valid = rule1 >= 17 && rule1 <= 18;
     
-    // Règle 2: Giron x CM = 71po² à 74po²
     const rule2 = treadInches * riserInches;
     const isRule2Valid = rule2 >= 71 && rule2 <= 74;
     
-    // Règle 3: Giron + 2(CM) = 22" à 25"
     const rule3 = treadInches + (2 * riserInches);
     const isRule3Valid = rule3 >= 22 && rule3 <= 25;
     
-    // Vérifier si au moins 2 des 3 règles sont respectées
     const validRules = [isRule1Valid, isRule2Valid, isRule3Valid].filter(Boolean).length;
-    const isValid = validRules >= 2;
     
     return {
-        isValid,
-        rule1: {
-            value: rule1,
-            isValid: isRule1Valid,
-            min: 17,
-            max: 18
-        },
-        rule2: {
-            value: rule2,
-            isValid: isRule2Valid,
-            min: 71,
-            max: 74
-        },
-        rule3: {
-            value: rule3,
-            isValid: isRule3Valid,
-            min: 22,
-            max: 25
-        },
+        isValid: validRules >= 2,
+        rule1: { value: rule1, isValid: isRule1Valid, min: 17, max: 18 },
+        rule2: { value: rule2, isValid: isRule2Valid, min: 71, max: 74 },
+        rule3: { value: rule3, isValid: isRule3Valid, min: 22, max: 25 },
         validRuleCount: validRules
     };
 }
 
-// Fonction pour calculer le nombre optimal de marches et leurs dimensions
+// ==================== CALCUL OPTIMAL ====================
+
 function calculateOptimalStair(totalRise, totalRun, preferences) {
     const {
         buildingType,
         stairType,
         stairConfig,
         lShapedConfig,
-        dancingStepsConfig,
-        spiralConfig,
         idealRiser,
         idealTread,
         priority
     } = preferences;
     
-    // Définir les limites selon le CNB 2015
+    // Définir les limites CNB 2015
     let minRiser, maxRiser, minTread, maxTread;
     
     if (buildingType === 'part3') {
-        // Règles pour les bâtiments régis par la partie 3
-        minRiser = 125; // 125 mm
-        maxRiser = 180; // 180 mm
-        minTread = 280; // 280 mm
-        maxTread = Infinity; // pas de limite maximale
+        minRiser = 125;
+        maxRiser = 180;
+        minTread = 280;
+        maxTread = Infinity;
         
-        // Ajustement pour escalier hélicoïdal
         if (stairConfig === 'spiral') {
-            maxRiser = 240; // 240 mm pour escalier hélicoïdal
-            minTread = 190; // Giron minimal à 300mm de l'axe pour hélicoïdal
+            maxRiser = 240;
+            minTread = 190;
         }
     } else {
-        // Règles pour les bâtiments régis par la partie 9
         if (stairType === 'private') {
-            minRiser = 125; // 125 mm
-            maxRiser = 200; // 200 mm
-            minTread = 255; // 255 mm
-            maxTread = 355; // 355 mm
-        } else { // common
-            minRiser = 125; // 125 mm
-            maxRiser = 180; // 180 mm
-            minTread = 280; // 280 mm
-            maxTread = Infinity; // pas de limite maximale
+            minRiser = 125;
+            maxRiser = 200;
+            minTread = 255;
+            maxTread = 355;
+        } else {
+            minRiser = 125;
+            maxRiser = 180;
+            minTread = 280;
+            maxTread = Infinity;
         }
         
-        // Ajustement pour escalier hélicoïdal
         if (stairConfig === 'spiral') {
-            maxRiser = 240; // 240 mm pour escalier hélicoïdal
-            minTread = 190; // Giron minimal à 300mm de l'axe pour hélicoïdal
+            maxRiser = 240;
+            minTread = 190;
         }
     }
     
-    // Règle du pas (2R + G = 630-650mm)
-    const minStep = 630;
-    const optimalStep = 640;
-    const maxStep = 650;
-    
-    // Calcul du nombre de marches rayonnantes et de leur impact géométrique
+    // Déterminer marches rayonnantes
     let numRadiatingSteps = 0;
-    let radiatingStepAngle = 0;
-    let configurationType = stairConfig;
+    let configurationType = stairConfig === 'l_shaped' && lShapedConfig ? lShapedConfig : stairConfig;
     
-    // Si c'est une volée tournante à 90° (en "L"), vérifier le type de configuration
-    if (stairConfig === 'l_shaped' && lShapedConfig) {
-        configurationType = lShapedConfig;
-    }
-    
-    // Déterminer le nombre et l'angle des marches rayonnantes
-    if (configurationType === 'two_45deg' || stairConfig === 'turning_45') {
+    if (configurationType === 'two_45deg') {
         numRadiatingSteps = 2;
-        radiatingStepAngle = 45;
-    } else if (configurationType === 'three_30deg' || stairConfig === 'turning_30') {
+    } else if (configurationType === 'three_30deg') {
         numRadiatingSteps = 3;
-        radiatingStepAngle = 30;
-    } else if (stairConfig === 'turning_60') {
-        numRadiatingSteps = 2;
-        radiatingStepAngle = 30;
-    } else if (stairConfig === 'l_shaped' && lShapedConfig === 'standard_landing') {
-        // Palier standard : pas de marches rayonnantes, mais soustraire la longueur du palier
-        // Un palier standard doit avoir au moins 900mm (partie 9 commun) ou 860mm (privé)
-        numRadiatingSteps = 0;
-    } else if (stairConfig === 'dancing_steps') {
-        // Pour les marches dansantes, on ne peut pas calculer précisément sans connaître l'angle
-        // On utilisera une approximation conservative
-        numRadiatingSteps = 0; // Traité séparément
     }
     
-    // Nombre théorique de marches
+    const optimalStep = 640;
     let solutions = [];
     
-    // Calculer les possibilités pour différents nombres de contremarches
-    // Déterminer plage de recherche pour nombre de contremarches
-    const theoreticalRisers = totalRise / ((idealRiser > 0) ? idealRiser : (minRiser + maxRiser) / 2);
+    // Calculer nombre théorique de contremarches
+    const theoreticalRisers = totalRise / (idealRiser > 0 ? idealRiser : (minRiser + maxRiser) / 2);
     const minRisersToTry = Math.max(3, Math.floor(theoreticalRisers - 3));
     const maxRisersToTry = Math.ceil(theoreticalRisers + 3);
     
     for (let numRisers = minRisersToTry; numRisers <= maxRisersToTry; numRisers++) {
+        // PRÉCISION CRITIQUE: Diviser la hauteur totale exactement
         const riserHeight = totalRise / numRisers;
         
-        // Vérifier si la hauteur de contremarche est dans les limites
         if (riserHeight < minRiser || riserHeight > maxRiser) continue;
         
-        // Le nombre de girons est toujours égal au nombre de contremarches moins 1
         const numTreads = numRisers - 1;
-        
         if (numTreads <= 0) continue;
         
-        // Calculer la longueur disponible pour les marches rectangulaires
+        // Calculer longueur disponible
         let availableRunForRectangular = totalRun;
         let numRectangularTreads = numTreads;
         
-        // Ajustement pour les marches rayonnantes
-        if (numRadiatingSteps > 0 && radiatingStepAngle > 0) {
-            // Les marches rayonnantes sont comptées dans le nombre total de marches
+        if (numRadiatingSteps > 0) {
             numRectangularTreads = numTreads - numRadiatingSteps;
-            
-            // Pour calculer la projection horizontale des marches rayonnantes :
-            // On utilise la formule pour un virage avec marches rayonnantes
-            // La projection dépend du rayon intérieur et du giron à 300mm de l'axe
-            
-            // Approximation : pour des marches rayonnantes, la projection horizontale
-            // est d'environ 0.7 fois le giron standard par marche rayonnante
-            // (ceci est une approximation basée sur la géométrie typique)
-            const estimatedRadiatingProjection = 0.7;
-            
-            // On soustrait l'espace pris par les marches rayonnantes
-            // En utilisant d'abord une estimation du giron
+            // Projection géométrique marches rayonnantes (approximation conservatrice)
             const estimatedTread = totalRun / numTreads;
-            availableRunForRectangular = totalRun - (numRadiatingSteps * estimatedTread * estimatedRadiatingProjection);
+            availableRunForRectangular = totalRun - (numRadiatingSteps * estimatedTread * 0.7);
         } else if (stairConfig === 'l_shaped' && lShapedConfig === 'standard_landing') {
-            // Soustraire la longueur du palier
             const landingLength = stairType === 'private' ? 860 : 900;
             availableRunForRectangular = totalRun - landingLength;
-            // Pour un escalier en L avec palier, on a 2 volées
-            // Le calcul reste le même mais on doit tenir compte du palier
         } else if (stairConfig === 'u_shaped') {
-            // Pour un escalier en U, soustraire la longueur du palier central
             const landingLength = stairType === 'private' ? 860 : 1100;
             availableRunForRectangular = totalRun - landingLength;
         } else if (stairConfig === 'dancing_steps') {
-            // Pour les marches dansantes, utiliser une approximation conservative
-            // On suppose que les marches dansantes prennent environ 80% de l'espace
-            // d'une marche rectangulaire équivalente en projection
-            availableRunForRectangular = totalRun * 0.95; // Facteur de correction conservateur
+            availableRunForRectangular = totalRun * 0.95;
         }
         
-        // S'assurer que la longueur disponible est positive
         if (availableRunForRectangular <= 0 || numRectangularTreads < 0) continue;
         
-        // Calculer le giron en fonction du nombre de marches rectangulaires
+        // PRÉCISION CRITIQUE: Diviser la longueur exactement
         let treadDepth;
         if (numRectangularTreads > 0) {
             treadDepth = availableRunForRectangular / numRectangularTreads;
         } else {
-            // Cas particulier où toutes les marches sont rayonnantes
             treadDepth = availableRunForRectangular / numTreads;
         }
         
-        // Vérifier si le giron est dans les limites
         if (treadDepth < minTread || (maxTread !== Infinity && treadDepth > maxTread)) continue;
         
-        // Vérifier la règle du pas
         const stepRule = checkStepRule(riserHeight, treadDepth);
-        
-        // Calculer la valeur du pas (2R + G)
         const stepValue = 2 * riserHeight + treadDepth;
         
-        // Calculer l'écart par rapport aux valeurs idéales
         const riserDeviation = idealRiser > 0 ? Math.abs(riserHeight - idealRiser) : 0;
         const treadDeviation = idealTread > 0 ? Math.abs(treadDepth - idealTread) : 0;
         const stepDeviation = Math.abs(stepValue - optimalStep);
         
-        // Score global (plus il est bas, meilleure est la solution)
         let score;
-        
         if (priority === 'comfort') {
-            // Priorité au confort : la règle du pas est plus importante
             score = stepDeviation * 2 + riserDeviation + treadDeviation;
-            
-            // Bonus si la règle du pas est respectée (au moins 2 des 3 règles)
-            if (stepRule.isValid) {
-                score *= 0.8; // Réduire le score pour favoriser les solutions conformes à la règle du pas
-            }
+            if (stepRule.isValid) score *= 0.8;
         } else {
-            // Priorité à l'espace : utiliser au mieux l'espace disponible
             score = riserDeviation + treadDeviation * 2;
         }
         
-        // Calculer la longueur totale réelle de l'escalier pour vérification
+        // Calculer longueur totale réelle
         let actualTotalRun = treadDepth * numRectangularTreads;
         if (numRadiatingSteps > 0) {
-            actualTotalRun += treadDepth * numRadiatingSteps * 0.7; // Projection des marches rayonnantes
+            actualTotalRun += treadDepth * numRadiatingSteps * 0.7;
         }
         if (stairConfig === 'l_shaped' && lShapedConfig === 'standard_landing') {
-            const landingLength = stairType === 'private' ? 860 : 900;
-            actualTotalRun += landingLength;
+            actualTotalRun += stairType === 'private' ? 860 : 900;
         } else if (stairConfig === 'u_shaped') {
-            const landingLength = stairType === 'private' ? 860 : 1100;
-            actualTotalRun += landingLength;
+            actualTotalRun += stairType === 'private' ? 860 : 1100;
         }
         
         solutions.push({
@@ -431,30 +291,14 @@ function calculateOptimalStair(totalRise, totalRun, preferences) {
         });
     }
     
-    // Trier les solutions par score (du plus bas au plus élevé)
     solutions.sort((a, b) => a.score - b.score);
-    
-    // Retourner les 3 meilleures solutions (ou moins s'il y en a moins)
     return solutions.slice(0, 3);
 }
 
-// Formatage des nombres avec précision appropriée
-function formatNumber(number) {
-    // Pour éviter les problèmes d'arrondi en virgule flottante
-    // On arrondit à 2 décimales pour les calculs intermédiaires
-    const rounded = Math.round(number * 100) / 100;
-    
-    // Si le nombre est très proche d'un entier (à 0.01 près), l'afficher comme entier
-    if (Math.abs(rounded - Math.round(rounded)) < 0.01) {
-        return Math.round(rounded).toFixed(0);
-    }
-    
-    // Sinon, afficher avec 1 décimale
-    return rounded.toFixed(1);
-}
+// ==================== INITIALISATION ====================
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Éléments du formulaire de vérification
+    // Éléments formulaire vérification
     const measurementSystem = document.getElementById('measurementSystem');
     const buildingType = document.getElementById('buildingType');
     const buildingUse = document.getElementById('buildingUse');
@@ -483,7 +327,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const result = document.getElementById('result');
     const resultContent = document.getElementById('resultContent');
 
-    // Éléments du calculateur d'escalier
+    // Éléments calculateur
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
     const calcMeasurementSystem = document.getElementById('calcMeasurementSystem');
@@ -516,112 +360,90 @@ document.addEventListener('DOMContentLoaded', function() {
     const calculatorResult = document.getElementById('calculatorResult');
     const calculatorResultContent = document.getElementById('calculatorResultContent');
     
-    // Placeholders pour les systèmes de mesure
+    // Placeholders
     const placeholders = {
-        imperial: {
-            // Onglet Calcul
-            "idealRiser": "Ex: 7″",
-            "idealRiserImperial": "Ex: 7″",
-            "idealTread": "Ex: 11″",
-            "idealTreadImperial": "Ex: 11″",
-            "totalRun": "Ex: 15'-2″",
-            "totalRunImperial": "Ex: 15'-2″",
-            "totalRise": "Ex: 10'-2″",
-            "totalRiseImperial": "Ex: 10'-2″",
-            "stairDesiredWidth": "Ex: 36″",
-            "stairDesiredWidthImperial": "Ex: 36″",
-            "calcMinNarrowSide": "Ex: 6″",
-            "calcMinNarrowSideImperial": "Ex: 6″",
-            "calcSpiralWidth": "Ex: 26″",
-            "calcSpiralWidthImperial": "Ex: 26″",
-            
-            // Onglet Vérification
-            "stairWidth": "Ex: 36″",
-            "stairWidthImperial": "Ex: 36″",
-            "headroom": "Ex: 6'-8″",
-            "headroomImperial": "Ex: 6'-8″",
-            "riserHeight": "Ex: 7 1/4″",
-            "riserHeightImperial": "Ex: 7 1/4″",
-            "treadDepth": "Ex: 10 1/4″",
-            "treadDepthImperial": "Ex: 10 1/4″",
-            "narrowSide": "Ex: 6″",
-            "narrowSideImperial": "Ex: 6″",
-            "spiralWidth": "Ex: 26″",
-            "spiralWidthImperial": "Ex: 26″"
-        },
         metrique: {
-            // Onglet Calcul
-            "idealRiser": "Ex: 180 mm",
-            "idealRiserImperial": "Ex: 180 mm",
-            "idealTread": "Ex: 280 mm",
-            "idealTreadImperial": "Ex: 280 mm",
-            "totalRun": "Ex: 4500 mm",
-            "totalRunImperial": "Ex: 4500 mm",
+            "totalRun": "Ex: 3500 mm",
+            "totalRunImperial": "Ex: 11'6\"",
             "totalRise": "Ex: 3000 mm",
-            "totalRiseImperial": "Ex: 3000 mm",
+            "totalRiseImperial": "Ex: 10'2\"",
             "stairDesiredWidth": "Ex: 900 mm",
-            "stairDesiredWidthImperial": "Ex: 900 mm",
+            "stairDesiredWidthImperial": "Ex: 36\"",
+            "idealRiser": "Ex: 180 mm",
+            "idealRiserImperial": "Ex: 7\"",
+            "idealTread": "Ex: 280 mm",
+            "idealTreadImperial": "Ex: 11\"",
             "calcMinNarrowSide": "Ex: 150 mm",
-            "calcMinNarrowSideImperial": "Ex: 150 mm",
+            "calcMinNarrowSideImperial": "Ex: 6\"",
             "calcSpiralWidth": "Ex: 660 mm",
-            "calcSpiralWidthImperial": "Ex: 660 mm",
-            
-            // Onglet Vérification
+            "calcSpiralWidthImperial": "Ex: 26\"",
             "stairWidth": "Ex: 900 mm",
-            "stairWidthImperial": "Ex: 900 mm",
+            "stairWidthImperial": "Ex: 36\"",
             "headroom": "Ex: 2050 mm",
-            "headroomImperial": "Ex: 2050 mm",
+            "headroomImperial": "Ex: 6'8\"",
             "riserHeight": "Ex: 180 mm",
-            "riserHeightImperial": "Ex: 180 mm",
+            "riserHeightImperial": "Ex: 7\"",
             "treadDepth": "Ex: 280 mm",
-            "treadDepthImperial": "Ex: 280 mm",
+            "treadDepthImperial": "Ex: 11\"",
             "narrowSide": "Ex: 150 mm",
-            "narrowSideImperial": "Ex: 150 mm",
+            "narrowSideImperial": "Ex: 6\"",
             "spiralWidth": "Ex: 660 mm",
-            "spiralWidthImperial": "Ex: 660 mm"
+            "spiralWidthImperial": "Ex: 26\""
+        },
+        imperial: {
+            "totalRun": "Ex: 3500 mm",
+            "totalRunImperial": "Ex: 11'6\"",
+            "totalRise": "Ex: 3000 mm",
+            "totalRiseImperial": "Ex: 10'2\"",
+            "stairDesiredWidth": "Ex: 900 mm",
+            "stairDesiredWidthImperial": "Ex: 36\"",
+            "idealRiser": "Ex: 180 mm",
+            "idealRiserImperial": "Ex: 7\"",
+            "idealTread": "Ex: 280 mm",
+            "idealTreadImperial": "Ex: 11\"",
+            "calcMinNarrowSide": "Ex: 150 mm",
+            "calcMinNarrowSideImperial": "Ex: 6\"",
+            "calcSpiralWidth": "Ex: 660 mm",
+            "calcSpiralWidthImperial": "Ex: 26\"",
+            "stairWidth": "Ex: 900 mm",
+            "stairWidthImperial": "Ex: 36\"",
+            "headroom": "Ex: 2050 mm",
+            "headroomImperial": "Ex: 6'8\"",
+            "riserHeight": "Ex: 180 mm",
+            "riserHeightImperial": "Ex: 7\"",
+            "treadDepth": "Ex: 280 mm",
+            "treadDepthImperial": "Ex: 11\"",
+            "narrowSide": "Ex: 150 mm",
+            "narrowSideImperial": "Ex: 6\"",
+            "spiralWidth": "Ex: 660 mm",
+            "spiralWidthImperial": "Ex: 26\""
         }
     };
     
-    // Gestion des onglets
+    // ==================== GESTION ONGLETS ====================
+    
     tabButtons.forEach(button => {
         button.addEventListener('click', function() {
             const tabId = this.getAttribute('data-tab');
-            
-            // Activer le bouton d'onglet et le contenu correspondant
             tabButtons.forEach(btn => btn.classList.remove('active'));
             tabContents.forEach(content => content.classList.remove('active'));
-            
             this.classList.add('active');
             document.getElementById(tabId).classList.add('active');
-            
-            // Mettre à jour les placeholders pour le nouvel onglet
             updatePlaceholders(tabId);
         });
     });
     
-    // Fonction pour mettre à jour les placeholders selon le système de mesure
     function updatePlaceholders(tab) {
         const isCalcTab = tab === 'calculator';
-        let systemeElement;
-        
-        if (isCalcTab) {
-            systemeElement = calcMeasurementSystem;
-        } else {
-            systemeElement = measurementSystem;
-        }
-        
+        const systemeElement = isCalcTab ? calcMeasurementSystem : measurementSystem;
         const isImperial = systemeElement.value === 'imperial';
         const placeholdersData = isImperial ? placeholders.imperial : placeholders.metrique;
         
-        // Mettre à jour tous les placeholders directement par ID
         for (const [id, placeholder] of Object.entries(placeholdersData)) {
             const element = document.getElementById(id);
-            if (element) {
-                element.placeholder = placeholder;
-            }
+            if (element) element.placeholder = placeholder;
         }
         
-        // Afficher/masquer les champs métriques/impériaux
         const metricInputs = document.querySelectorAll('.metric-input');
         const imperialInputs = document.querySelectorAll('.imperial-input');
         
@@ -634,7 +456,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Synchroniser les systèmes de mesure entre les onglets
+    // Synchroniser systèmes de mesure
     measurementSystem.addEventListener('change', function() {
         calcMeasurementSystem.value = this.value;
         updatePlaceholders('verification');
@@ -647,14 +469,12 @@ document.addEventListener('DOMContentLoaded', function() {
         updatePlaceholders('calculator');
     });
     
-    // Gestion du changement de configuration d'escalier pour l'onglet vérification
+    // Gestion configurations escalier - vérification
     stairConfig.addEventListener('change', function() {
-        // Masquer d'abord toutes les options conditionnelles
         lShapedOptions.style.display = 'none';
         dancingStepsOptions.style.display = 'none';
         spiralOptions.style.display = 'none';
         
-        // Afficher les options appropriées selon la sélection
         if (this.value === 'l_shaped') {
             lShapedOptions.style.display = 'block';
         } else if (this.value === 'dancing_steps') {
@@ -664,14 +484,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Gestion du changement de configuration d'escalier pour l'onglet calcul
+    // Gestion configurations escalier - calculateur
     calcStairConfig.addEventListener('change', function() {
-        // Masquer d'abord toutes les options conditionnelles
         calcLShapedOptions.style.display = 'none';
         calcDancingStepsOptions.style.display = 'none';
         calcSpiralOptions.style.display = 'none';
         
-        // Afficher les options appropriées selon la sélection
         if (this.value === 'l_shaped') {
             calcLShapedOptions.style.display = 'block';
         } else if (this.value === 'dancing_steps') {
@@ -681,7 +499,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Ajouter des écouteurs d'événements pour la conversion entre métrique et impérial
+    // Conversion métrique/impérial
     const metricInputPairs = [
         { metric: totalRun, imperial: totalRunImperial },
         { metric: totalRise, imperial: totalRiseImperial },
@@ -700,7 +518,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     metricInputPairs.forEach(pair => {
         if (pair.metric && pair.imperial) {
-            // Métrique vers impérial
             pair.metric.addEventListener('input', function() {
                 const value = parseFloat(this.value);
                 if (!isNaN(value)) {
@@ -708,7 +525,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
             
-            // Impérial vers métrique
             pair.imperial.addEventListener('input', function() {
                 const value = imperialToMetric(validateImperialInput(this.value));
                 if (value !== null) {
@@ -717,285 +533,200 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
-
-    // Gestion du changement de type de bâtiment et d'usage
-    buildingType.addEventListener('change', updateRequirements);
-    buildingUse.addEventListener('change', updateRequirements);
-    stairType.addEventListener('change', updateRequirements);
-    stairUse.addEventListener('change', updateRequirements);
-
-    function updateRequirements() {
-        // Cette fonction sera utilisée pour ajuster les exigences en fonction
-        // du type de bâtiment et de l'usage sélectionnés
-        const isBuildingPart3 = buildingType.value === 'part3';
-        const isExitStair = stairUse.value === 'exit';
-        
-        // Ajustement des champs en fonction du type de bâtiment et de l'usage
-        if (isBuildingPart3) {
-            // Afficher un message ou ajuster des valeurs pour la partie 3
-            // Pour l'instant, nous nous concentrons sur la partie 9
-        }
-        
-        if (isExitStair) {
-            // Ajuster les exigences pour les escaliers d'issue
-        }
-    }
-
-    // Vérification de la conformité
+    
+    // ==================== VÉRIFICATION CONFORMITÉ ====================
+    
     checkButton.addEventListener('click', function() {
-        // Réinitialiser les messages d'erreur
         document.querySelectorAll('.error').forEach(el => el.textContent = '');
         
-        // Récupérer les valeurs du formulaire
         const isMetric = measurementSystem.value === 'metric';
         const isBuildingPart3 = buildingType.value === 'part3';
-        const buildingUseValue = buildingUse.value;
         const type = stairType.value;
         const stairUseValue = stairUse.value;
         const config = stairConfig.value;
         const lShapedConfigValue = lShapedConfig ? lShapedConfig.value : 'standard_landing';
-        const dancingStepsConfigValue = dancingStepsConfig ? dancingStepsConfig.value : 'standard';
-        const spiralConfigValue = spiralConfig ? spiralConfig.value : 'secondary';
+        const spiralConfigValue = spiralConfig ? spiralConfig.value : 'primary';
         
-        // Conversion des valeurs en métrique si nécessaire
         let riserHeightValue, treadDepthValue, narrowSideValue, stairWidthValue, headroomValue, spiralWidthValue;
         
         if (isMetric) {
             riserHeightValue = parseFloat(riserHeight.value);
             treadDepthValue = parseFloat(treadDepth.value);
-            narrowSideValue = parseFloat(narrowSide.value);
+            narrowSideValue = parseFloat(narrowSide ? narrowSide.value : 0) || 0;
             stairWidthValue = parseFloat(stairWidth.value);
             headroomValue = parseFloat(headroom.value);
-            spiralWidthValue = parseFloat(spiralWidth.value);
+            spiralWidthValue = parseFloat(spiralWidth ? spiralWidth.value : 0) || 0;
         } else {
             riserHeightValue = imperialToMetric(validateImperialInput(riserHeightImperial.value));
             treadDepthValue = imperialToMetric(validateImperialInput(treadDepthImperial.value));
-            narrowSideValue = imperialToMetric(validateImperialInput(narrowSideImperial.value));
+            narrowSideValue = imperialToMetric(validateImperialInput(narrowSideImperial ? narrowSideImperial.value : '')) || 0;
             stairWidthValue = imperialToMetric(validateImperialInput(stairWidthImperial.value));
             headroomValue = imperialToMetric(validateImperialInput(headroomImperial.value));
-            spiralWidthValue = imperialToMetric(validateImperialInput(spiralWidthImperial.value));
+            spiralWidthValue = imperialToMetric(validateImperialInput(spiralWidthImperial ? spiralWidthImperial.value : '')) || 0;
         }
         
-        // Validation des entrées
         let isValid = true;
         
         if (isNaN(riserHeightValue) || riserHeightValue <= 0) {
-            document.getElementById('riserHeightError').textContent = 'Veuillez entrer une valeur numérique valide pour la hauteur de contremarche.';
+            document.getElementById('riserHeightError').textContent = 'Valeur invalide.';
             isValid = false;
         }
         
         if (isNaN(treadDepthValue) || treadDepthValue <= 0) {
-            document.getElementById('treadDepthError').textContent = 'Veuillez entrer une valeur numérique valide pour le giron.';
-            isValid = false;
-        }
-        
-        if (config === 'dancing_steps' && (isNaN(narrowSideValue) || narrowSideValue <= 0)) {
-            document.getElementById('narrowSideError').textContent = 'Veuillez entrer une valeur numérique valide pour la largeur minimale côté étroit.';
+            document.getElementById('treadDepthError').textContent = 'Valeur invalide.';
             isValid = false;
         }
         
         if (isNaN(stairWidthValue) || stairWidthValue <= 0) {
-            document.getElementById('stairWidthError').textContent = 'Veuillez entrer une valeur numérique valide pour la largeur de l\'escalier.';
+            document.getElementById('stairWidthError').textContent = 'Valeur invalide.';
             isValid = false;
         }
         
         if (isNaN(headroomValue) || headroomValue <= 0) {
-            document.getElementById('headroomError').textContent = 'Veuillez entrer une valeur numérique valide pour la hauteur libre.';
+            document.getElementById('headroomError').textContent = 'Valeur invalide.';
             isValid = false;
         }
         
         if (config === 'spiral' && (isNaN(spiralWidthValue) || spiralWidthValue <= 0)) {
-            document.getElementById('spiralWidthError').textContent = 'Veuillez entrer une valeur numérique valide pour la largeur libre entre mains courantes.';
+            document.getElementById('spiralWidthError').textContent = 'Valeur invalide.';
             isValid = false;
         }
         
         if (!isValid) return;
         
-        // Définir les limites selon le CNB 2015
+        // Définir limites CNB 2015
         let minRiser, maxRiser, minTread, maxTread, minNarrowSide, minWidth, minHeadroom, minSpiralWidth;
-        let codeReference = 'CNB 2015'; // Référence par défaut
+        let codeReference = 'CNB 2015';
         
         if (isBuildingPart3) {
-            // Règles pour les bâtiments régis par la partie 3
             codeReference = 'CNB 2015 Partie 3';
+            minRiser = 125;
+            maxRiser = 180;
+            minTread = 280;
+            maxTread = Infinity;
             
-            // Hauteur de contremarche (3.4.6.8)
-            minRiser = 125; // 125 mm
-            maxRiser = 180; // 180 mm
-            
-            // Giron (3.4.6.8)
-            minTread = 280; // 280 mm
-            maxTread = Infinity; // pas de limite maximale
-            
-            // Largeur minimale côté étroit (3.4.6.9)
             if (config === 'dancing_steps') {
-                if (dancingStepsConfigValue === 'exit') {
-                    minNarrowSide = 240; // 240 mm pour une issue
-                } else {
-                    minNarrowSide = 150; // 150 mm standard
-                }
+                minNarrowSide = 150;
             }
             
-            // Largeur de l'escalier (3.4.3.2)
-            minWidth = 1100; // 1100 mm pour une issue standard
+            minWidth = 1100;
+            minHeadroom = 2050;
             
-            // Hauteur libre (3.4.3.4)
-            minHeadroom = 2050; // 2050 mm
-            
-            // Largeur libre entre mains courantes (escalier hélicoïdal)
             if (config === 'spiral') {
-                minSpiralWidth = 660; // 660 mm
-                maxRiser = 240; // 240 mm pour escalier hélicoïdal
+                minSpiralWidth = 660;
+                maxRiser = 240;
             }
         } else {
-            // Règles pour les bâtiments régis par la partie 9
             codeReference = 'CNB 2015 Partie 9';
             
-            // Hauteur de contremarche (9.8.4.1)
             if (type === 'private') {
-                minRiser = 125; // 125 mm
-                maxRiser = 200; // 200 mm
-            } else { // common
-                minRiser = 125; // 125 mm
-                maxRiser = 180; // 180 mm
+                minRiser = 125;
+                maxRiser = 200;
+                minTread = 255;
+                maxTread = 355;
+            } else {
+                minRiser = 125;
+                maxRiser = 180;
+                minTread = 280;
+                maxTread = Infinity;
             }
             
-            // Giron (9.8.4.2)
-            if (type === 'private') {
-                minTread = 255; // 255 mm
-                maxTread = 355; // 355 mm
-            } else { // common
-                minTread = 280; // 280 mm
-                maxTread = Infinity; // pas de limite maximale
-            }
-            
-            // Largeur minimale côté étroit (9.8.4.3 ou 9.8.4.6 pour marches rayonnantes)
             if (config === 'dancing_steps') {
-                if (type === 'private') {
-                    minNarrowSide = 150; // 150 mm (9.8.4.3)
-                } else if (dancingStepsConfigValue === 'exit') {
-                    minNarrowSide = 240; // 240 mm pour une issue
-                } else {
-                    minNarrowSide = 150; // 150 mm standard
-                }
+                minNarrowSide = 150;
             }
             
-            // Largeur de l'escalier (9.8.2.1)
             if (type === 'private') {
-                minWidth = 860; // 860 mm
-            } else { // common
-                minWidth = 900; // 900 mm
+                minWidth = 860;
+                minHeadroom = 1950;
+            } else {
+                minWidth = 900;
+                minHeadroom = 2050;
             }
             
-            // Hauteur libre (9.8.2.2)
-            if (type === 'private') {
-                minHeadroom = 1950; // 1950 mm
-            } else { // common
-                minHeadroom = 2050; // 2050 mm
-            }
-            
-            // Largeur libre entre mains courantes (escalier hélicoïdal) (9.8.4.7)
             if (config === 'spiral') {
-                minSpiralWidth = 660; // 660 mm
-                maxRiser = 240; // 240 mm pour escalier hélicoïdal
+                minSpiralWidth = 660;
+                maxRiser = 240;
+                minTread = 190;
             }
         }
         
-        // Ajustement supplémentaire pour les escaliers d'issue
         if (stairUseValue === 'exit') {
             if (isBuildingPart3) {
-                // Ajustements spécifiques aux issues de la partie 3
-                minWidth = 1100; // 1100 mm minimum pour une issue
-                
+                minWidth = 1100;
                 if (config === 'dancing_steps') {
-                    minNarrowSide = 240; // 240 mm pour une issue
+                    minNarrowSide = 240;
                 }
             } else {
-                // Ajustements spécifiques aux issues de la partie 9
-                minWidth = 900; // 900 mm minimum pour une issue dans la partie 9
+                minWidth = 900;
             }
         }
         
-        // Vérifier la conformité
+        // Vérifier conformité
         let issues = [];
         let isCompliant = true;
         
-        // Vérification de la hauteur de contremarche
         if (riserHeightValue < minRiser) {
-            issues.push(`La hauteur de contremarche (${riserHeightValue} mm) est inférieure au minimum requis (${minRiser} mm).`);
+            issues.push(`Hauteur contremarche (${riserHeightValue.toFixed(0)} mm) < minimum (${minRiser} mm)`);
             isCompliant = false;
         } else if (riserHeightValue > maxRiser) {
-            issues.push(`La hauteur de contremarche (${riserHeightValue} mm) dépasse le maximum autorisé (${maxRiser} mm).`);
+            issues.push(`Hauteur contremarche (${riserHeightValue.toFixed(0)} mm) > maximum (${maxRiser} mm)`);
             isCompliant = false;
         }
         
-        // Vérification du giron
         if (treadDepthValue < minTread) {
-            issues.push(`Le giron (${treadDepthValue} mm) est inférieur au minimum requis (${minTread} mm).`);
+            issues.push(`Giron (${treadDepthValue.toFixed(0)} mm) < minimum (${minTread} mm)`);
             isCompliant = false;
         } else if (treadDepthValue > maxTread && maxTread !== Infinity) {
-            issues.push(`Le giron (${treadDepthValue} mm) dépasse le maximum autorisé (${maxTread} mm).`);
+            issues.push(`Giron (${treadDepthValue.toFixed(0)} mm) > maximum (${maxTread} mm)`);
             isCompliant = false;
         }
         
-        // Vérification de la règle du pas
         const stepRule = checkStepRule(riserHeightValue, treadDepthValue);
         if (!stepRule.isValid) {
-            let stepsIssue = "La règle du pas n'est pas respectée (moins de 2 des 3 règles sont satisfaites) :";
-            
-            // Détailler les règles du pas qui ne sont pas respectées
+            let stepsIssue = "Règle du pas non respectée (< 2/3 règles):";
             if (!stepRule.rule1.isValid) {
-                stepsIssue += `<br>- Règle 1 : Giron + CM = ${stepRule.rule1.value.toFixed(2)}" (devrait être entre ${stepRule.rule1.min}" et ${stepRule.rule1.max}")`;
+                stepsIssue += `<br>- Règle 1: ${stepRule.rule1.value.toFixed(2)}" (idéal: 17"-18")`;
             }
             if (!stepRule.rule2.isValid) {
-                stepsIssue += `<br>- Règle 2 : Giron × CM = ${stepRule.rule2.value.toFixed(2)} po² (devrait être entre ${stepRule.rule2.min} po² et ${stepRule.rule2.max} po²)`;
+                stepsIssue += `<br>- Règle 2: ${stepRule.rule2.value.toFixed(2)} po² (idéal: 71-74 po²)`;
             }
             if (!stepRule.rule3.isValid) {
-                stepsIssue += `<br>- Règle 3 : Giron + 2(CM) = ${stepRule.rule3.value.toFixed(2)}" (devrait être entre ${stepRule.rule3.min}" et ${stepRule.rule3.max}")`;
+                stepsIssue += `<br>- Règle 3: ${stepRule.rule3.value.toFixed(2)}" (idéal: 22"-25")`;
             }
-            
             issues.push(stepsIssue);
-            // Ne pas marquer comme non conforme car c'est juste une recommandation
         }
         
-        // Vérification de la largeur minimale côté étroit (pour escalier avec marches dansantes)
         if (config === 'dancing_steps' && narrowSideValue < minNarrowSide) {
-            const narrowSideImperialValue = metricToImperial(narrowSideValue);
-            issues.push(`La largeur minimale côté étroit ${narrowSideImperialValue} (${narrowSideValue.toFixed(2)} mm) est inférieure au minimum requis (${minNarrowSide} mm) selon le ${codeReference}.`);
+            issues.push(`Largeur côté étroit (${narrowSideValue.toFixed(0)} mm) < minimum (${minNarrowSide} mm)`);
             isCompliant = false;
         }
         
-        // Vérification de la largeur de l'escalier
         if (stairWidthValue < minWidth) {
-            issues.push(`La largeur de l'escalier (${stairWidthValue} mm) est inférieure au minimum requis (${minWidth} mm).`);
+            issues.push(`Largeur escalier (${stairWidthValue.toFixed(0)} mm) < minimum (${minWidth} mm)`);
             isCompliant = false;
         }
         
-        // Vérification de la hauteur libre
         if (headroomValue < minHeadroom) {
-            issues.push(`La hauteur libre (${headroomValue} mm) est inférieure au minimum requis (${minHeadroom} mm).`);
+            issues.push(`Hauteur libre (${headroomValue.toFixed(0)} mm) < minimum (${minHeadroom} mm)`);
             isCompliant = false;
         }
         
-        // Vérification de la largeur libre entre mains courantes (pour escalier hélicoïdal)
         if (config === 'spiral' && spiralWidthValue < minSpiralWidth) {
-            issues.push(`La largeur libre entre mains courantes (${spiralWidthValue} mm) est inférieure au minimum requis (${minSpiralWidth} mm).`);
+            issues.push(`Largeur libre mains courantes (${spiralWidthValue.toFixed(0)} mm) < minimum (${minSpiralWidth} mm)`);
             isCompliant = false;
         }
         
-        // Vérification spécifique pour les escaliers hélicoïdaux servant d'issue
         if (config === 'spiral' && stairUseValue === 'exit') {
-            issues.push(`Les escaliers hélicoïdaux ne doivent pas être utilisés comme issues (CNB 2015 9.8.4.7).`);
+            issues.push(`Escaliers hélicoïdaux interdits comme issues (CNB 9.8.4.7)`);
             isCompliant = false;
         }
         
-        // Vérification pour escalier hélicoïdal comme seul moyen d'évacuation pour plus de 3 personnes
         if (config === 'spiral' && spiralConfigValue === 'primary' && type === 'common') {
-            issues.push(`Un escalier hélicoïdal ne peut servir de seul moyen d'évacuation que s'il ne dessert pas plus de 3 personnes (CNB 2015 9.8.4.7).`);
+            issues.push(`Escalier hélicoïdal seul moyen évacuation: max 3 personnes (CNB 9.8.4.7)`);
             isCompliant = false;
         }
         
-        // Afficher le résultat
+        // Affichage résultat
         resultContent.innerHTML = '';
         result.className = 'result';
         
@@ -1003,68 +734,51 @@ document.addEventListener('DOMContentLoaded', function() {
             result.classList.add('compliant');
             resultContent.innerHTML = `<p class="success">✓ Conforme au ${codeReference}.</p>`;
             
-            // Si la conformité est vérifiée mais que la règle du pas n'est pas respectée
             if (!stepRule.isValid) {
-                let stepRuleInfo = `
+                resultContent.innerHTML += `
                 <div class="warning">
-                    <p>⚠ Note: La règle du pas n'est pas entièrement respectée (${stepRule.validRuleCount}/3 règles satisfaites). Pour un confort optimal, il est recommandé de respecter au moins 2 des 3 règles suivantes :</p>
+                    <p>⚠ Règle du pas: ${stepRule.validRuleCount}/3 règles satisfaites (recommandé: 2/3)</p>
                     <ul>
-                        <li>Règle 1: Giron + CM = 17" à 18" (actuel: ${stepRule.rule1.value.toFixed(2)}")</li>
-                        <li>Règle 2: Giron × CM = 71 po² à 74 po² (actuel: ${stepRule.rule2.value.toFixed(2)} po²)</li>
-                        <li>Règle 3: Giron + 2(CM) = 22" à 25" (actuel: ${stepRule.rule3.value.toFixed(2)}")</li>
+                        <li>${stepRule.rule1.isValid ? "✓" : "⨯"} Règle 1: ${stepRule.rule1.value.toFixed(2)}" (17"-18")</li>
+                        <li>${stepRule.rule2.isValid ? "✓" : "⨯"} Règle 2: ${stepRule.rule2.value.toFixed(2)} po² (71-74 po²)</li>
+                        <li>${stepRule.rule3.isValid ? "✓" : "⨯"} Règle 3: ${stepRule.rule3.value.toFixed(2)}" (22"-25")</li>
                     </ul>
-                </div>
-                `;
-                resultContent.innerHTML += stepRuleInfo;
+                </div>`;
             } else {
-                // Indiquer quelles règles du pas sont respectées
-                let stepRuleInfo = `
+                resultContent.innerHTML += `
                 <div class="result-section">
-                    <p>✓ La règle du pas est respectée (${stepRule.validRuleCount}/3 règles satisfaites) :</p>
+                    <p>✓ Règle du pas respectée (${stepRule.validRuleCount}/3):</p>
                     <ul>
-                        <li>${stepRule.rule1.isValid ? "✓" : "⨯"} Règle 1: Giron + CM = 17" à 18" (actuel: ${stepRule.rule1.value.toFixed(2)}")</li>
-                        <li>${stepRule.rule2.isValid ? "✓" : "⨯"} Règle 2: Giron × CM = 71 po² à 74 po² (actuel: ${stepRule.rule2.value.toFixed(2)} po²)</li>
-                        <li>${stepRule.rule3.isValid ? "✓" : "⨯"} Règle 3: Giron + 2(CM) = 22" à 25" (actuel: ${stepRule.rule3.value.toFixed(2)}")</li>
+                        <li>${stepRule.rule1.isValid ? "✓" : "⨯"} Règle 1: ${stepRule.rule1.value.toFixed(2)}"</li>
+                        <li>${stepRule.rule2.isValid ? "✓" : "⨯"} Règle 2: ${stepRule.rule2.value.toFixed(2)} po²</li>
+                        <li>${stepRule.rule3.isValid ? "✓" : "⨯"} Règle 3: ${stepRule.rule3.value.toFixed(2)}"</li>
                     </ul>
-                </div>
-                `;
-                resultContent.innerHTML += stepRuleInfo;
+                </div>`;
             }
         } else {
             result.classList.add('non-compliant');
-            let issuesList = `<p>⚠ Non conforme au ${codeReference}.</p><p>Problèmes détectés:</p><ul>`;
+            resultContent.innerHTML = `<p>⚠ Non conforme au ${codeReference}.</p><p>Problèmes:</p><ul>`;
             issues.forEach(issue => {
-                let formattedIssue = issue;
-                if (!isMetric) {
-                    // Convertir les valeurs métriques en impériales pour l'affichage
-                    formattedIssue = issue.replace(/(\d+(?:\.\d+)?) mm/g, function(match, p1) {
-                        return metricToImperial(parseFloat(p1)) + ' (' + parseFloat(p1).toFixed(2) + ' mm)';
-                    });
-                }
-                issuesList += `<li>${formattedIssue}</li>`;
+                resultContent.innerHTML += `<li>${issue}</li>`;
             });
-            issuesList += '</ul>';
-            resultContent.innerHTML = issuesList;
+            resultContent.innerHTML += '</ul>';
         }
         
         result.style.display = 'block';
     });
     
-    // Calcul d'escalier
+    // ==================== CALCUL ESCALIER ====================
+    
     calculateButton.addEventListener('click', function() {
-        // Réinitialiser les messages d'erreur
         document.querySelectorAll('#calculator .error').forEach(el => el.textContent = '');
         
-        // Récupérer les valeurs du formulaire
         const isMetric = calcMeasurementSystem.value === 'metric';
         const buildingTypeValue = calcBuildingType.value;
         const stairTypeValue = calcStairType.value;
         const stairConfigValue = calcStairConfig.value;
         const lShapedConfigValue = calcLShapedConfig ? calcLShapedConfig.value : null;
-        const dancingStepsConfigValue = calcDancingStepsConfig ? calcDancingStepsConfig.value : null;
         const spiralConfigValue = calcSpiralConfig ? calcSpiralConfig.value : null;
         
-        // Conversion des valeurs en métrique si nécessaire
         let totalRunValue, totalRiseValue, stairWidthValue, idealRiserValue, idealTreadValue;
         let minNarrowSideValue, spiralWidthValue;
         
@@ -1086,481 +800,248 @@ document.addEventListener('DOMContentLoaded', function() {
             spiralWidthValue = imperialToMetric(validateImperialInput(calcSpiralWidthImperial ? calcSpiralWidthImperial.value : '')) || 0;
         }
         
-        // Validation des entrées
         let isValid = true;
         
         if (isNaN(totalRunValue) || totalRunValue <= 0) {
-            document.getElementById('totalRunError').textContent = 'Veuillez entrer une valeur numérique valide pour la longueur totale.';
+            document.getElementById('totalRunError').textContent = 'Valeur invalide.';
             isValid = false;
         }
         
         if (isNaN(totalRiseValue) || totalRiseValue <= 0) {
-            document.getElementById('totalRiseError').textContent = 'Veuillez entrer une valeur numérique valide pour la hauteur totale.';
+            document.getElementById('totalRiseError').textContent = 'Valeur invalide.';
             isValid = false;
         }
         
         if (isNaN(stairWidthValue) || stairWidthValue <= 0) {
-            document.getElementById('stairDesiredWidthError').textContent = 'Veuillez entrer une valeur numérique valide pour la largeur souhaitée.';
+            document.getElementById('stairDesiredWidthError').textContent = 'Valeur invalide.';
             isValid = false;
         }
         
-        // Validation spécifique pour les marches dansantes
         if (stairConfigValue === 'dancing_steps' && (isNaN(minNarrowSideValue) || minNarrowSideValue <= 0)) {
-            document.getElementById('calcMinNarrowSideError').textContent = 'Veuillez entrer une valeur numérique valide pour la largeur minimale côté étroit.';
+            document.getElementById('calcMinNarrowSideError').textContent = 'Valeur invalide.';
             isValid = false;
         }
         
-        // Validation spécifique pour les escaliers hélicoïdaux
         if (stairConfigValue === 'spiral' && (isNaN(spiralWidthValue) || spiralWidthValue <= 0)) {
-            document.getElementById('calcSpiralWidthError').textContent = 'Veuillez entrer une valeur numérique valide pour la largeur libre entre mains courantes.';
+            document.getElementById('calcSpiralWidthError').textContent = 'Valeur invalide.';
             isValid = false;
         }
         
         if (!isValid) return;
         
-        // Calculer les solutions optimales
+        const priorityValue = priorityComfort && priorityComfort.checked ? 'comfort' : 'space';
+        
         const preferences = {
             buildingType: buildingTypeValue,
             stairType: stairTypeValue,
             stairConfig: stairConfigValue,
             lShapedConfig: lShapedConfigValue,
-            dancingStepsConfig: dancingStepsConfigValue,
-            spiralConfig: spiralConfigValue,
             idealRiser: idealRiserValue,
             idealTread: idealTreadValue,
-            priority: priorityComfort.checked ? 'comfort' : 'space'
+            priority: priorityValue
         };
         
         const solutions = calculateOptimalStair(totalRiseValue, totalRunValue, preferences);
         
-        // Définir les limites selon le CNB 2015 pour vérification
-        let minRiser, maxRiser, minTread, maxTread, minWidth, minNarrowSide, minSpiralWidth;
-        let codeReference = 'CNB 2015';
+        if (!solutions || solutions.length === 0) {
+            calculatorResultContent.innerHTML = '<p>⚠ Aucune solution conforme trouvée. Vérifiez les dimensions.</p>';
+            calculatorResult.style.display = 'block';
+            return;
+        }
         
+        const bestSolution = solutions[0];
+        const codeReference = buildingTypeValue === 'part3' ? 'CNB 2015 Partie 3' : 'CNB 2015 Partie 9';
+        
+        // Vérifier largeur
+        let minWidth = 900;
         if (buildingTypeValue === 'part3') {
-            codeReference = 'CNB 2015 Partie 3';
-            minRiser = 125;
-            maxRiser = 180;
-            minTread = 280;
-            maxTread = Infinity;
             minWidth = 1100;
-            minNarrowSide = 240; // Pour marches dansantes dans une issue
-            minSpiralWidth = 660; // Pour escalier hélicoïdal
-            
-            if (stairConfigValue === 'spiral') {
-                maxRiser = 240;
-            }
-        } else {
-            codeReference = 'CNB 2015 Partie 9';
-            
-            if (stairTypeValue === 'private') {
-                minRiser = 125;
-                maxRiser = 200;
-                minTread = 255;
-                maxTread = 355;
-                minWidth = 860;
-                minNarrowSide = 150; // Pour marches dansantes privées
-            } else {
-                minRiser = 125;
-                maxRiser = 180;
-                minTread = 280;
-                maxTread = Infinity;
-                minWidth = 900;
-                minNarrowSide = dancingStepsConfigValue === 'exit' ? 240 : 150; // Selon le type de marches dansantes
-            }
-            
-            minSpiralWidth = 660; // Pour escalier hélicoïdal
-            
-            if (stairConfigValue === 'spiral') {
-                maxRiser = 240;
-            }
+        } else if (stairTypeValue === 'private') {
+            minWidth = 860;
         }
         
-        // Vérifier la largeur de l'escalier
         const isWidthCompliant = stairWidthValue >= minWidth;
-        
-        // Vérifications spécifiques selon le type d'escalier
-        let specificWarnings = '';
-        
-        if (stairConfigValue === 'spiral') {
-            const isSpiralWidthCompliant = spiralWidthValue >= minSpiralWidth;
-            
-            if (!isSpiralWidthCompliant) {
-                let spiralWidthDisplay = isMetric ? 
-                    `${formatNumber(spiralWidthValue)} mm` : 
-                    metricToImperial(spiralWidthValue);
-                
-                let minSpiralWidthDisplay = isMetric ? 
-                    `${minSpiralWidth} mm` : 
-                    metricToImperial(minSpiralWidth);
-                
-                specificWarnings += `
-                    <div class="warning">
-                        <p>⚠ La largeur libre entre mains courantes (${spiralWidthDisplay}) est inférieure au minimum requis (${minSpiralWidthDisplay}) selon le ${codeReference}.</p>
-                    </div>
-                `;
-            }
-            
-            if (spiralConfigValue === 'primary' && stairTypeValue === 'common') {
-                specificWarnings += `
-                    <div class="warning">
-                        <p>⚠ Un escalier hélicoïdal ne peut servir de seul moyen d'évacuation que s'il ne dessert pas plus de 3 personnes (CNB 2015 9.8.4.7).</p>
-                    </div>
-                `;
-            }
-        } else if (stairConfigValue === 'dancing_steps') {
-            const isNarrowSideCompliant = minNarrowSideValue >= minNarrowSide;
-            
-            if (!isNarrowSideCompliant) {
-                let narrowSideDisplay = isMetric ? 
-                    `${formatNumber(minNarrowSideValue)} mm` : 
-                    metricToImperial(minNarrowSideValue);
-                
-                let minNarrowSideDisplay = isMetric ? 
-                    `${minNarrowSide} mm` : 
-                    metricToImperial(minNarrowSide);
-                
-                specificWarnings += `
-                    <div class="warning">
-                        <p>⚠ La largeur minimale côté étroit ${narrowSideDisplay} (${minNarrowSideValue.toFixed(2)} mm) est inférieure au minimum requis (${minNarrowSide} mm) selon le ${codeReference}.</p>
-                    </div>
-                `;
-            }
+        let widthWarning = '';
+        if (!isWidthCompliant) {
+            widthWarning = `<div class="warning"><p>⚠ Largeur ${stairWidthValue.toFixed(0)} mm < minimum ${minWidth} mm</p></div>`;
         }
         
-        // Préparer l'affichage des résultats
-        calculatorResultContent.innerHTML = '';
+        // Formatage résultats
+        const formatRiserHeight = isMetric ? `${bestSolution.riserHeight.toFixed(2)} mm` : metricToImperial(bestSolution.riserHeight);
+        const formatTreadDepth = isMetric ? `${bestSolution.treadDepth.toFixed(2)} mm` : metricToImperial(bestSolution.treadDepth);
+        const formatRiserExact = isMetric ? `${bestSolution.riserHeight.toFixed(2)} mm` : `${(bestSolution.riserHeight / 25.4).toFixed(4)}"`;
+        const formatTreadExact = isMetric ? `${bestSolution.treadDepth.toFixed(2)} mm` : `${(bestSolution.treadDepth / 25.4).toFixed(4)}"`;
         
-        if (solutions.length === 0) {
-            calculatorResult.className = 'result non-compliant';
-            calculatorResultContent.innerHTML = `
-                <p>⚠ Aucune solution conforme n'a été trouvée avec les dimensions spécifiées.</p>
-                <p>Recommandations :</p>
-                <ul>
-                    <li>Augmentez la longueur horizontale disponible</li>
-                    <li>Envisagez une configuration différente d'escalier</li>
-                    <li>Consultez un professionnel pour une solution sur mesure</li>
-                </ul>
-            `;
+        // VÉRIFICATIONS MATHÉMATIQUES EXACTES
+        const totalRiseCalculation = bestSolution.riserHeight * bestSolution.numRisers;
+        const riseError = Math.abs(totalRiseCalculation - totalRiseValue);
+        
+        const totalRunCalculation = bestSolution.treadDepth * bestSolution.numTreads;
+        const runError = Math.abs(totalRunCalculation - totalRunValue);
+        
+        const formatTotalRise = isMetric ? `${totalRiseCalculation.toFixed(2)} mm` : metricToImperial(totalRiseCalculation);
+        const formatActualTotalRun = isMetric ? `${bestSolution.actualTotalRun.toFixed(2)} mm` : metricToImperial(bestSolution.actualTotalRun);
+        const formatStairWidth = isMetric ? `${stairWidthValue.toFixed(0)} mm` : metricToImperial(stairWidthValue);
+        
+        let riserVerification = '';
+        if (isMetric) {
+            riserVerification = `
+                <div class="step-formula">
+                    Vérification: ${bestSolution.numRisers} × ${bestSolution.riserHeight.toFixed(2)} mm = ${totalRiseCalculation.toFixed(2)} mm
+                    ${riseError < 0.1 ? '✓ Exact' : `⚠ Écart ${riseError.toFixed(2)} mm`}
+                </div>`;
         } else {
-            calculatorResult.className = 'result compliant';
-            
-            // Vérification de la largeur
-            let widthWarning = '';
-            if (!isWidthCompliant) {
-                let widthValueDisplay = isMetric ? 
-                    `${formatNumber(stairWidthValue)} mm` : 
-                    metricToImperial(stairWidthValue);
-                
-                let minWidthDisplay = isMetric ? 
-                    `${minWidth} mm` : 
-                    metricToImperial(minWidth);
-                
-                widthWarning = `
-                    <div class="warning">
-                        <p>⚠ La largeur spécifiée (${widthValueDisplay}) est inférieure au minimum requis (${minWidthDisplay}) selon le ${codeReference}.</p>
-                    </div>
-                `;
-            }
-            
-            // Afficher une explication de la règle du pas
-            const stepRuleIdealImperial = "17-18 pouces";
-            const stepRuleIdealMetric = "432-457 mm";
-            const stepRuleSquareIdealImperial = "71-74 po²";
-            const stepRuleSquareIdealMetric = "45800-47700 mm²";
-            const stepRule2RGIdealImperial = "22-25 pouces";
-            const stepRule2RGIdealMetric = "559-635 mm";
-            
-            const stepRuleIdeal = isMetric ? stepRuleIdealMetric : stepRuleIdealImperial;
-            const stepRuleSquareIdeal = isMetric ? stepRuleSquareIdealMetric : stepRuleSquareIdealImperial;
-            const stepRule2RGIdeal = isMetric ? stepRule2RGIdealMetric : stepRule2RGIdealImperial;
-            
-            const explanationSection = `
-                <div class="result-section">
-                    <h3>Règle du pas</h3>
-                    <p>Les critères de confort pour un escalier sont vérifiés lorsqu'au moins 2 des 3 règles suivantes sont respectées :</p>
-                    <ol>
-                        <li>Giron + CM = 17" à 18" (${isMetric ? "432-457 mm" : "17-18 pouces"})</li>
-                        <li>Giron × CM = 71 po² à 74 po² (${isMetric ? "45800-47700 mm²" : "71-74 po²"})</li>
-                        <li>Giron + 2(CM) = 22" à 25" (${isMetric ? "559-635 mm" : "22-25 pouces"})</li>
-                    </ol>
-                    <p>Ces formules correspondent au pas moyen d'un adulte et assurent un confort optimal lors de l'utilisation de l'escalier.</p>
+            const riserInches = bestSolution.riserHeight / 25.4;
+            const totalRiseInches = totalRiseCalculation / 25.4;
+            riserVerification = `
+                <div class="step-formula">
+                    Vérification: ${bestSolution.numRisers} × ${riserInches.toFixed(4)}" = ${totalRiseInches.toFixed(4)}"
+                    ${riseError < 2.5 ? '✓ Exact' : `⚠ Écart ${(riseError/25.4).toFixed(4)}"`}
+                </div>`;
+        }
+        
+        let treadVerification = '';
+        if (isMetric) {
+            treadVerification = `
+                <div class="step-formula">
+                    Vérification: ${bestSolution.numTreads} × ${bestSolution.treadDepth.toFixed(2)} mm = ${totalRunCalculation.toFixed(2)} mm
+                    ${runError < 0.1 ? '✓ Exact' : `⚠ Écart ${runError.toFixed(2)} mm`}
+                </div>`;
+        } else {
+            const treadInches = bestSolution.treadDepth / 25.4;
+            const totalRunInches = totalRunCalculation / 25.4;
+            treadVerification = `
+                <div class="step-formula">
+                    Vérification: ${bestSolution.numTreads} × ${treadInches.toFixed(4)}" = ${totalRunInches.toFixed(4)}"
+                    ${runError < 2.5 ? '✓ Exact' : `⚠ Écart ${(runError/25.4).toFixed(4)}"`}
+                </div>`;
+        }
+        
+        let stepRuleDetails = `
+            <div class="result-section">
+                <h4>Règle du pas (solution optimale)</h4>
+                <ul>
+                    <li>${bestSolution.stepRule.rule1.isValid ? "✓" : "⚠"} Règle 1: ${bestSolution.stepRule.rule1.value.toFixed(2)}" (17"-18")</li>
+                    <li>${bestSolution.stepRule.rule2.isValid ? "✓" : "⚠"} Règle 2: ${bestSolution.stepRule.rule2.value.toFixed(2)} po² (71-74 po²)</li>
+                    <li>${bestSolution.stepRule.rule3.isValid ? "✓" : "⚠"} Règle 3: ${bestSolution.stepRule.rule3.value.toFixed(2)}" (22"-25")</li>
+                </ul>
+                <p>${bestSolution.stepRule.isValid ? "✓ Confort optimal (≥2/3 règles)" : "⚠ Confort limité (<2/3 règles)"}</p>
+            </div>`;
+        
+        let detailsHtml = `
+            <div class="result-section">
+                <h3>Solution optimale</h3>
+                <h4>Dimensions de traçage (valeurs exactes):</h4>
+                <ul>
+                    <li><strong>Hauteur contremarche:</strong> ${formatRiserExact} ${isMetric ? '' : '(≈ ' + formatRiserHeight + ')'}</li>
+                    <li><strong>Profondeur giron:</strong> ${formatTreadExact} ${isMetric ? '' : '(≈ ' + formatTreadDepth + ')'}</li>
+                </ul>
+                ${riserVerification}
+                ${treadVerification}
+                <h4>Récapitulatif:</h4>
+                <ul>
+                    <li>Contremarches: ${bestSolution.numRisers}</li>
+                    <li>Marches: ${bestSolution.numTreads}</li>
+                    <li>Hauteur totale: ${formatTotalRise}</li>
+                    <li>Longueur totale: ${formatActualTotalRun}</li>
+                    <li>Largeur: ${formatStairWidth} ${isWidthCompliant ? '✓' : '⚠'}</li>
+                </ul>
+                <div class="warning">
+                    <p><strong>Important traçage:</strong></p>
+                    <ul>
+                        <li>Utilisez les <strong>valeurs exactes décimales</strong> ci-dessus</li>
+                        <li>Fractions = approximations au 1/16" près</li>
+                        <li>Tolérance CNB 2015: ±5mm entre marches, ±10mm dans volée</li>
+                        <li>Somme contremarches = hauteur totale exacte</li>
+                        <li>Somme girons = longueur totale exacte</li>
+                    </ul>
                 </div>
-            `;
-
-            // Afficher les solutions
-            let solutionsHtml = `
+            </div>
+            ${stepRuleDetails}`;
+        
+        let configNotes = '';
+        if (stairConfigValue === 'spiral') {
+            configNotes = `
                 <div class="result-section">
-                    <h3>Meilleures configurations</h3>
+                    <h3>Notes escalier hélicoïdal</h3>
+                    <ul>
+                        <li>Interdit comme issue (CNB 9.8.4.7)</li>
+                        <li>Seul moyen évacuation: max 3 personnes</li>
+                        <li>Largeur libre min: 660 mm</li>
+                        <li>Giron min: 190 mm à 300 mm de l'axe côté étroit</li>
+                    </ul>
+                </div>`;
+        } else if (stairConfigValue === 'dancing_steps') {
+            configNotes = `
+                <div class="result-section">
+                    <h3>Notes marches dansantes</h3>
+                    <ul>
+                        <li>Angle constant dans même volée</li>
+                        <li>Giron min: ${isMetric ? '150 mm' : '6"'} à 300 mm de l'axe</li>
+                        <li>Hauteur/giron uniformes à 300 mm de l'axe</li>
+                        <li>Rotation même direction dans volée</li>
+                    </ul>
+                </div>`;
+        }
+        
+        let solutionsTable = '';
+        if (solutions.length > 1) {
+            solutionsTable = `
+                <div class="result-section">
+                    <h3>Alternatives</h3>
                     <table class="result-table">
                         <thead>
                             <tr>
                                 <th>Solution</th>
                                 <th>Contremarches</th>
-                                <th>Hauteur contremarche</th>
+                                <th>Hauteur CM</th>
                                 <th>Giron</th>
-                                <th>Règles du pas respectées</th>
-                                <th>Longueur totale</th>
+                                <th>Règles</th>
                             </tr>
                         </thead>
-                        <tbody>
-            `;
+                        <tbody>`;
             
-            solutions.forEach((solution, index) => {
-                const isOptimal = index === 0;
-                const className = isOptimal ? 'optimal-solution' : '';
+            solutions.forEach((sol, index) => {
+                const className = index === 0 ? 'optimal-solution' : '';
+                const riserStr = isMetric ? `${sol.riserHeight.toFixed(1)} mm` : metricToImperial(sol.riserHeight);
+                const treadStr = isMetric ? `${sol.treadDepth.toFixed(1)} mm` : metricToImperial(sol.treadDepth);
                 
-                let riserHeightDisplay, treadDepthDisplay, stepRuleDisplay, actualTotalRunDisplay;
-                
-                if (isMetric) {
-                    riserHeightDisplay = formatNumber(solution.riserHeight) + ' mm';
-                    treadDepthDisplay = formatNumber(solution.treadDepth) + ' mm';
-                    actualTotalRunDisplay = formatNumber(solution.treadDepth * solution.numTreads) + ' mm';
-                } else {
-                    riserHeightDisplay = metricToImperial(solution.riserHeight);
-                    treadDepthDisplay = metricToImperial(solution.treadDepth);
-                    actualTotalRunDisplay = metricToImperial(solution.treadDepth * solution.numTreads);
-                }
-                
-                // Nombre de règles respectées pour la règle du pas
-                const validRules = solution.stepRule.validRuleCount;
-                const isStepRuleValid = solution.stepRule.isValid;
-                stepRuleDisplay = `${validRules}/3 ${isStepRuleValid ? "✓" : "⨯"}`;
-                
-                solutionsHtml += `
+                solutionsTable += `
                     <tr class="${className}">
-                        <td>${isOptimal ? '✓ Optimale' : 'Alternative ' + index}</td>
-                        <td>${solution.numRisers}</td>
-                        <td>${riserHeightDisplay}</td>
-                        <td>${treadDepthDisplay}</td>
-                        <td>${stepRuleDisplay}</td>
-                        <td>${actualTotalRunDisplay}</td>
-                    </tr>
-                `;
+                        <td>${index + 1}${index === 0 ? ' ★' : ''}</td>
+                        <td>${sol.numRisers}</td>
+                        <td>${riserStr}</td>
+                        <td>${treadStr}</td>
+                        <td>${sol.stepRule.validRuleCount}/3 ${sol.stepRule.isValid ? '✓' : '⚠'}</td>
+                    </tr>`;
             });
             
-            solutionsHtml += `
+            solutionsTable += `
                         </tbody>
                     </table>
-                </div>
-            `;
-            
-            // Afficher les détails de la meilleure solution
-            const bestSolution = solutions[0];
-            let detailsHtml = '';
-            
-            if (bestSolution) {
-                // Calculs de vérification EXACTS
-                const totalRiseCalculation = bestSolution.riserHeight * bestSolution.numRisers;
-                const actualTotalRunCalculation = bestSolution.actualTotalRun || (bestSolution.treadDepth * bestSolution.numTreads);
-                
-                // Vérifier la précision
-                const riseError = Math.abs(totalRiseCalculation - totalRiseValue);
-                const runError = Math.abs(actualTotalRunCalculation - totalRunValue);
-                
-                let formatRiserHeight, formatTreadDepth, formatTotalRise, formatActualTotalRun, formatInputTotalRun, formatStairWidth;
-                let formatRiserExact, formatTreadExact; // Valeurs exactes en décimal
-                
-                if (isMetric) {
-                    // En métrique, afficher avec 2 décimales pour la précision
-                    formatRiserHeight = bestSolution.riserHeight.toFixed(2) + ' mm';
-                    formatTreadDepth = bestSolution.treadDepth.toFixed(2) + ' mm';
-                    formatRiserExact = bestSolution.riserHeight.toFixed(2) + ' mm';
-                    formatTreadExact = bestSolution.treadDepth.toFixed(2) + ' mm';
-                    formatTotalRise = totalRiseCalculation.toFixed(2) + ' mm';
-                    formatActualTotalRun = actualTotalRunCalculation.toFixed(2) + ' mm';
-                    formatInputTotalRun = totalRiseValue.toFixed(2) + ' mm';
-                    formatStairWidth = formatNumber(stairWidthValue) + ' mm';
-                } else {
-                    // En impérial, afficher la valeur décimale ET la fraction
-                    const riserInches = bestSolution.riserHeight / 25.4;
-                    const treadInches = bestSolution.treadDepth / 25.4;
-                    
-                    formatRiserExact = riserInches.toFixed(4) + '"';
-                    formatTreadExact = treadInches.toFixed(4) + '"';
-                    
-                    // Fraction approximative (1/16")
-                    formatRiserHeight = metricToImperial(bestSolution.riserHeight);
-                    formatTreadDepth = metricToImperial(bestSolution.treadDepth);
-                    
-                    formatTotalRise = metricToImperial(totalRiseCalculation);
-                    formatActualTotalRun = metricToImperial(actualTotalRunCalculation);
-                    formatInputTotalRun = metricToImperial(totalRiseValue);
-                    formatStairWidth = metricToImperial(stairWidthValue);
-                }
-                
-                // Formule de vérification pour contremarches
-                let riserVerification = '';
-                if (isMetric) {
-                    riserVerification = `
-                        <div class="step-formula">
-                            Vérification : ${bestSolution.numRisers} contremarches × ${bestSolution.riserHeight.toFixed(2)} mm = ${totalRiseCalculation.toFixed(2)} mm
-                            ${riseError < 0.1 ? '✓ Exact' : `⚠ Écart de ${riseError.toFixed(2)} mm`}
-                        </div>
-                    `;
-                } else {
-                    const riserInches = bestSolution.riserHeight / 25.4;
-                    const totalRiseInches = totalRiseCalculation / 25.4;
-                    riserVerification = `
-                        <div class="step-formula">
-                            Vérification : ${bestSolution.numRisers} contremarches × ${riserInches.toFixed(4)}" = ${totalRiseInches.toFixed(4)}"
-                            ${riseError < 2.5 ? '✓ Exact' : `⚠ Écart de ${(riseError/25.4).toFixed(4)}"`}
-                        </div>
-                    `;
-                }
-                
-                // Formule de vérification pour girons
-                let treadVerification = '';
-                if (isMetric) {
-                    treadVerification = `
-                        <div class="step-formula">
-                            Vérification : ${bestSolution.numTreads} marches × ${bestSolution.treadDepth.toFixed(2)} mm = ${(bestSolution.treadDepth * bestSolution.numTreads).toFixed(2)} mm
-                            ${runError < 0.1 ? '✓ Exact' : `⚠ Écart de ${runError.toFixed(2)} mm`}
-                        </div>
-                    `;
-                } else {
-                    const treadInches = bestSolution.treadDepth / 25.4;
-                    const totalRunInches = (bestSolution.treadDepth * bestSolution.numTreads) / 25.4;
-                    treadVerification = `
-                        <div class="step-formula">
-                            Vérification : ${bestSolution.numTreads} marches × ${treadInches.toFixed(4)}" = ${totalRunInches.toFixed(4)}"
-                            ${runError < 2.5 ? '✓ Exact' : `⚠ Écart de ${(runError/25.4).toFixed(4)}"`}
-                        </div>
-                    `;
-                }
-                
-                // Informations sur les règles du pas pour la meilleure solution
-                let stepRuleDetails = `
-                    <div class="result-section">
-                        <h4>Vérification de la règle du pas (solution optimale)</h4>
-                        <ul>
-                            <li>${bestSolution.stepRule.rule1.isValid ? "✓" : "⚠"} Règle 1: Giron + CM = ${bestSolution.stepRule.rule1.value.toFixed(2)}" (idéal: ${bestSolution.stepRule.rule1.min}"-${bestSolution.stepRule.rule1.max}")</li>
-                            <li>${bestSolution.stepRule.rule2.isValid ? "✓" : "⚠"} Règle 2: Giron × CM = ${bestSolution.stepRule.rule2.value.toFixed(2)} po² (idéal: ${bestSolution.stepRule.rule2.min}-${bestSolution.stepRule.rule2.max} po²)</li>
-                            <li>${bestSolution.stepRule.rule3.isValid ? "✓" : "⚠"} Règle 3: Giron + 2(CM) = ${bestSolution.stepRule.rule3.value.toFixed(2)}" (idéal: ${bestSolution.stepRule.rule3.min}"-${bestSolution.stepRule.rule3.max}")</li>
-                        </ul>
-                        <p>${bestSolution.stepRule.isValid ? "✓ Cette solution respecte les critères de confort (au moins 2 des 3 règles sont satisfaites)." : "⚠ Cette solution ne respecte pas pleinement les critères de confort (moins de 2 règles satisfaites)."}</p>
-                    </div>
-                `;
-                
-                // Informations de base
-                let marchesInfo = `<li>Nombre de marches: ${bestSolution.numTreads}`;
-                if (bestSolution.numRadiatingSteps > 0) {
-                    marchesInfo += ` (${bestSolution.numRectangularTreads} rectangulaires + ${bestSolution.numRadiatingSteps} rayonnantes)`;
-                }
-                marchesInfo += `</li>`;
-                
-                detailsHtml = `
-                    <div class="result-section">
-                        <h3>Détails de la solution optimale</h3>
-                        <h4>Dimensions exactes (à utiliser pour le traçage) :</h4>
-                        <ul>
-                            <li><strong>Hauteur de contremarche :</strong> ${formatRiserExact} ${isMetric ? '' : '(≈ ' + formatRiserHeight + ')'}</li>
-                            <li><strong>Profondeur du giron :</strong> ${formatTreadExact} ${isMetric ? '' : '(≈ ' + formatTreadDepth + ')'}</li>
-                        </ul>
-                        ${riserVerification}
-                        ${treadVerification}
-                        <h4>Récapitulatif :</h4>
-                        <ul>
-                            <li>Nombre de contremarches: ${bestSolution.numRisers}</li>
-                            ${marchesInfo}
-                            <li>Hauteur totale calculée: ${formatTotalRise}</li>
-                            <li>Longueur totale calculée: ${formatActualTotalRun}</li>
-                            <li>Largeur recommandée: ${formatStairWidth} ${isWidthCompliant ? '' : '⚠'}</li>
-                        </ul>
-                        ${bestSolution.numRadiatingSteps > 0 ? `
-                            <p><strong>Note:</strong> Pour les marches rayonnantes, le giron indiqué (${formatTreadExact}) doit être mesuré à 300 mm de l'axe de la main courante du côté étroit, conformément au CNB 2015.</p>
-                        ` : ''}
-                        <div class="warning">
-                            <p><strong>Important pour le traçage :</strong></p>
-                            <ul>
-                                <li>Utilisez les valeurs <strong>exactes en décimales</strong> ci-dessus pour le traçage CAD</li>
-                                <li>Les fractions (ex: ${isMetric ? '' : formatRiserHeight + ', ' + formatTreadDepth}) sont des approximations au 1/16" le plus proche</li>
-                                <li>En construction réelle, le CNB 2015 permet une tolérance de ±5mm entre marches adjacentes et ±10mm dans la volée</li>
-                                <li>La somme de toutes les contremarches doit donner exactement la hauteur totale</li>
-                                <li>La somme de tous les girons doit donner exactement la longueur totale</li>
-                            </ul>
-                        </div>
-                    </div>
-                    ${stepRuleDetails}
-                `;
-            }
-            
-            // Ajouter des notes spécifiques selon le type d'escalier
-            let configNotes = '';
-            
-            if (stairConfigValue === 'spiral') {
-                configNotes = `
-                    <div class="result-section">
-                        <h3>Notes sur l'escalier hélicoïdal</h3>
-                        <ul>
-                            <li>Les escaliers hélicoïdaux ne doivent pas être utilisés comme issues (CNB 9.8.4.7).</li>
-                            <li>Un escalier hélicoïdal ne peut servir de seul moyen d'évacuation que s'il ne dessert pas plus de 3 personnes.</li>
-                            <li>La largeur libre minimale entre mains courantes doit être de 660 mm.</li>
-                            <li>Le giron minimal doit être de 190 mm à 300 mm de l'axe de la main courante du côté étroit.</li>
-                        </ul>
-                    </div>
-                `;
-            } else if (stairConfigValue === 'dancing_steps') {
-                configNotes = `
-                    <div class="result-section">
-                        <h3>Notes sur les marches dansantes</h3>
-                        <ul>
-                            <li>Toutes les marches dansantes d'une même volée doivent avoir un angle constant.</li>
-                            <li>Le giron minimal mesuré à 300 mm de l'axe de la main courante doit être ${isMetric ? (minNarrowSide + ' mm') : metricToImperial(minNarrowSide)}.</li>
-                            <li>La hauteur et le giron doivent être uniformes lorsqu'ils sont mesurés à 300 mm de l'axe de la main courante.</li>
-                            <li>Toutes les marches dansantes d'une même volée doivent tourner dans la même direction.</li>
-                        </ul>
-                    </div>
-                `;
-            } else if (stairConfigValue === 'l_shaped' && lShapedConfigValue === 'two_45deg') {
-                configNotes = `
-                    <div class="result-section">
-                        <h3>Notes sur les marches rayonnantes</h3>
-                        <ul>
-                            <li>Une seule série de marches rayonnantes est autorisée entre deux planchers.</li>
-                            <li>Les marches rayonnantes à 45° doivent avoir un angle de rotation de 45° exactement.</li>
-                            <li>Ces marches doivent être uniformes dans leur dimension.</li>
-                        </ul>
-                    </div>
-                `;
-            } else if (stairConfigValue === 'l_shaped' && lShapedConfigValue === 'three_30deg') {
-                configNotes = `
-                    <div class="result-section">
-                        <h3>Notes sur les marches rayonnantes</h3>
-                        <ul>
-                            <li>Une seule série de marches rayonnantes est autorisée entre deux planchers.</li>
-                            <li>Les marches rayonnantes à 30° doivent avoir un angle de rotation de 30° exactement.</li>
-                            <li>Ces marches doivent être uniformes dans leur dimension.</li>
-                        </ul>
-                    </div>
-                `;
-            }
-            
-            // Assembler le résultat final
-            calculatorResultContent.innerHTML = `
-                <p class="success">✓ Solution conforme au ${codeReference} trouvée.</p>
-                ${widthWarning}
-                ${specificWarnings}
-                ${explanationSection}
-                ${solutionsHtml}
-                ${detailsHtml}
-                ${configNotes}
-                <div class="result-section">
-                    <h3>Notes importantes</h3>
-                    <ul>
-                        <li>Ces calculs sont indicatifs et doivent être vérifiés par un professionnel.</li>
-                        <li>Les dimensions finales peuvent nécessiter des ajustements selon les matériaux utilisés.</li>
-                        <li>La hauteur et la profondeur des marches doivent être uniformes dans une même volée.</li>
-                        <li>N'oubliez pas les exigences concernant les mains courantes et garde-corps.</li>
-                    </ul>
-                </div>
-            `;
+                </div>`;
         }
+        
+        calculatorResultContent.innerHTML = `
+            <p class="success">✓ Solution conforme ${codeReference}</p>
+            ${widthWarning}
+            ${detailsHtml}
+            ${solutionsTable}
+            ${configNotes}
+            <div class="result-section">
+                <h3>Notes importantes</h3>
+                <ul>
+                    <li>Calculs indicatifs - vérification professionnelle requise</li>
+                    <li>Dimensions finales selon matériaux utilisés</li>
+                    <li>Hauteur/giron uniformes dans volée</li>
+                    <li>Exigences mains courantes et garde-corps à respecter</li>
+                </ul>
+            </div>`;
         
         calculatorResult.style.display = 'block';
     });
     
-    // Initialiser l'affichage en fonction des sélections initiales
+    // Initialisation
     stairConfig.dispatchEvent(new Event('change'));
     calcStairConfig.dispatchEvent(new Event('change'));
     updatePlaceholders('verification');

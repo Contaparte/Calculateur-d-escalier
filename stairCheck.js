@@ -340,10 +340,18 @@ function displayCalculatorResults(solutions, params) {
     
     if (!solutions || solutions.length === 0) {
         const avgRiser = totalRiseValue / (totalRunValue / 280);
+        const minLength = Math.ceil((totalRiseValue/175)*280/100)*100;
         
         let diagnostic = '<p>⚠ Aucune solution conforme trouvée.</p>';
         diagnostic += '<div class="warning"><p><strong>Suggestions :</strong></p><ul>';
-        diagnostic += `<li>Pour ${(totalRiseValue/1000).toFixed(2)} m de hauteur, longueur min ≈ ${Math.ceil((totalRiseValue/175)*280/100)*100} mm</li>`;
+        
+        // CORRECTION: Formatter selon le système de mesure
+        if (isMetric) {
+            diagnostic += `<li>Pour ${(totalRiseValue/1000).toFixed(2)} m de hauteur, longueur min ≈ ${minLength} mm</li>`;
+        } else {
+            diagnostic += `<li>Pour ${metricToImperial(totalRiseValue)} de hauteur, longueur min ≈ ${metricToImperial(minLength)}</li>`;
+        }
+        
         diagnostic += '<li>Essayez un escalier avec palier</li>';
         diagnostic += '<li>Vérifiez le type (Privé vs Commun)</li>';
         diagnostic += '</ul></div>';
@@ -367,7 +375,11 @@ function displayCalculatorResults(solutions, params) {
     const isWidthCompliant = stairWidthValue >= minWidth;
     let widthWarning = '';
     if (!isWidthCompliant) {
-        widthWarning = `<div class="warning"><p>⚠ Largeur ${stairWidthValue.toFixed(0)} mm < minimum ${minWidth} mm</p></div>`;
+        if (isMetric) {
+            widthWarning = `<div class="warning"><p>⚠ Largeur ${stairWidthValue.toFixed(0)} mm < minimum ${minWidth} mm</p></div>`;
+        } else {
+            widthWarning = `<div class="warning"><p>⚠ Largeur ${metricToImperial(stairWidthValue)} < minimum ${metricToImperial(minWidth)}</p></div>`;
+        }
     }
     
     // Formatage résultats avec précision maximale
@@ -565,9 +577,7 @@ function displayCalculatorResults(solutions, params) {
                 <h3>Notes marches dansantes</h3>
                 <ul>
                     <li>Angle constant dans même volée</li>
-                    <li>Giron min: ${isMetric ? '150 mm' : '6"'} à 300 mm de l'axe</li>
-                    <li>Hauteur/giron uniformes à 300 mm de l'axe</li>
-                    <li>Rotation même direction dans volée</li>
+                    <li>Giron min: ${isMetric ? '150 mm' : '6"'} à 300 mm de l'axe étroit</li>
                 </ul>
             </div>`;
     } else if (stairConfigValue === 'l_shaped' && lShapedConfigValue === 'standard_landing') {
@@ -575,96 +585,59 @@ function displayCalculatorResults(solutions, params) {
             <div class="result-section">
                 <h3>Notes escalier en L avec palier</h3>
                 <ul>
-                    <li>Le palier compte comme un giron surdimensionné</li>
-                    <li>Profondeur du palier = largeur souhaitée</li>
-                    <li>Cumul: girons volée 1 + palier + girons volée 2</li>
-                    <li>Mesures prises sur le côté long de chaque volée</li>
+                    <li>Palier carré: profondeur = largeur escalier</li>
+                    <li>Le palier compte comme 2 girons (profondeur + largeur)</li>
+                    <li>1ère volée: du plancher inférieur au palier</li>
+                    <li>2ème volée: du palier au plancher supérieur</li>
                 </ul>
             </div>`;
     }
     
-    let solutionsTable = '';
-    if (solutions.length > 1) {
-        solutionsTable = `
-            <div class="result-section">
-                <h3>Alternatives</h3>
-                <table class="result-table">
-                    <thead>
-                        <tr>
-                            <th>Solution</th>
-                            <th>CM</th>
-                            <th>Hauteur CM</th>
-                            <th>Girons</th>
-                            <th>Profondeur</th>
-                            <th>Règles</th>
-                        </tr>
-                    </thead>
-                    <tbody>`;
-        
-        solutions.forEach((sol, index) => {
-            const className = index === 0 ? 'optimal-solution' : '';
-            const riserStr = isMetric ? `${sol.riserHeight.toFixed(1)} mm` : metricToImperial(sol.riserHeight);
-            const treadStr = isMetric ? `${sol.treadDepth.toFixed(1)} mm` : metricToImperial(sol.treadDepth);
-            
-            solutionsTable += `
-                <tr class="${className}">
-                    <td>${index + 1}${index === 0 ? ' ⭐' : ''}</td>
-                    <td>${sol.numRisers}</td>
-                    <td>${riserStr}</td>
-                    <td>${sol.numTreads}</td>
-                    <td>${treadStr}</td>
-                    <td>${sol.stepRule.validRuleCount}/3</td>
-                </tr>`;
-        });
-        
-        solutionsTable += `
-                    </tbody>
-                </table>
-            </div>`;
+    if (configNotes) {
+        calculatorResultContent.innerHTML += configNotes;
     }
     
-    calculatorResultContent.innerHTML += configNotes + solutionsTable;
     calculatorResult.style.display = 'block';
+}
+
+// ==================== FONCTION REFORMATAGE SANS RECALCUL ====================
+
+function performCalculation() {
+    if (!lastCalculatorParams || !lastCalculatorParams.solutions) return;
+    
+    // Récupérer le système de mesure actuel
+    const calcMeasurementSystem = document.getElementById('calcMeasurementSystem');
+    const isMetric = calcMeasurementSystem.value === 'metric';
+    
+    // Mettre à jour le paramètre isMetric
+    lastCalculatorParams.isMetric = isMetric;
+    
+    // Reformater l'affichage
+    displayCalculatorResults(lastCalculatorParams.solutions, lastCalculatorParams);
 }
 
 // ==================== FONCTION D'AFFICHAGE DES RÉSULTATS VÉRIFICATION ====================
 
 function displayVerificationResults(params) {
-    const {
-        isCompliant,
-        issues,
-        stepRule,
-        codeReference,
-        isMetric
-    } = params;
+    const { isCompliant, issues, stepRule, codeReference, isMetric } = params;
     
     const result = document.getElementById('result');
     const resultContent = document.getElementById('resultContent');
     
-    result.className = 'result';
+    result.classList.remove('compliant', 'non-compliant');
     
-    if (isCompliant) {
+    if (isCompliant && stepRule.isValid) {
         result.classList.add('compliant');
-        resultContent.innerHTML = `<p>✓ Conforme au ${codeReference}.</p>`;
+        resultContent.innerHTML = `<p class="success">✓ Conforme au ${codeReference}.</p>`;
         
-        if (stepRule.isValid) {
+        if (isMetric) {
             resultContent.innerHTML += `
             <div class="result-section">
                 <p>✓ Règle du pas respectée (${stepRule.validRuleCount}/3):</p>
                 <ul>
-                    <li>${stepRule.rule1.isValid ? "✓" : "✗"} Règle 1: ${stepRule.rule1.value.toFixed(2)}"</li>
-                    <li>${stepRule.rule2.isValid ? "✓" : "✗"} Règle 2: ${stepRule.rule2.value.toFixed(2)} po²</li>
-                    <li>${stepRule.rule3.isValid ? "✓" : "✗"} Règle 3: ${stepRule.rule3.value.toFixed(2)}"</li>
-                </ul>
-            </div>`;
-        } else if (!isMetric) {
-            resultContent.innerHTML += `
-            <div class="result-section">
-                <p>⚠ Règle du pas non respectée (${stepRule.validRuleCount}/3):</p>
-                <ul>
-                    <li>${stepRule.rule1.isValid ? "✓" : "✗"} Règle 1: ${stepRule.rule1.value.toFixed(2)}" (17"-18")</li>
-                    <li>${stepRule.rule2.isValid ? "✓" : "✗"} Règle 2: ${stepRule.rule2.value.toFixed(2)} po² (71-74 po²)</li>
-                    <li>${stepRule.rule3.isValid ? "✓" : "✗"} Règle 3: ${stepRule.rule3.value.toFixed(2)}" (22"-25")</li>
+                    <li>${stepRule.rule1.isValid ? "✓" : "✗"} Règle 1: ${stepRule.rule1.value.toFixed(2)}" (432-457 mm)</li>
+                    <li>${stepRule.rule2.isValid ? "✓" : "✗"} Règle 2: ${stepRule.rule2.value.toFixed(2)} po² (458-477 cm²)</li>
+                    <li>${stepRule.rule3.isValid ? "✓" : "✗"} Règle 3: ${stepRule.rule3.value.toFixed(2)}" (559-635 mm)</li>
                 </ul>
             </div>`;
         } else {
@@ -672,9 +645,34 @@ function displayVerificationResults(params) {
             <div class="result-section">
                 <p>✓ Règle du pas respectée (${stepRule.validRuleCount}/3):</p>
                 <ul>
-                    <li>${stepRule.rule1.isValid ? "✓" : "✗"} Règle 1: ${stepRule.rule1.value.toFixed(2)}"</li>
+                    <li>${stepRule.rule1.isValid ? "✓" : "✗"} Règle 1: ${stepRule.rule1.value.toFixed(2)}" (17"-18")</li>
                     <li>${stepRule.rule2.isValid ? "✓" : "✗"} Règle 2: ${stepRule.rule2.value.toFixed(2)} po²</li>
-                    <li>${stepRule.rule3.isValid ? "✓" : "✗"} Règle 3: ${stepRule.rule3.value.toFixed(2)}"</li>
+                    <li>${stepRule.rule3.isValid ? "✓" : "✗"} Règle 3: ${stepRule.rule3.value.toFixed(2)}" (22"-25")</li>
+                </ul>
+            </div>`;
+        }
+    } else if (isCompliant) {
+        result.classList.add('compliant');
+        resultContent.innerHTML = `<p>✓ Conforme au ${codeReference}.</p>`;
+        
+        if (isMetric) {
+            resultContent.innerHTML += `
+            <div class="result-section">
+                <p>⚠ Règle du pas non respectée (${stepRule.validRuleCount}/3):</p>
+                <ul>
+                    <li>${stepRule.rule1.isValid ? "✓" : "✗"} Règle 1: ${stepRule.rule1.value.toFixed(2)}" (432-457 mm)</li>
+                    <li>${stepRule.rule2.isValid ? "✓" : "✗"} Règle 2: ${stepRule.rule2.value.toFixed(2)} po² (458-477 cm²)</li>
+                    <li>${stepRule.rule3.isValid ? "✓" : "✗"} Règle 3: ${stepRule.rule3.value.toFixed(2)}" (559-635 mm)</li>
+                </ul>
+            </div>`;
+        } else {
+            resultContent.innerHTML += `
+            <div class="result-section">
+                <p>⚠ Règle du pas non respectée (${stepRule.validRuleCount}/3):</p>
+                <ul>
+                    <li>${stepRule.rule1.isValid ? "✓" : "✗"} Règle 1: ${stepRule.rule1.value.toFixed(2)}" (17"-18")</li>
+                    <li>${stepRule.rule2.isValid ? "✓" : "✗"} Règle 2: ${stepRule.rule2.value.toFixed(2)} po² (71-74 po²)</li>
+                    <li>${stepRule.rule3.isValid ? "✓" : "✗"} Règle 3: ${stepRule.rule3.value.toFixed(2)}" (22"-25")</li>
                 </ul>
             </div>`;
         }
@@ -755,47 +753,51 @@ document.addEventListener('DOMContentLoaded', function() {
     const idealTreadImperial = document.getElementById('idealTreadImperial');
     const calculateButton = document.getElementById('calculateStair');
     const calculatorResult = document.getElementById('calculatorResult');
+    const calculatorResultContent = document.getElementById('calculatorResultContent');
     const calcLandingDimensions = document.getElementById('calcLandingDimensions');
     const firstFlightRun = document.getElementById('firstFlightRun');
     const firstFlightRunImperial = document.getElementById('firstFlightRunImperial');
     const secondFlightRun = document.getElementById('secondFlightRun');
     const secondFlightRunImperial = document.getElementById('secondFlightRunImperial');
     
-    // Fonction pour basculer entre les onglets
+    // Gestion des onglets
     tabButtons.forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', () => {
+            const targetTab = button.getAttribute('data-tab');
+            
             tabButtons.forEach(btn => btn.classList.remove('active'));
             tabContents.forEach(content => content.classList.remove('active'));
-            this.classList.add('active');
-            document.getElementById(this.dataset.tab).classList.add('active');
+            
+            button.classList.add('active');
+            document.getElementById(targetTab).classList.add('active');
         });
     });
     
-    // Fonction pour mettre à jour les placeholders selon le système
+    // Fonction d'affichage/masquage des champs selon système
     function updatePlaceholders(section) {
         const system = section === 'verification' ? measurementSystem.value : calcMeasurementSystem.value;
         const isMetric = system === 'metric';
         
-        if (section === 'verification') {
-            document.querySelectorAll('#verification .metric-input').forEach(el => {
-                el.style.display = isMetric ? 'block' : 'none';
-            });
-            document.querySelectorAll('#verification .imperial-input').forEach(el => {
-                el.style.display = isMetric ? 'none' : 'block';
-            });
-        } else {
-            document.querySelectorAll('#calculator .metric-input').forEach(el => {
-                el.style.display = isMetric ? 'block' : 'none';
-            });
-            document.querySelectorAll('#calculator .imperial-input').forEach(el => {
-                el.style.display = isMetric ? 'none' : 'block';
-            });
-        }
+        const sectionId = section === 'verification' ? 'verification' : 'calculator';
+        const metricInputs = document.querySelectorAll(`#${sectionId} .metric-input`);
+        const imperialInputs = document.querySelectorAll(`#${sectionId} .imperial-input`);
+        
+        metricInputs.forEach(input => {
+            input.style.display = isMetric ? 'block' : 'none';
+        });
+        
+        imperialInputs.forEach(input => {
+            input.style.display = isMetric ? 'none' : 'block';
+        });
     }
     
+    // Événements changement de système - CORRECTION: Reformater sans recalculer
     measurementSystem.addEventListener('change', function() {
         updatePlaceholders('verification');
         if (lastVerificationParams) {
+            // Mettre à jour le système de mesure
+            const isMetric = measurementSystem.value === 'metric';
+            lastVerificationParams.isMetric = isMetric;
             displayVerificationResults(lastVerificationParams);
         }
     });
@@ -864,50 +866,40 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Conversion métrique/impérial
-    const metricInputPairs = [
+    // Synchronisation bidirectionnelle métrique/impérial
+    const syncPairs = [
         { metric: totalRun, imperial: totalRunImperial },
         { metric: totalRise, imperial: totalRiseImperial },
         { metric: stairDesiredWidth, imperial: stairDesiredWidthImperial },
         { metric: idealRiser, imperial: idealRiserImperial },
         { metric: idealTread, imperial: idealTreadImperial },
-        { metric: stairWidth, imperial: stairWidthImperial },
-        { metric: headroom, imperial: headroomImperial },
-        { metric: riserHeight, imperial: riserHeightImperial },
-        { metric: treadDepth, imperial: treadDepthImperial },
         { metric: firstFlightRun, imperial: firstFlightRunImperial },
         { metric: secondFlightRun, imperial: secondFlightRunImperial },
+        { metric: riserHeight, imperial: riserHeightImperial },
+        { metric: treadDepth, imperial: treadDepthImperial },
+        { metric: stairWidth, imperial: stairWidthImperial },
+        { metric: headroom, imperial: headroomImperial },
+        { metric: calcMinNarrowSide, imperial: calcMinNarrowSideImperial },
+        { metric: narrowSide, imperial: narrowSideImperial },
+        { metric: calcSpiralWidth, imperial: calcSpiralWidthImperial },
+        { metric: spiralWidth, imperial: spiralWidthImperial },
         { metric: landingDepth, imperial: landingDepthImperial }
     ];
     
-    if (narrowSide && narrowSideImperial) {
-        metricInputPairs.push({ metric: narrowSide, imperial: narrowSideImperial });
-    }
-    if (calcMinNarrowSide && calcMinNarrowSideImperial) {
-        metricInputPairs.push({ metric: calcMinNarrowSide, imperial: calcMinNarrowSideImperial });
-    }
-    if (spiralWidth && spiralWidthImperial) {
-        metricInputPairs.push({ metric: spiralWidth, imperial: spiralWidthImperial });
-    }
-    if (calcSpiralWidth && calcSpiralWidthImperial) {
-        metricInputPairs.push({ metric: calcSpiralWidth, imperial: calcSpiralWidthImperial });
-    }
-    
-    metricInputPairs.forEach(pair => {
+    syncPairs.forEach(pair => {
         if (pair.metric && pair.imperial) {
             pair.metric.addEventListener('input', function() {
-                const value = parseFloat(this.value);
-                if (!isNaN(value) && value > 0) {
-                    pair.imperial.value = metricToImperial(value);
+                const mmValue = parseFloat(this.value);
+                if (!isNaN(mmValue) && mmValue > 0) {
+                    pair.imperial.value = metricToImperial(mmValue);
                 }
             });
             
             pair.imperial.addEventListener('input', function() {
                 const validated = validateImperialInput(this.value);
-                this.value = validated;
-                const value = imperialToMetric(validated);
-                if (value !== null && value > 0) {
-                    pair.metric.value = value.toFixed(2);
+                const mmValue = imperialToMetric(validated);
+                if (mmValue !== null && mmValue > 0) {
+                    pair.metric.value = mmValue.toFixed(0);
                 }
             });
         }
@@ -915,7 +907,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // ==================== CALCUL D'ESCALIER ====================
     
-    function performCalculation() {
+    calculateButton.addEventListener('click', function() {
         document.querySelectorAll('#calculator .error').forEach(el => el.textContent = '');
         
         const isMetric = calcMeasurementSystem.value === 'metric';
@@ -992,7 +984,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const priorityComfort = document.querySelector('input[name="calcPriority"]:checked');
         const priority = priorityComfort ? priorityComfort.value : 'comfort';
         
-        const solutions = calculateOptimalStair(totalRise, totalRunValue, {
+        const solutions = calculateOptimalStair(totalRiseValue, totalRunValue, {
             buildingType: buildingTypeValue,
             stairType: stairTypeValue,
             stairConfig: stairConfigValue,
@@ -1005,6 +997,7 @@ document.addEventListener('DOMContentLoaded', function() {
             secondFlightRun: secondFlightRunValue
         });
         
+        // CORRECTION: Sauvegarder les solutions pour reformatage
         lastCalculatorParams = {
             totalRiseValue,
             totalRunValue,
@@ -1013,16 +1006,14 @@ document.addEventListener('DOMContentLoaded', function() {
             stairTypeValue,
             stairConfigValue,
             lShapedConfigValue,
-            isMetric
+            isMetric,
+            solutions  // AJOUT: Sauvegarder les solutions
         };
         
         displayCalculatorResults(solutions, lastCalculatorParams);
-    }
+    });
     
-    calculateButton.addEventListener('click', performCalculation);
-    
-    // ==================== RECALCUL AVEC PRIORITÃ‰ CHANGÃ‰E ====================
-    
+    // Priority change listener
     const priorityComfort = document.querySelector('input[name="calcPriority"][value="comfort"]');
     const prioritySpace = document.querySelector('input[name="calcPriority"][value="space"]');
     

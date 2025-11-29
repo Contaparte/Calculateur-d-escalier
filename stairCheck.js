@@ -1226,12 +1226,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
             
+            // Ne pas modifier la valeur pendant la saisie - seulement convertir
             pair.imperial.addEventListener('input', function() {
-                const validated = validateImperialInput(this.value);
-                this.value = validated;
-                const val = imperialToMetric(validated);
+                const val = imperialToMetric(this.value);
                 if (val !== null && val > 0) {
                     pair.metric.value = val.toFixed(2);
+                }
+            });
+            
+            // Nettoyer/normaliser seulement à la perte de focus
+            pair.imperial.addEventListener('blur', function() {
+                const validated = validateImperialInput(this.value);
+                if (validated && validated !== this.value) {
+                    this.value = validated;
                 }
             });
         }

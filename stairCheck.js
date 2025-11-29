@@ -166,66 +166,57 @@ function metricToImperialPrecise(mmValue) {
  * IMPORTANT: L'ordre des regex est critique - les formats simples (pouces seuls) 
  * doivent être testés APRÈS les formats avec apostrophe obligatoire
  */
+/**
+ * Convertit une valeur impériale en millimètres
+ * Accepte de nombreux formats sans nettoyage préalable requis
+ */
 function imperialToMetric(imperialValue) {
     if (!imperialValue) return null;
     
-    imperialValue = validateImperialInput(imperialValue);
-    if (!imperialValue) return null;
+    let input = imperialValue.toString().trim();
+    // Normaliser les apostrophes et guillemets
+    input = input.replace(/[''′]/g, "'").replace(/[""″]/g, '"');
     
     let match;
     
-    // Format: X' Y Z/W" (ex: 10' 2 1/2") - APOSTROPHE OBLIGATOIRE
-    match = imperialValue.match(/^(\d+(?:\.\d+)?)'\s*(\d+(?:\.\d+)?)\s+(\d+)\/(\d+)(?:"|in)?$/);
+    // Format: X' Y Z/W" (ex: 10' 2 1/2", 10'2 1/2")
+    match = input.match(/^(\d+(?:\.\d+)?)'[\s-]*(\d+(?:\.\d+)?)\s+(\d+)\/(\d+)(?:"|in)?$/);
     if (match) {
-        const feet = parseFloat(match[1]) || 0;
-        const inches = parseFloat(match[2]);
-        const num = parseFloat(match[3]);
-        const den = parseFloat(match[4]);
-        return (feet * 12 + inches + (num / den)) * 25.4;
+        return (parseFloat(match[1]) * 12 + parseFloat(match[2]) + parseFloat(match[3]) / parseFloat(match[4])) * 25.4;
     }
     
-    // Format: X' Y" (ex: 10' 2") - APOSTROPHE OBLIGATOIRE
-    match = imperialValue.match(/^(\d+(?:\.\d+)?)'\s*(\d+(?:\.\d+)?)(?:"|in)?$/);
+    // Format: X' Y" (ex: 10' 2", 10'2", 10'-2")
+    match = input.match(/^(\d+(?:\.\d+)?)'[\s-]*(\d+(?:\.\d+)?)(?:"|in)?$/);
     if (match) {
-        const feet = parseFloat(match[1]) || 0;
-        const inches = parseFloat(match[2]) || 0;
-        return (feet * 12 + inches) * 25.4;
+        return (parseFloat(match[1]) * 12 + parseFloat(match[2])) * 25.4;
     }
     
-    // Format: X' Z/W" (ex: 3' 1/2") - APOSTROPHE OBLIGATOIRE
-    match = imperialValue.match(/^(\d+(?:\.\d+)?)'\s*(\d+)\/(\d+)(?:"|in)?$/);
+    // Format: X' Z/W" (ex: 3' 1/2", 3'1/2")
+    match = input.match(/^(\d+(?:\.\d+)?)'[\s-]*(\d+)\/(\d+)(?:"|in)?$/);
     if (match) {
-        const feet = parseFloat(match[1]) || 0;
-        const num = parseFloat(match[2]);
-        const den = parseFloat(match[3]);
-        return (feet * 12 + (num / den)) * 25.4;
+        return (parseFloat(match[1]) * 12 + parseFloat(match[2]) / parseFloat(match[3])) * 25.4;
     }
     
-    // Format: X' (ex: 10') - APOSTROPHE OBLIGATOIRE
-    match = imperialValue.match(/^(\d+(?:\.\d+)?)'$/);
+    // Format: X' (ex: 10', 10 ft)
+    match = input.match(/^(\d+(?:\.\d+)?)\s*(?:'|ft|feet)$/);
     if (match) {
         return parseFloat(match[1]) * 12 * 25.4;
     }
     
-    // Format: Y Z/W" (ex: 7 1/4") - Pouces avec fraction, sans apostrophe
-    match = imperialValue.match(/^(\d+(?:\.\d+)?)\s+(\d+)\/(\d+)(?:"|in)?$/);
+    // Format: Y Z/W" (ex: 7 1/4", 7-1/4")
+    match = input.match(/^(\d+(?:\.\d+)?)[\s-]+(\d+)\/(\d+)(?:"|in)?$/);
     if (match) {
-        const inches = parseFloat(match[1]);
-        const num = parseFloat(match[2]);
-        const den = parseFloat(match[3]);
-        return (inches + (num / den)) * 25.4;
+        return (parseFloat(match[1]) + parseFloat(match[2]) / parseFloat(match[3])) * 25.4;
     }
     
-    // Format: Z/W" (ex: 1/2") - Fraction seule
-    match = imperialValue.match(/^(\d+)\/(\d+)(?:"|in)?$/);
+    // Format: Z/W" (ex: 1/2")
+    match = input.match(/^(\d+)\/(\d+)(?:"|in)?$/);
     if (match) {
-        const num = parseFloat(match[1]);
-        const den = parseFloat(match[2]);
-        return (num / den) * 25.4;
+        return (parseFloat(match[1]) / parseFloat(match[2])) * 25.4;
     }
     
-    // Format: Y" (ex: 108") - Pouces seuls (DOIT être testé APRÈS les formats avec ')
-    match = imperialValue.match(/^(\d+(?:\.\d+)?)(?:"|in)?$/);
+    // Format: Y" ou Y (ex: 108", 108, 36in)
+    match = input.match(/^(\d+(?:\.\d+)?)\s*(?:"|in|inch|inches)?$/);
     if (match) {
         return parseFloat(match[1]) * 25.4;
     }

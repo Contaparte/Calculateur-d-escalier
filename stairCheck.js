@@ -782,16 +782,29 @@ function displayCalculatorResults(solutions, params) {
         const minRisers = Math.ceil(totalRiseValue / limits.maxRiser);
         const minTreads = minRisers - 1;
         const minLength = minTreads * limits.minTread;
+        const calculatedTread = params.totalRunValue / minTreads;
+        
+        const codeRef = buildingTypeValue === 'part3' ? 'Partie 3' : 'Partie 9';
         
         let html = '<h3>⚠️ Aucune solution conforme trouvée</h3>';
         html += '<div class="warning">';
+        html += '<p><strong>Raison :</strong></p>';
+        html += '<ul>';
+        
+        if (isMetric) {
+            html += `<li>Giron calculé : ${calculatedTread.toFixed(0)} mm < minimum requis ${limits.minTread} mm (${codeRef})</li>`;
+        } else {
+            html += `<li>Giron calculé : ${metricToImperial(calculatedTread)} < minimum requis ${metricToImperial(limits.minTread)} (${codeRef})</li>`;
+        }
+        
+        html += '</ul>';
         html += '<p><strong>Suggestions :</strong></p>';
         html += '<ul>';
         
         if (isMetric) {
-            html += `<li>Pour ${(totalRiseValue / 1000).toFixed(2)} m de hauteur, longueur minimale ≈ ${minLength.toFixed(0)} mm</li>`;
+            html += `<li>Longueur minimale requise ≈ ${minLength.toFixed(0)} mm (${minTreads} girons × ${limits.minTread} mm)</li>`;
         } else {
-            html += `<li>Pour ${metricToImperial(totalRiseValue)} de hauteur, longueur minimale ≈ ${metricToImperial(minLength)}</li>`;
+            html += `<li>Longueur minimale requise ≈ ${metricToImperial(minLength)} (${minTreads} girons × ${metricToImperial(limits.minTread)})</li>`;
         }
         
         html += '<li>Essayez une configuration avec palier (escalier en L ou U)</li>';

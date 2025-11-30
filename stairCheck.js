@@ -795,7 +795,7 @@ function displayCalculatorResults(solutions, params) {
         
         const codeRef = buildingTypeValue === 'part3' ? 'Partie 3' : 'Partie 9';
         
-        let html = '<h3>⚠  Aucune solution conforme trouvée</h3>';
+        let html = '<h3>Aucune solution conforme trouvée</h3>';
         html += '<div class="warning">';
         html += '<p><strong>Raison :</strong></p>';
         html += '<ul>';

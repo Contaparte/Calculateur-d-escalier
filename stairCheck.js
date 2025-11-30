@@ -859,7 +859,7 @@ function displayCalculatorResults(solutions, params) {
     
     // Dimensions principales
     html += '<div class="result-section">';
-    html += '<h4>📐 Dimensions calculées</h4>';
+    html += '<h4>Dimensions calculées</h4>';
     html += '<ul>';
     html += `<li><strong>Contremarches :</strong> ${best.numRisers} × ${formatValuePrecise(best.riserHeight, isMetric)}</li>`;
     html += `<li><strong>Girons :</strong> ${best.numTreads} × ${formatValuePrecise(best.treadDepth, isMetric)}</li>`;
@@ -915,7 +915,7 @@ function displayCalculatorResults(solutions, params) {
     
     // Instructions de traçage
     html += '<div class="warning">';
-    html += '<p><strong>📐 Instructions pour le traçage CAD :</strong></p>';
+    html += '<p><strong>Instructions pour le traçage CAD :</strong></p>';
     html += '<ul>';
     html += `<li>Utilisez les ${isMetric ? 'valeurs exactes en mm' : 'valeurs décimales entre parenthèses'}</li>`;
     html += `<li>Nombre de contremarches : ${best.numRisers}</li>`;
@@ -957,7 +957,7 @@ function displayCalculatorResults(solutions, params) {
         solutions.forEach((sol, i) => {
             const rowClass = i === 0 ? 'optimal-solution' : '';
             html += `<tr class="${rowClass}">`;
-            html += `<td>${i + 1}${i === 0 ? ' ⭐' : ''}</td>`;
+            html += `<td>${i + 1}</td>`;
             html += `<td>${sol.numRisers}</td>`;
             html += `<td>${formatValue(sol.riserHeight, isMetric, 1)}</td>`;
             html += `<td>${sol.numTreads}</td>`;

@@ -852,7 +852,7 @@ function displayCalculatorResults(solutions, params) {
     
     // Titre et statut
     const isCompliant = best.stepRule.isValid && isWidthOk;
-    html += `<h3>${isCompliant ? '✓' : '⚠ '} Solution optimale (${codeRef})</h3>`;
+    html += `<h3>${isCompliant ? '✓' : '⚠'} Solution optimale (${codeRef})</h3>`;
     
     // Avertissement largeur
     if (!isWidthOk) {

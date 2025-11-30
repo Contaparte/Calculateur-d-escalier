@@ -269,10 +269,12 @@ function checkStepRule(riserMm, treadMm) {
     const rule3Valid = rule3Value >= 22 && rule3Value <= 25;
     
     const validCount = [rule1Valid, rule2Valid, rule3Valid].filter(Boolean).length;
+    const validCountLabel = `${validCount} sur 3`;
     
     return {
         isValid: validCount >= 2,
         validCount,
+        validCountLabel,
         rule1: { value: rule1Value, isValid: rule1Valid, range: '17"-18"' },
         rule2: { value: rule2Value, isValid: rule2Valid, range: '71-74 po²' },
         rule3: { value: rule3Value, isValid: rule3Valid, range: '22"-25"' }

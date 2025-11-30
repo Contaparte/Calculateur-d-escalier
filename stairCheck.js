@@ -908,7 +908,7 @@ function displayCalculatorResults(solutions, params) {
     
     // Règle du pas
     html += '<div class="result-section">';
-    html += `<h4>${best.stepRule.isValid ? '✓' : '⚠ '} Règle du pas (${best.stepRule.validCount}/3)</h4>`;
+    html += `<h4>${best.stepRule.isValid ? '✓' : '⚠ '} Règle du pas (${best.stepRule.validCount} sur 3)</h4>`;
     html += '<ul>';
     html += `<li>${best.stepRule.rule1.isValid ? '✓' : '✗'} G + H = ${best.stepRule.rule1.value.toFixed(2)}" (${best.stepRule.rule1.range})</li>`;
     html += `<li>${best.stepRule.rule2.isValid ? '✓' : '✗'} G × H = ${best.stepRule.rule2.value.toFixed(2)} (${best.stepRule.rule2.range})</li>`;
@@ -964,7 +964,7 @@ function displayCalculatorResults(solutions, params) {
             html += `<td>${formatValue(sol.riserHeight, isMetric, 1)}</td>`;
             html += `<td>${sol.numTreads}</td>`;
             html += `<td>${formatValue(sol.treadDepth, isMetric, 1)}</td>`;
-            html += `<td>${sol.stepRule.validCount}/3</td>`;
+            html += `<td>${sol.stepRule.validCount} sur 3</td>`;
             html += '</tr>';
         });
         
@@ -1011,7 +1011,7 @@ function displayVerificationResults(params) {
     
     // Règle du pas
     html += '<div class="result-section">';
-    html += `<h4>${stepRule.isValid ? '✓' : '⚠ '} Règle du pas (${stepRule.validCount}/3)</h4>`;
+    html += `<h4>${stepRule.isValid ? '✓' : '⚠ '} Règle du pas (${stepRule.validCount} sur 3)</h4>`;
     html += '<ul>';
     html += `<li>${stepRule.rule1.isValid ? '✓' : '✗'} Règle 1 (G+H) : ${stepRule.rule1.value.toFixed(2)}" (17"-18")</li>`;
     html += `<li>${stepRule.rule2.isValid ? '✓' : '✗'} Règle 2 (G×H) : ${stepRule.rule2.value.toFixed(2)} po² (71-74)</li>`;

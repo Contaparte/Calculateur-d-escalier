@@ -859,7 +859,7 @@ function displayCalculatorResults(solutions, params) {
     
     // Dimensions principales
     html += '<div class="result-section">';
-    html += '<h4>📐 Dimensions calculées</h4>';
+    html += '<h4>📐 Dimensions calculées</h4>';
     html += '<ul>';
     html += `<li><strong>Contremarches :</strong> ${best.numRisers} × ${formatValuePrecise(best.riserHeight, isMetric)}</li>`;
     html += `<li><strong>Girons :</strong> ${best.numTreads} × ${formatValuePrecise(best.treadDepth, isMetric)}</li>`;
@@ -915,7 +915,7 @@ function displayCalculatorResults(solutions, params) {
     
     // Instructions de traçage
     html += '<div class="warning">';
-    html += '<p><strong>📐 Instructions pour le traçage CAD :</strong></p>';
+    html += '<p><strong>📐Instructions pour le traçage CAD :</strong></p>';
     html += '<ul>';
     html += `<li>Utilisez les ${isMetric ? 'valeurs exactes en mm' : 'valeurs décimales entre parenthèses'}</li>`;
     html += `<li>Nombre de contremarches : ${best.numRisers}</li>`;
@@ -927,7 +927,7 @@ function displayCalculatorResults(solutions, params) {
     // Notes spécifiques selon la configuration
     if (stairConfigValue === 'l_shaped' && lShapedConfigValue === 'standard_landing') {
         html += '<div class="result-section">';
-        html += '<h4>📐 Notes - Escalier en L avec palier</h4>';
+        html += '<h4>📐 Notes - Escalier en L avec palier</h4>';
         html += '<ul>';
         html += '<li>Le palier est un giron surdimensionné (carré)</li>';
         html += '<li>Profondeur palier = largeur palier = largeur de l\'escalier</li>';
@@ -937,7 +937,7 @@ function displayCalculatorResults(solutions, params) {
     
     if (best.isSpiral) {
         html += '<div class="result-section">';
-        html += '<h4>📐 Notes - Escalier hélicoïdal</h4>';
+        html += '<h4>📐 Notes - Escalier hélicoïdal</h4>';
         html += '<ul>';
         html += '<li>Giron mesuré à 300 mm de l\'axe de la main courante</li>';
         html += '<li>Largeur libre min. entre mains courantes : 660 mm</li>';
@@ -1349,9 +1349,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (!isValid) return;
         
-        // Priorité de conception
-        const priorityRadio = document.querySelector('input[name="calcPriority"]:checked');
-        const priority = priorityRadio ? priorityRadio.value : 'comfort';
+        // Priorité de conception fixée au confort
+        const priority = 'comfort';
         
         // Calculer
         const solutions = calculateOptimalStair({
@@ -1389,15 +1388,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     calculateButton.addEventListener('click', performCalculation);
-    
-    // Recalcul automatique lors du changement de priorité
-    document.querySelectorAll('input[name="calcPriority"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            if (lastCalculatorParams) {
-                performCalculation();
-            }
-        });
-    });
     
     // ===== Vérification de conformité =====
     

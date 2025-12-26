@@ -856,7 +856,7 @@ function displayCalculatorResults(solutions, params) {
     
     // Avertissement largeur
     if (!isWidthOk) {
-        html += `<div class="warning"><p>⚠  Largeur ${formatValue(stairWidthValue, isMetric, 0)} inférieure au minimum requis (${formatValue(limits.minWidth, isMetric, 0)})</p></div>`;
+        html += `<div class="warning"><p>⚠ Largeur ${formatValue(stairWidthValue, isMetric, 0)} inférieure au minimum requis (${formatValue(limits.minWidth, isMetric, 0)})</p></div>`;
     }
     
     // Dimensions principales

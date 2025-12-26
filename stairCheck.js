@@ -929,7 +929,7 @@ function displayCalculatorResults(solutions, params) {
     // Notes spécifiques selon la configuration
     if (stairConfigValue === 'l_shaped' && lShapedConfigValue === 'standard_landing') {
         html += '<div class="result-section">';
-        html += '<h4>📐 Notes - Escalier en L avec palier</h4>';
+        html += '<h4>Notes - Escalier en L avec palier</h4>';
         html += '<ul>';
         html += '<li>Le palier est un giron surdimensionné (carré)</li>';
         html += '<li>Profondeur palier = largeur palier = largeur de l\'escalier</li>';
@@ -939,7 +939,7 @@ function displayCalculatorResults(solutions, params) {
     
     if (best.isSpiral) {
         html += '<div class="result-section">';
-        html += '<h4>📐 Notes - Escalier hélicoïdal</h4>';
+        html += '<h4>Notes - Escalier hélicoïdal</h4>';
         html += '<ul>';
         html += '<li>Giron mesuré à 300 mm de l\'axe de la main courante</li>';
         html += '<li>Largeur libre min. entre mains courantes : 660 mm</li>';

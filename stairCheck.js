@@ -856,7 +856,7 @@ function displayCalculatorResults(solutions, params) {
     
     // Avertissement largeur
     if (!isWidthOk) {
-        html += `<div class="warning"><p>⚠ Largeur ${formatValue(stairWidthValue, isMetric, 0)} inférieure au minimum requis (${formatValue(limits.minWidth, isMetric, 0)})</p></div>`;
+        html += `<div class="warning"><p>⚠ Largeur ${formatValue(stairWidthValue, isMetric, 0)} inférieure au minimum requis (${formatValue(limits.minWidth, isMetric, 0)})</p></div>`;
     }
     
     // Dimensions principales
@@ -877,7 +877,7 @@ function displayCalculatorResults(solutions, params) {
         html += `<li><strong>Girons volée 2 :</strong> ${best.treadsInFlight2}</li>`;
     }
     
-    html += `<li><strong>Largeur :</strong> ${formatValue(stairWidthValue, isMetric, 0)} ${isWidthOk ? '✓' : '⚠ '}</li>`;
+    html += `<li><strong>Largeur :</strong> ${formatValue(stairWidthValue, isMetric, 0)} ${isWidthOk ? '✓' : '⚠ '}</li>`;
     html += '</ul></div>';
     
     // Vérification mathématique
@@ -888,7 +888,7 @@ function displayCalculatorResults(solutions, params) {
         const totalRiseCalc = best.riserHeight * best.numRisers;
         const riseError = Math.abs(totalRiseCalc - totalRiseValue);
         html += `${best.numRisers} × ${best.riserHeight.toFixed(4)} mm = ${totalRiseCalc.toFixed(4)} mm `;
-        html += riseError < 0.01 ? '✓ Exact' : `⚠  Écart ${riseError.toFixed(4)} mm`;
+        html += riseError < 0.01 ? '✓ Exact' : `⚠ Écart ${riseError.toFixed(4)} mm`;
         
         if (best.useLandingConfiguration) {
             html += '<br>';
@@ -896,7 +896,7 @@ function displayCalculatorResults(solutions, params) {
             const availableCalc = best.availableForTreads;
             const treadError = Math.abs(totalTreadCalc - availableCalc);
             html += `${best.numTreads} × ${best.treadDepth.toFixed(4)} mm = ${totalTreadCalc.toFixed(4)} mm `;
-            html += treadError < 0.01 ? '✓ Exact' : `⚠  Écart ${treadError.toFixed(4)} mm`;
+            html += treadError < 0.01 ? '✓ Exact' : `⚠ Écart ${treadError.toFixed(4)} mm`;
         }
     } else {
         const riserIn = best.riserHeight / 25.4;

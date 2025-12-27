@@ -1193,24 +1193,21 @@ function generateLShapedStairVisualization(stairData) {
         svg += '<text x="' + r(palierX - 8) + '" y="' + r(planStartY + stairW2_plan - treadW2_exact/2 + 3) + '" style="font:8px Arial;fill:#666;" text-anchor="end">' + (flight1Treads + 1) + '</text>';
         svg += '<text x="' + r(palierX - 8) + '" y="' + r(planStartY + treadW2_exact/2 + 3) + '" style="font:8px Arial;fill:#666;" text-anchor="end">' + numTreads + '</text>';
         
-        // Fleches de montee - 2 volees distinctes
-        // Volee 1 : fleche horizontale
+        // Fleche de montee continue - une seule fleche qui traverse tout l'escalier
         const arrow1Y = r(planStartY + stairW2_plan + stairWidth_plan/2);
-        const arrow1StartX = r(planStartX + treadW1_exact);
-        const arrow1EndX = r(planStartX + stairW1_plan);
-        svg += '<line x1="' + arrow1StartX + '" y1="' + arrow1Y + '" x2="' + arrow1EndX + '" y2="' + arrow1Y + '" stroke="#1b5e20" stroke-width="1.5" marker-end="url(#arrLMontee)"/>';
+        const arrow1StartX = r(planStartX + treadW1_exact);  // Depart a la 1ere CM
+        const arrowCornerX = r(palierX + stairWidth_plan/2);  // Centre du palier
+        const arrowEndY = r(planStartY);  // Fin a la derniere CM
         
-        // E.H. au depart de la volee 1
+        // Segment horizontal (volee 1)
+        svg += '<line x1="' + arrow1StartX + '" y1="' + arrow1Y + '" x2="' + arrowCornerX + '" y2="' + arrow1Y + '" stroke="#1b5e20" stroke-width="1.5"/>';
+        // Segment dans le palier (virage)
+        svg += '<line x1="' + arrowCornerX + '" y1="' + arrow1Y + '" x2="' + arrowCornerX + '" y2="' + r(planStartY + stairW2_plan) + '" stroke="#1b5e20" stroke-width="1.5"/>';
+        // Segment vertical avec fleche (volee 2)
+        svg += '<line x1="' + arrowCornerX + '" y1="' + r(planStartY + stairW2_plan) + '" x2="' + arrowCornerX + '" y2="' + arrowEndY + '" stroke="#1b5e20" stroke-width="1.5" marker-end="url(#arrLMontee)"/>';
+        
+        // E.H. au depart
         svg += '<text x="' + r(arrow1StartX - 5) + '" y="' + (arrow1Y + 4) + '" style="font:bold 9px Arial;fill:#1b5e20;" text-anchor="end">E.H.</text>';
-        
-        // Volee 2 : fleche verticale
-        const arrow2X = r(palierX + stairWidth_plan/2);
-        const arrow2StartY = r(planStartY + stairW2_plan - treadW2_exact);
-        const arrow2EndY = r(planStartY);
-        svg += '<line x1="' + arrow2X + '" y1="' + arrow2StartY + '" x2="' + arrow2X + '" y2="' + arrow2EndY + '" stroke="#1b5e20" stroke-width="1.5" marker-end="url(#arrLMontee)"/>';
-        
-        // E.H. au depart de la volee 2 (apres le palier)
-        svg += '<text x="' + (arrow2X + 5) + '" y="' + r(arrow2StartY + 4) + '" style="font:bold 9px Arial;fill:#1b5e20;">E.H.</text>';
         
         // Cotations
         const dimY1 = r(planStartY + stairW2_plan + stairWidth_plan + 25);

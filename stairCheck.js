@@ -1802,7 +1802,7 @@ function displayCalculatorResults(solutions, params) {
         html += '<h4>Alternatives</h4>';
         html += '<table class="result-table">';
         html += '<thead><tr>';
-        html += '<th>#</th><th>CM</th><th>Hauteur CM</th><th>Girons</th><th>Profondeur</th><th>Règle</th>';
+        html += '<th>#</th><th>CM</th><th>Hauteur CM</th><th>Girons</th><th>Profondeur</th><th>Règle du pas</th>';
         html += '</tr></thead><tbody>';
         
         solutions.forEach((sol, i) => {

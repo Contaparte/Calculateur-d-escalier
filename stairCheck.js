@@ -3200,7 +3200,7 @@ function displayCalculatorResults(solutions, params) {
    radiatingDesc = best.radiatingAngle === 45 ? '2×2×45°' : '2×3×30°';
   }
   html += `<li><strong>Marches rayonnantes :</strong> ${best.totalRadiatingSteps} (${radiatingDesc})</li>`;
-  html += `<li><strong>Total girons :</strong> ${best.numTreads}</li>`;
+  html += `<li><strong>Total girons marches rectangulaires :</strong> ${best.numTreads}</li>`;
   // Afficher le palier pour les escaliers en U avec palier
   if (best.numLandings > 0) {
    html += `<li><strong>Palier :</strong> ${best.numLandings}</li>`;

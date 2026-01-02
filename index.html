@@ -455,7 +455,7 @@
  
  <p><strong>Nature de l'outil :</strong> Ce calculateur est un outil <strong>éducatif et technique</strong> basé sur le Code de construction du Québec, Chapitre I : Bâtiment, et Code national du bâtiment : Canada 2020 (modifié). Il permet d'effectuer les calculs de dimensions d'escaliers conformes aux exigences du Code.</p>
  
- <p>Cet outil <strong>n'est pas un rapport d'expertise</strong>. Les résultats générés sont fournis Ç   titre indicatif et éducatif. L'utilisateur demeure responsable de valider la conformité des résultats auprès d'un professionnel qualifié ou de l'autorité compétente.</p>
+ <p>Cet outil <strong>n'est pas un rapport d'expertise</strong>. Les résultats générés sont fournis à titre indicatif et éducatif. L'utilisateur demeure responsable de valider la conformité des résultats auprès d'un professionnel qualifié ou de l'autorité compétente.</p>
  
  <h3>Pour qui est conçu cet outil?</h3>
  
@@ -468,7 +468,7 @@
  <ul>
   <li>Les établissements de réunion (groupe A)</li>
   <li>Les établissements de soins, de traitement ou de détention (groupes B1, B2, B4)</li>
-  <li>Les établissements industriels Ç   risques très élevés (groupe F1)</li>
+  <li>Les établissements industriels à risques très élevés (groupe F1)</li>
   <li>Les bâtiments dépassant certains seuils de superficie ou de hauteur</li>
  </ul>
  
@@ -531,11 +531,11 @@
       <label for="calcStairConfig">Configuration de l'escalier :</label>
       <select id="calcStairConfig">
        <option value="straight">Volée droite</option>
-       <option value="turning_30">Volée tournante Ç   30° (1 marche rayonnante)</option>
-       <option value="turning_45">Volée tournante Ç   45° (1 marche rayonnante)</option>
-       <option value="turning_60">Volée tournante Ç   60° (2 marches de 30°)</option>
-       <option value="l_shaped">Volée tournante Ç   90° (en "L")</option>
-       <option value="u_shaped">Volée tournante Ç   180° (en "U")</option>
+       <option value="turning_30">Volée tournante à 30° (1 marche rayonnante)</option>
+       <option value="turning_45">Volée tournante à 45° (1 marche rayonnante)</option>
+       <option value="turning_60">Volée tournante à 60° (2 marches de 30°)</option>
+       <option value="l_shaped">Volée tournante à 90° (en "L")</option>
+       <option value="u_shaped">Volée tournante à 180° (en "U")</option>
        <option value="dancing_steps">Marches dansantes</option>
        <option value="spiral">Hélicoïdal</option>
       </select>
@@ -546,9 +546,9 @@
     <div id="calcLShapedOptions" class="sub-options" style="display: none;">
      <div class="form-row">
       <div class="form-col">
-       <label for="calcLShapedConfig">Type de virage Ç   90° :</label>
+       <label for="calcLShapedConfig">Type de virage à 90° :</label>
        <select id="calcLShapedConfig">
-        <option value="standard_landing">Palier standard (tournant Ç   90°)</option>
+        <option value="standard_landing">Palier standard (tournant à 90°)</option>
         <option value="two_45deg">2 marches rayonnantes de 45°</option>
         <option value="three_30deg">3 marches rayonnantes de 30°</option>
        </select>
@@ -560,7 +560,7 @@
     <div id="calcUShapedOptions" class="sub-options" style="display: none;">
      <div class="form-row">
       <div class="form-col">
-       <label for="calcUShapedConfig">Type de virage Ç   180° :</label>
+       <label for="calcUShapedConfig">Type de virage à 180° :</label>
        <select id="calcUShapedConfig">
         <option value="rect_landing_rect">Marche(s) rectangulaire(s) + palier + marche(s) rectangulaire(s)</option>
         <option value="rect_landing_radiating_rect">Marche(s) rectangulaire(s) + palier + marches rayonnantes + marche(s) rectangulaire(s)</option>
@@ -590,7 +590,7 @@
        </select>
       </div>
       <div class="form-col">
-       <label for="calcMinNarrowSide">Giron min. côté étroit : <span class="info-icon" title="Mesuré Ç   300 mm de l'axe de la main courante (CNB 9.8.4.6)">i</span></label>
+       <label for="calcMinNarrowSide">Giron min. côté étroit : <span class="info-icon" title="Mesuré à 300 mm de l'axe de la main courante (CNB 9.8.4.6)">i</span></label>
        <input type="text" id="calcMinNarrowSide" class="metric-input" placeholder="Ex: 150 mm">
        <input type="text" id="calcMinNarrowSideImperial" class="imperial-input" placeholder="Ex: 6&quot;" style="display: none;">
        <div class="error" id="calcMinNarrowSideError"></div>
@@ -598,7 +598,7 @@
      </div>
      <div class="form-row">
       <div class="form-col">
-       <label for="calcDancingAngle">Angle total de rotation : <span class="info-icon" title="Angle total de virage des marches dansantes (30° Ç   180°)">i</span></label>
+       <label for="calcDancingAngle">Angle total de rotation : <span class="info-icon" title="Angle total de virage des marches dansantes (30° à 180°)">i</span></label>
        <select id="calcDancingAngle">
         <option value="90">90° (quart de tour)</option>
         <option value="180">180° (demi-tour)</option>
@@ -632,7 +632,7 @@
      </div>
      <div class="form-row">
       <div class="form-col">
-       <label for="calcSpiralRotation">Rotation totale (°) : <span class="info-icon" title="Angle total de rotation (généralement 270° Ç   360° par étage)">i</span></label>
+       <label for="calcSpiralRotation">Rotation totale (°) : <span class="info-icon" title="Angle total de rotation (généralement 270° à 360° par étage)">i</span></label>
        <input type="text" id="calcSpiralRotation" placeholder="Ex: 360">
        <div class="error" id="calcSpiralRotationError"></div>
       </div>
@@ -698,7 +698,7 @@
      </div>
      <div class="form-row" id="uLandingRow">
       <div class="form-col">
-       <label for="uLandingWidth">Largeur du palier : <span class="info-icon" title="Mesure extérieure totale du palier (= 2Ç— largeur escalier si volées adjacentes, ou plus si espace entre volées)">i</span></label>
+       <label for="uLandingWidth">Largeur du palier : <span class="info-icon" title="Mesure extérieure totale du palier (= 2× largeur escalier si volées adjacentes, ou plus si espace entre volées)">i</span></label>
        <input type="text" id="uLandingWidth" class="metric-input" placeholder="Ex: 1800 mm">
        <input type="text" id="uLandingWidthImperial" class="imperial-input" placeholder="Ex: 6'" style="display: none;">
        <div class="error" id="uLandingWidthError"></div>
@@ -715,13 +715,13 @@
     <!-- Hauteur totale (toujours visible) -->
     <div class="form-row">
      <div class="form-col">
-      <label for="totalRise">Hauteur totale Ç   gravir : <span class="info-icon" title="Hauteur entre les deux niveaux de plancher">i</span></label>
+      <label for="totalRise">Hauteur totale à gravir : <span class="info-icon" title="Hauteur entre les deux niveaux de plancher">i</span></label>
       <input type="text" id="totalRise" class="metric-input" placeholder="Ex: 2700 mm">
       <input type="text" id="totalRiseImperial" class="imperial-input" placeholder="Ex: 8'-10&quot;" style="display: none;">
       <div class="error" id="totalRiseError"></div>
      </div>
      <div class="form-col">
-      <label for="stairDesiredWidth">Largeur de l'escalier : <span class="info-icon" title="Largeur souhaitée (= profondeur du palier pour escalier en L)">i</span></label>
+      <label for="stairDesiredWidth">Largeur de l'escalier : <span class="info-icon" title="Largeur souhaitée de l'escalier (min. selon CNB)">i</span></label>
       <input type="text" id="stairDesiredWidth" class="metric-input" placeholder="Ex: 900 mm">
       <input type="text" id="stairDesiredWidthImperial" class="imperial-input" placeholder="Ex: 36&quot;" style="display: none;">
       <div class="error" id="stairDesiredWidthError"></div>
@@ -743,7 +743,7 @@
  
  <p><strong>Nature de l'outil :</strong> Ce calculateur est un outil <strong>éducatif et technique</strong> basé sur le Code de construction du Québec, Chapitre I : Bâtiment, et Code national du bâtiment : Canada 2020 (modifié). Il permet d'effectuer les calculs de dimensions d'escaliers conformes aux exigences du Code.</p>
  
- <p>Cet outil <strong>n'est pas un rapport d'expertise</strong>. Les résultats générés sont fournis Ç   titre indicatif et éducatif. L'utilisateur demeure responsable de valider la conformité des résultats auprès d'un professionnel qualifié ou de l'autorité compétente.</p>
+ <p>Cet outil <strong>n'est pas un rapport d'expertise</strong>. Les résultats générés sont fournis à titre indicatif et éducatif. L'utilisateur demeure responsable de valider la conformité des résultats auprès d'un professionnel qualifié ou de l'autorité compétente.</p>
  
  <h3>Pour qui est conçu cet outil?</h3>
  
@@ -756,7 +756,7 @@
  <ul>
   <li>Les établissements de réunion (groupe A)</li>
   <li>Les établissements de soins, de traitement ou de détention (groupes B1, B2, B4)</li>
-  <li>Les établissements industriels Ç   risques très élevés (groupe F1)</li>
+  <li>Les établissements industriels à risques très élevés (groupe F1)</li>
   <li>Les bâtiments dépassant certains seuils de superficie ou de hauteur</li>
  </ul>
  
@@ -828,11 +828,11 @@
       <label for="stairConfig">Configuration :</label>
       <select id="stairConfig">
        <option value="straight">Volée droite</option>
-       <option value="turning_30">Volée tournante Ç   30° (1 marche rayonnante)</option>
-       <option value="turning_45">Volée tournante Ç   45° (1 marche rayonnante)</option>
-       <option value="turning_60">Volée tournante Ç   60° (2 marches de 30°)</option>
-       <option value="l_shaped">Volée tournante Ç   90° (en "L")</option>
-       <option value="u_shaped">Volée tournante Ç   180° (en "U")</option>
+       <option value="turning_30">Volée tournante à 30° (1 marche rayonnante)</option>
+       <option value="turning_45">Volée tournante à 45° (1 marche rayonnante)</option>
+       <option value="turning_60">Volée tournante à 60° (2 marches de 30°)</option>
+       <option value="l_shaped">Volée tournante à 90° (en "L")</option>
+       <option value="u_shaped">Volée tournante à 180° (en "U")</option>
        <option value="dancing_steps">Marches dansantes</option>
        <option value="spiral">Hélicoïdal</option>
       </select>
@@ -843,7 +843,7 @@
     <div id="lShapedOptions" class="sub-options" style="display: none;">
      <div class="form-row">
       <div class="form-col">
-       <label for="lShapedConfig">Type de virage Ç   90° :</label>
+       <label for="lShapedConfig">Type de virage à 90° :</label>
        <select id="lShapedConfig">
         <option value="standard_landing">Palier standard</option>
         <option value="two_45deg">2 marches rayonnantes de 45°</option>
@@ -864,7 +864,7 @@
        </select>
       </div>
       <div class="form-col">
-       <label for="narrowSide">Giron côté étroit : <span class="info-icon" title="Mesuré Ç   300 mm de l'axe de la main courante">i</span></label>
+       <label for="narrowSide">Giron côté étroit : <span class="info-icon" title="Mesuré à 300 mm de l'axe de la main courante">i</span></label>
        <input type="text" id="narrowSide" class="metric-input" placeholder="Ex: 150 mm">
        <input type="text" id="narrowSideImperial" class="imperial-input" placeholder="Ex: 6&quot;" style="display: none;">
        <div class="error" id="narrowSideError"></div>
@@ -891,7 +891,7 @@
      </div>
      <div class="form-row">
       <div class="form-col">
-       <label for="spiralTreadAt300">Giron Ç   300 mm de l'axe : <span class="info-icon" title="Min. 190 mm selon CNB 9.8.4.7">i</span></label>
+       <label for="spiralTreadAt300">Giron à 300 mm de l'axe : <span class="info-icon" title="Min. 190 mm selon CNB 9.8.4.7">i</span></label>
        <input type="text" id="spiralTreadAt300" class="metric-input" placeholder="Ex: 200 mm">
        <input type="text" id="spiralTreadAt300Imperial" class="imperial-input" placeholder="Ex: 8&quot;" style="display: none;">
        <div class="error" id="spiralTreadAt300Error"></div>

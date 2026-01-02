@@ -874,14 +874,20 @@ function calculateUShapedStair(params) {
   availableForTreads = flight1Run + flight2Run;
   break;
   case 'rect_landing_radiating_rect':
-  // Configuration palier + marches rayonnantes (3 volées)
+  // Configuration palier + marches rayonnantes
+  // Longueur 1ère partie = girons rectangulaires avant palier
+  // Longueur 2ème partie = zone palier (pas de girons rectangulaires)
+  // Longueur 3ème partie = girons rectangulaires après rayonnantes
   numLandings = 1;
-  availableForTreads = flight1Run + flight2Run + (flight3Run || 0) + (landingLength * 0.25);
+  availableForTreads = flight1Run + (flight3Run || 0);
   break;
   case 'rect_radiating_landing_rect':
-  // Configuration marches rayonnantes + palier (3 volées)
+  // Configuration marches rayonnantes + palier
+  // Longueur 1ère partie = girons rectangulaires avant rayonnantes
+  // Longueur 2ème partie = zone palier (pas de girons rectangulaires)
+  // Longueur 3ème partie = girons rectangulaires après palier
   numLandings = 1;
-  availableForTreads = flight1Run + flight2Run + (flight3Run || 0) + (landingLength * 0.25);
+  availableForTreads = flight1Run + (flight3Run || 0);
   break;
   case 'rect_radiating_landing_radiating_rect':
   // Configuration marches rayonnantes + palier + marches rayonnantes (3 volées)
@@ -2373,21 +2379,22 @@ function generateUShapedMixedVisualization(stairData) {
  const stepsPerCorner = radiatingAngle === 30 ? 3 : 2;
  const totalRadiatingSteps = stepsPerCorner; // Une seule série de 90°
  
- // Répartition des girons rectangulaires
+ // Répartition des girons rectangulaires entre les 2 sections (pas 3)
+ // Pour rect_landing_radiating_rect et rect_radiating_landing_rect:
+ // - flight1 = girons rectangulaires section 1
+ // - flight2 = zone palier (pas de girons rectangulaires)
+ // - flight3 = girons rectangulaires section 2
  const numRectTreads = Math.max(0, numTreads - totalRadiatingSteps);
- const totalRectRun = actualFlight1Run + actualFlight2Run + actualFlight3Run;
+ const totalRectRun = actualFlight1Run + actualFlight3Run; // Seulement flight1 et flight3
  
- let flight1Treads, flight2Treads, flight3Treads;
+ let flight1Treads, flight3Treads;
  if (totalRectRun > 0 && numRectTreads > 0) {
   const ratio1 = actualFlight1Run / totalRectRun;
-  const ratio2 = actualFlight2Run / totalRectRun;
   flight1Treads = Math.max(1, Math.round(numRectTreads * ratio1));
-  flight2Treads = Math.max(1, Math.round(numRectTreads * ratio2));
-  flight3Treads = Math.max(1, numRectTreads - flight1Treads - flight2Treads);
+  flight3Treads = Math.max(1, numRectTreads - flight1Treads);
  } else {
-  flight1Treads = Math.floor(numRectTreads / 3);
-  flight2Treads = Math.floor(numRectTreads / 3);
-  flight3Treads = numRectTreads - flight1Treads - flight2Treads;
+  flight1Treads = Math.floor(numRectTreads / 2);
+  flight3Treads = numRectTreads - flight1Treads;
  }
  
  let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;background:#fafafa;border:1px solid #e0e0e0;border-radius:6px;">';
@@ -2429,12 +2436,11 @@ function generateUShapedMixedVisualization(stairData) {
  const treadDepth_plan = r(treadDepth * scalePlan);
  
  const flight1Run_plan = r(flight1Treads * treadDepth_plan);
- const flight2Run_plan = r(flight2Treads * treadDepth_plan);
  const flight3Run_plan = r(flight3Treads * treadDepth_plan);
  
  // Position de départ centrée
  const totalW_plan = (2 * stairWidth_plan);
- const totalH_plan = Math.max(flight1Run_plan + landingDepth_plan, flight3Run_plan + stairWidth_plan) + flight2Run_plan;
+ const totalH_plan = Math.max(flight1Run_plan + landingDepth_plan, flight3Run_plan + stairWidth_plan);
  const planStartX = r(margin.left + (planW - totalW_plan) / 2);
  const planStartY = r(margin.top + (planH - totalH_plan) / 2);
  

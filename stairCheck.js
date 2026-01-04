@@ -1363,7 +1363,7 @@ function generateLShapedStairVisualization(stairData) {
  if (isLanding) {
   titleText += ' (2 volees + palier)';
  } else {
-  titleText += ' (1 volee continue)';
+  titleText += ' (1 volée continue)';
  }
  svg += '<rect x="' + (W/2 - 140) + '" y="8" width="280" height="26" fill="#e8f5e9" rx="4"/>';
  svg += '<text x="' + (W/2) + '" y="27" style="font:bold 12px Arial;fill:#2e7d32;" text-anchor="middle">' + titleText + '</text>';
@@ -1503,7 +1503,7 @@ function generateLShapedStairVisualization(stairData) {
   svg += '<text x="' + r(palierX - 10) + '" y="' + r(planStartY + stairW2_plan/2) + '" style="font:9px Arial;fill:#666;" text-anchor="middle" transform="rotate(-90 ' + r(palierX - 10) + ' ' + r(planStartY + stairW2_plan/2) + ')">' + flight2Treads + ' girons rectangulaires</text>';
   
  } else {
-  // ===== ESCALIER EN L AVEC MARCHES RAYONNANTES (1 VOLEE CONTINUE) =====
+  // ===== ESCALIER EN L AVEC MARCHES RAYONNANTES (1 volée continue) =====
   
   const L = stairWidth_plan;
   
@@ -1708,7 +1708,7 @@ function generateLShapedStairVisualization(stairData) {
   svg += '<text x="' + markerX_v2m + '" y="' + r(planStartY + stairW2_plan - treadW2_exact/2 + 3) + '" style="font:9px Arial;fill:#333;font-weight:bold;" text-anchor="middle">' + startNum2 + '</text>';
   svg += '<text x="' + markerX_v2m + '" y="' + r(planStartY + treadW2_exact/2 + 3) + '" style="font:9px Arial;fill:#333;font-weight:bold;" text-anchor="middle">' + numTreads + '</text>';
   
-  // Fleche de montee (une seule volee continue) - virage a 90 degres
+  // Fleche de montee (une seule volée continue) - virage a 90 degres
   const arrow1Y = r(planStartY + stairW2_plan + stairWidth_plan/2);
   const arrowCornerX = r(cornerX + stairWidth_plan/2);
   const arrowStartX = r(planStartX); // Depart a la 1ere CM (bord gauche de l'escalier)

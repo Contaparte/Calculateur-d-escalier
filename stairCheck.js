@@ -3438,7 +3438,7 @@ function displayCalculatorResults(solutions, params) {
  html += '<ul>';
  html += `<li>Utilisez les ${isMetric ? 'valeurs exactes en mm' : 'valeurs décimales entre parenthèses'}</li>`;
  html += `<li>Nombre de contremarches : ${best.numRisers}</li>`;
- html += `<li>Nombre de girons tracés : ${best.numTreads} (le dernier giron n'est pas comptabilisé, car il correspond au niveau du plancher supérieur)</li>`;
+ html += `<li>Nombre de girons tracés : ${best.numTreads} (le dernier giron n'est pas comptabilisé, car il correspond au niveau du plancher supérieur)</li>`;
  html += '<li>La somme des contremarches doit égaler la hauteur totale exacte</li>';
  html += '<li>La somme des girons doit égaler la longueur horizontale exacte</li>';
  html += '</ul></div>';

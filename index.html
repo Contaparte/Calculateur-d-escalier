@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Calculateur d'escalier - CNB 2020</title>
+ <style>
+  :root {
+   --primary-color: #2e7d32;
+   --primary-hover: #1b5e20;
+   --secondary-color: #1976d2;
+   --error-color: #c62828;
+   --warning-color: #f9a825;
+   --success-color: #2e7d32;
+   --bg-light: #fafafa;
+   --bg-section: #f5f5f5;
+   --border-color: #e0e0e0;
+   --text-primary: #212121;
+   --text-secondary: #757575;
+  }
+  
+  * { box-sizing: border-box; }
+  
+  body {
+   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+   margin: 0;
+   padding: 20px;
+   background-color: #fef7f2;
+   color: var(--text-primary);
+   line-height: 1.5;
+  }
+  
+  #app {
+   max-width: 1100px;
+   margin: 0 auto;
+   padding: 30px;
+   background-color: white;
+   border-radius: 12px;
+   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+  
+  h1 {
+   color: var(--primary-color);
+   text-align: center;
+   margin-bottom: 10px;
+   font-size: 1.8em;
+  }
+  
+  .subtitle {
+   text-align: center;
+   color: var(--text-secondary);
+   margin-bottom: 25px;
+   font-size: 0.95em;
+  }
+  
+  /* Navigation des onglets */
+  .tab-nav {
+   display: flex;
+   background-color: var(--bg-section);
+   border-radius: 8px;
+   padding: 4px;
+   margin-bottom: 25px;
+   gap: 4px;
+  }
+  
+  .tab-nav button {
+   flex: 1;
+   background-color: transparent;
+   color: var(--text-secondary);
+   border: none;
+   padding: 12px 20px;
+   cursor: pointer;
+   font-size: 15px;
+   font-weight: 500;
+   border-radius: 6px;
+   transition: all 0.2s ease;
+  }
+  
+  .tab-nav button:hover {
+   background-color: rgba(46, 125, 50, 0.1);
+   color: var(--primary-color);
+  }
+  
+  .tab-nav button.active {
+   background-color: var(--primary-color);
+   color: white;
+   box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
+  }
+  
+  .tab-content {
+   display: none;
+   animation: fadeIn 0.3s ease;
+  }
+  
+  .tab-content.active { display: block; }
+  
+  @keyframes fadeIn {
+   from { opacity: 0; transform: translateY(10px); }
+   to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .tab-description {
+   margin-bottom: 25px;
+   padding: 15px 20px;
+   background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+   border-left: 4px solid var(--primary-color);
+   border-radius: 0 8px 8px 0;
+   font-size: 0.95em;
+   color: var(--text-primary);
+  }
+  
+  /* Sections de formulaire */
+  .form-section {
+   margin-bottom: 28px;
+   padding: 20px;
+   background-color: var(--bg-light);
+   border-radius: 10px;
+   border: 1px solid var(--border-color);
+  }
+  
+  .form-section h2 {
+   margin: 0 0 18px 0;
+   color: var(--text-primary);
+   font-size: 1.15em;
+   font-weight: 600;
+   padding-bottom: 10px;
+   border-bottom: 2px solid var(--primary-color);
+  }
+  
+  .form-row {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 20px;
+   margin-bottom: 15px;
+  }
+  
+  .form-row:last-child { margin-bottom: 0; }
+  
+  .form-col {
+   flex: 1;
+   min-width: 280px;
+  }
+  
+  label {
+   display: block;
+   margin-bottom: 6px;
+   font-weight: 500;
+   color: var(--text-primary);
+   font-size: 0.95em;
+  }
+  
+  .info-icon {
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   width: 18px;
+   height: 18px;
+   background-color: var(--secondary-color);
+   color: white;
+   border-radius: 50%;
+   font-size: 11px;
+   font-weight: bold;
+   margin-left: 6px;
+   cursor: help;
+   vertical-align: middle;
+  }
+  
+  input[type="text"], select {
+   width: 100%;
+   padding: 12px 14px;
+   border: 1px solid var(--border-color);
+   border-radius: 8px;
+   font-size: 15px;
+   transition: border-color 0.2s, box-shadow 0.2s;
+   background-color: white;
+  }
+  
+  input[type="text"]:focus, select:focus {
+   outline: none;
+   border-color: var(--primary-color);
+   box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
+  }
+  
+  select {
+   cursor: pointer;
+   appearance: none;
+   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23757575' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+   background-repeat: no-repeat;
+   background-position: right 12px center;
+   padding-right: 36px;
+  }
+  
+  ::placeholder {
+   color: #9e9e9e;
+   font-style: italic;
+  }
+  
+  /* Radio buttons */
+  .radio-group {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 20px;
+   margin-top: 8px;
+  }
+  
+  .radio-group label {
+   display: flex;
+   align-items: center;
+   font-weight: 400;
+   cursor: pointer;
+   padding: 8px 16px;
+   border-radius: 6px;
+   border: 1px solid var(--border-color);
+   transition: all 0.2s;
+  }
+  
+  .radio-group label:hover {
+   background-color: var(--bg-section);
+   border-color: var(--primary-color);
+  }
+  
+  .radio-group input[type="radio"] {
+   margin-right: 8px;
+   accent-color: var(--primary-color);
+  }
+  
+  /* Boutons */
+  button.btn-primary {
+   background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+   color: white;
+   padding: 14px 32px;
+   border: none;
+   border-radius: 8px;
+   cursor: pointer;
+   font-size: 16px;
+   font-weight: 600;
+   transition: all 0.2s;
+   box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+  }
+  
+  button.btn-primary:hover {
+   transform: translateY(-2px);
+   box-shadow: 0 6px 16px rgba(46, 125, 50, 0.4);
+  }
+  
+  button.btn-primary:active {
+   transform: translateY(0);
+  }
+  
+  /* Messages et résultats */
+  .error {
+   color: var(--error-color);
+   font-size: 0.85em;
+   margin-top: 4px;
+   min-height: 18px;
+  }
+  
+  .result {
+   display: none;
+   margin-top: 25px;
+   padding: 25px;
+   border-radius: 10px;
+   animation: slideIn 0.3s ease;
+  }
+  
+  @keyframes slideIn {
+   from { opacity: 0; transform: translateY(20px); }
+   to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .result.compliant {
+   background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+   border: 1px solid #a5d6a7;
+  }
+  
+  .result.non-compliant {
+   background: linear-gradient(135deg, #ffebee 0%, #fce4ec 100%);
+   border: 1px solid #ef9a9a;
+  }
+  
+  .result h3 {
+   margin: 0 0 15px 0;
+   color: var(--primary-color);
+   font-size: 1.2em;
+  }
+  
+  .result.non-compliant h3 {
+   color: var(--error-color);
+  }
+  
+  .result-section {
+   margin: 20px 0;
+   padding: 15px;
+   background-color: rgba(255, 255, 255, 0.7);
+   border-radius: 8px;
+  }
+  
+  .result-section h4 {
+   margin: 0 0 12px 0;
+   color: var(--text-primary);
+   font-size: 1.05em;
+  }
+  
+  .result-section ul {
+   margin: 0;
+   padding-left: 24px;
+  }
+  
+  .result-section li {
+   margin-bottom: 6px;
+  }
+  
+  .warning {
+   background-color: #fff8e1;
+   padding: 15px;
+   margin: 15px 0;
+   border-left: 4px solid var(--warning-color);
+   border-radius: 0 8px 8px 0;
+  }
+  
+  .warning p { margin: 0 0 8px 0; }
+  .warning ul { margin: 0; padding-left: 20px; }
+  
+  /* Panneau d'avertissements CNB */
+  .cnb-warnings-panel {
+   background-color: #fff8e1;
+   border: 1px solid #ffcc02;
+   border-left: 4px solid var(--warning-color);
+   border-radius: 0 8px 8px 0;
+   margin: 20px 0;
+   overflow: hidden;
+  }
+  .cnb-warnings-header {
+   background-color: #ffecb3;
+   padding: 10px 15px;
+   font-weight: 600;
+   color: #e65100;
+  }
+  .cnb-warnings-panel ul {
+   margin: 0;
+   padding: 12px 15px 12px 35px;
+   list-style-type: disc;
+  }
+  .cnb-warnings-panel li {
+   margin-bottom: 8px;
+   padding: 6px 10px;
+   background-color: rgba(255, 255, 255, 0.6);
+   border-radius: 4px;
+   font-size: 0.9em;
+  }
+  .cnb-warnings-panel li.warning-error {
+   background-color: #ffebee;
+   border-left: 3px solid #c62828;
+  }
+  
+  .step-formula {
+   background-color: #e3f2fd;
+   padding: 15px;
+   margin: 15px 0;
+   border-left: 4px solid var(--secondary-color);
+   border-radius: 0 8px 8px 0;
+   font-family: 'Consolas', 'Monaco', monospace;
+   font-size: 0.95em;
+  }
+  
+  /* Tableau des résultats */
+  .result-table {
+   width: 100%;
+   border-collapse: collapse;
+   margin: 15px 0;
+   font-size: 0.95em;
+  }
+  
+  .result-table th, .result-table td {
+   border: 1px solid var(--border-color);
+   padding: 10px 12px;
+   text-align: left;
+  }
+  
+  .result-table th {
+   background-color: var(--bg-section);
+   font-weight: 600;
+   color: var(--text-primary);
+  }
+  
+  .result-table tr:nth-child(even) {
+   background-color: var(--bg-light);
+  }
+  
+  .optimal-solution {
+   background-color: #e8f5e9 !important;
+   font-weight: 500;
+  }
+
+/* Section de dégagement de responsabilité */
+.disclaimer-section {
+ background-color: #f0f9ff;
+ border: 1px solid #bae6fd;
+ border-radius: 8px;
+ padding: 24px;
+ margin-bottom: 24px;
+}
+.disclaimer-section h2 {
+ color: #0c4a6e;
+ font-size: 1.5rem;
+ font-weight: 700;
+ margin-bottom: 16px;
+}
+.disclaimer-section h3 {
+ color: #075985;
+ font-size: 1.125rem;
+ font-weight: 600;
+ margin-top: 20px;
+ margin-bottom: 12px;
+}
+.disclaimer-section p {
+ color: #334155;
+ line-height: 1.6;
+ margin-bottom: 12px;
+}
+.disclaimer-section ul {
+ margin-left: 24px;
+ margin-bottom: 12px;
+}
+.disclaimer-section li {
+ color: #334155;
+ line-height: 1.6;
+ margin-bottom: 8px;
+}
+.disclaimer-section strong {
+ color: #0c4a6e;
+ font-weight: 600;
+}
+.disclaimer-section a {
+ color: #0284c7;
+ text-decoration: underline;
+}
+.disclaimer-section a:hover {
+ color: #0369a1;
+}
+  
+  /* Classes utilitaires */
+  .hidden { display: none !important; }
+  
+  .metric-input, .imperial-input {
+   transition: opacity 0.2s;
+  }
+  
+  .sub-options {
+   margin-left: 20px;
+   margin-top: 15px;
+   padding: 15px;
+   background-color: rgba(255, 255, 255, 0.5);
+   border-left: 3px solid var(--primary-color);
+   border-radius: 0 8px 8px 0;
+  }
+  
+  /* Indicateurs de statut */
+  .status-ok { color: var(--success-color); }
+  .status-warning { color: var(--warning-color); }
+  .status-error { color: var(--error-color); }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+   body { padding: 10px; }
+   #app { padding: 20px; }
+   .form-col { min-width: 100%; }
+   .tab-nav { flex-direction: column; }
+   .radio-group { flex-direction: column; gap: 10px; }
+  }
+ </style>
+</head>
+<body>
+ <div id="app">
+  <h1>Calculateur d'escalier</h1>
+  <p class="subtitle">Conforme au Code de construction du Québec et CNB 2020 (modifié)</p>
+  
+  <div class="tab-nav">
+   <button class="tab-button active" data-tab="calculator">Calcul d'escalier</button>
+   <button class="tab-button" data-tab="verification">Vérification de conformité</button>
+  </div>
+  
+  <!-- ======================= ONGLET CALCULATEUR ======================= -->
+  <div id="calculator" class="tab-content active">
+   <div class="disclaimer-section">
+ <h2>À propos de cet outil et du cadre réglementaire</h2>
+ 
+ <p><strong>Nature de l'outil :</strong> Ce calculateur est un outil <strong>éducatif et technique</strong> basé sur le Code de construction du Québec, Chapitre I : Bâtiment, et Code national du bâtiment : Canada 2020 (modifié). Il permet d'effectuer les calculs de dimensions d'escaliers conformes aux exigences du Code.</p>
+ 
+ <p>Cet outil <strong>n'est pas un rapport d'expertise</strong>. Les résultats générés sont fournis à titre indicatif et éducatif. L'utilisateur demeure responsable de valider la conformité des résultats auprès d'un professionnel qualifié ou de l'autorité compétente.</p>
+ 
+ <h3>Pour qui est conçu cet outil?</h3>
+ 
+ <p>Ce calculateur s'adresse aux professionnels du bâtiment : architectes, ingénieurs, technologues en architecture, inspecteurs municipaux, entrepreneurs en construction et autoconstructeurs qui souhaitent effectuer rapidement des calculs de conformité pour les escaliers.</p>
+ 
+ <h3>Cadre réglementaire au Québec</h3>
+ 
+ <p>Selon la <strong>Loi sur les architectes du Québec</strong>, certains types de bâtiments requièrent obligatoirement l'intervention d'un architecte pour la préparation des plans et devis, notamment :</p>
+ 
+ <ul>
+  <li>Les établissements de réunion (groupe A)</li>
+  <li>Les établissements de soins, de traitement ou de détention (groupes B1, B2, B4)</li>
+  <li>Les établissements industriels à risques très élevés (groupe F1)</li>
+  <li>Les bâtiments dépassant certains seuils de superficie ou de hauteur</li>
+ </ul>
+ 
+ <p>Pour plus d'informations sur les bâtiments assujettis : <a href="https://oaq.com/loi" target="_blank">oaq.com/loi</a></p>
+ 
+ <h3>À propos du créateur</h3>
+ 
+ <p><strong>FVA</strong> est une entreprise spécialisée en <strong>architecture bioclimatique</strong> adaptée au climat québécois. Ce calculateur a été développé pour faciliter les calculs de conformité au Code de construction du Québec et offrir un outil pratique aux professionnels du domaine.</p>
+</div>
+   
+   <!-- Système de mesure -->
+   <div class="form-section">
+    <h2>Système de mesure</h2>
+    <div class="form-row">
+     <div class="form-col">
+      <label for="calcMeasurementSystem">Unités :</label>
+      <select id="calcMeasurementSystem">
+       <option value="metric">Métrique (mm)</option>
+       <option value="imperial">Impérial (pieds-pouces)</option>
+      </select>
+     </div>
+    </div>
+   </div>
+   
+   <!-- Type d'escalier -->
+   <div class="form-section">
+    <h2>Type d'escalier</h2>
+    <div class="form-row">
+     <div class="form-col">
+      <label for="calcBuildingType">Type de bâtiment :</label>
+      <select id="calcBuildingType">
+       <option value="part9">Partie 9 "“ Maisons et petits bâtiments</option>
+       <option value="part3">Partie 3 "“ Grands bâtiments</option>
+      </select>
+     </div>
+     <div class="form-col">
+      <label for="calcStairType">Type d'escalier :</label>
+      <select id="calcStairType">
+       <option value="private">Privé (desservant un seul logement)</option>
+       <option value="common">Commun</option>
+      </select>
+     </div>
+    </div>
+    
+    <!-- Options pour Partie 3 - Groupe d'usage -->
+    <div id="calcPart3Options" class="sub-options" style="display: none;">
+     <div class="form-row">
+      <div class="form-col">
+       <label for="calcUsageGroup">Groupe d'usage : <span class="info-icon" title="Le groupe B, division 2 (soins de santé) a une hauteur max. de volée de 2400 mm au lieu de 3700 mm">i</span></label>
+       <select id="calcUsageGroup">
+        <option value="general">Général (max. 3700 mm/volée)</option>
+        <option value="b_div2">Groupe B, division 2 "“ Soins (max. 2400 mm/volée)</option>
+       </select>
+      </div>
+     </div>
+    </div>
+    
+    <div class="form-row">
+     <div class="form-col">
+      <label for="calcStairConfig">Configuration de l'escalier :</label>
+      <select id="calcStairConfig">
+       <option value="straight">Volée droite</option>
+       <option value="turning_30">Volée tournante à 30° (1 marche rayonnante)</option>
+       <option value="turning_45">Volée tournante à 45° (1 marche rayonnante)</option>
+       <option value="turning_60">Volée tournante à 60° (2 marches de 30°)</option>
+       <option value="l_shaped">Volée tournante à 90° (en "L")</option>
+       <option value="u_shaped">Volée tournante à 180° (en "U")</option>
+       <option value="dancing_steps">Marches dansantes</option>
+       <option value="spiral">Hélicoïdal</option>
+      </select>
+     </div>
+    </div>
+    
+    <!-- Options pour escalier en L (90°) -->
+    <div id="calcLShapedOptions" class="sub-options" style="display: none;">
+     <div class="form-row">
+      <div class="form-col">
+       <label for="calcLShapedConfig">Type de virage à 90° :</label>
+       <select id="calcLShapedConfig">
+        <option value="standard_landing">Palier standard (tournant à 90°)</option>
+        <option value="two_45deg">2 marches rayonnantes de 45°</option>
+        <option value="three_30deg">3 marches rayonnantes de 30°</option>
+       </select>
+      </div>
+     </div>
+    </div>
+    
+        <!-- Options pour escalier en U (180°) -->
+    <div id="calcUShapedOptions" class="sub-options" style="display: none;">
+     <div class="form-row">
+      <div class="form-col">
+       <label for="calcUShapedConfig">Type de virage à 180° :</label>
+       <select id="calcUShapedConfig">
+        <option value="rect_landing_rect">Marche(s) rectangulaire(s) + palier + marche(s) rectangulaire(s)</option>
+        <option value="rect_landing_radiating_rect">Marche(s) rectangulaire(s) + palier + marches rayonnantes + marche(s) rectangulaire(s)</option>
+        <option value="rect_radiating_landing_rect">Marche(s) rectangulaire(s) + marches rayonnantes + palier + marche(s) rectangulaire(s)</option>
+        <option value="rect_radiating_landing_radiating_rect">Marche(s) rectangulaire(s) + marches rayonnantes + palier + marches rayonnantes + marche(s) rectangulaire(s)</option>
+       </select>
+      </div>
+     </div>
+     <div class="form-row" id="calcURadiatingAngleRow" style="display: none;">
+      <div class="form-col">
+       <label for="calcURadiatingAngle">Angle des marches rayonnantes :</label>
+       <select id="calcURadiatingAngle">
+        <option value="45">45° (2 marches par série de 90°)</option>
+        <option value="30">30° (3 marches par série de 90°)</option>
+       </select>
+      </div>
+     </div>
+    </div>
+    
+    <!-- Options pour marches dansantes -->
+    <div id="calcDancingStepsOptions" class="sub-options" style="display: none;">
+     <div class="form-row">
+      <div class="form-col">
+       <label for="calcDancingStepsConfig">Configuration :</label>
+       <select id="calcDancingStepsConfig">
+        <option value="l_dancing">1 virage (type L) : Rect. + dansantes + Rect.</option>
+        <option value="u_dancing">2 virages (type U) : Rect. + dansantes + Rect. + dansantes + Rect.</option>
+       </select>
+      </div>
+     </div>
+     <div class="form-row">
+      <div class="form-col">
+       <label for="calcDancingAngle">Angle par virage : <span class="info-icon" title="Angle de rotation pour chaque zone de marches dansantes (CNB 9.8.4.3)">i</span></label>
+       <select id="calcDancingAngle">
+        <option value="60">60°</option>
+        <option value="75">75°</option>
+        <option value="90" selected>90° (quart de tour)</option>
+        <option value="custom">Personnalisé</option>
+       </select>
+      </div>
+      <div class="form-col" id="calcDancingCustomAngleContainer" style="display: none;">
+       <label for="calcDancingCustomAngle">Angle personnalisé (°) :</label>
+       <input type="text" id="calcDancingCustomAngle" placeholder="Ex: 72">
+       <div class="error" id="calcDancingCustomAngleError"></div>
+      </div>
+     </div>
+     <div class="form-row">
+      <div class="form-col">
+       <label for="calcDancingNumSteps">Nombre de marches dansantes par zone : <span class="info-icon" title="Nombre de marches dans chaque zone de virage (angle constant par marche)">i</span></label>
+       <select id="calcDancingNumSteps">
+        <option value="2">2 marches</option>
+        <option value="3" selected>3 marches</option>
+        <option value="4">4 marches</option>
+        <option value="5">5 marches</option>
+        <option value="6">6 marches</option>
+       </select>
+      </div>
+      <div class="form-col">
+       <label for="calcDancingInnerRadius">Rayon intérieur : <span class="info-icon" title="Distance du centre de la courbe au bord intérieur des marches. Le giron est mesuré à 300 mm de l'axe de la main courante (CNB 9.8.4.3)">i</span></label>
+       <input type="text" id="calcDancingInnerRadius" class="metric-input" placeholder="Ex: 200 mm">
+       <input type="text" id="calcDancingInnerRadiusImperial" class="imperial-input" placeholder="Ex: 8&quot;" style="display: none;">
+       <div class="error" id="calcDancingInnerRadiusError"></div>
+      </div>
+     </div>
+     <div class="info-box" style="margin-top: 10px; padding: 8px; background: #fff3e0; border-left: 3px solid #ff9800; font-size: 12px;">
+      <strong>CNB 9.8.4.3 - Marches dansantes :</strong><br>
+      • Giron min. 150 mm à l'extrémité étroite<br>
+      • Giron conforme au tableau 9.8.4.2 à 300 mm de l'axe de la main courante<br>
+      • Angle constant obligatoire • Non permises comme issue
+     </div>
+    </div>
+    
+    <!-- Options pour escalier hélicoïdal -->
+    <div id="calcSpiralOptions" class="sub-options" style="display: none;">
+     <div class="form-row">
+      <div class="form-col">
+       <label for="calcSpiralConfig">Usage :</label>
+       <select id="calcSpiralConfig">
+        <option value="secondary">Escalier secondaire</option>
+        <option value="primary">Seul moyen d'évacuation (max. 3 personnes)</option>
+       </select>
+      </div>
+      <div class="form-col">
+       <label for="calcSpiralInnerRadius">Rayon intérieur : <span class="info-icon" title="Distance du centre au côté étroit des marches">i</span></label>
+       <input type="text" id="calcSpiralInnerRadius" class="metric-input" placeholder="Ex: 300 mm">
+       <input type="text" id="calcSpiralInnerRadiusImperial" class="imperial-input" placeholder="Ex: 12&quot;" style="display: none;">
+       <div class="error" id="calcSpiralInnerRadiusError"></div>
+      </div>
+     </div>
+     <div class="form-row">
+      <div class="form-col">
+       <label for="calcSpiralRotation">Rotation totale (°) : <span class="info-icon" title="Angle total de rotation (généralement 270° à 360° par étage)">i</span></label>
+       <input type="text" id="calcSpiralRotation" placeholder="Ex: 360">
+       <div class="error" id="calcSpiralRotationError"></div>
+      </div>
+     </div>
+    </div>
+   </div>
+   
+   <!-- Dimensions souhaitées -->
+   <div class="form-section">
+    <h2>Dimensions disponibles</h2>
+    
+    <!-- Pour escaliers simples (droits, tournants simples) -->
+    <div id="calcStandardRunContainer" class="form-row">
+     <div class="form-col">
+      <label for="totalRun">Longueur totale disponible : <span class="info-icon" title="Distance horizontale totale pour l'escalier">i</span></label>
+      <input type="text" id="totalRun" class="metric-input" placeholder="Ex: 3600 mm">
+      <input type="text" id="totalRunImperial" class="imperial-input" placeholder="Ex: 12'" style="display: none;">
+      <div class="error" id="totalRunError"></div>
+     </div>
+    </div>
+    
+    <!-- Pour escalier en L (palier standard OU marches rayonnantes) -->
+    <div id="calcLandingDimensions" style="display: none;">
+     <div class="form-row">
+      <div class="form-col">
+       <label for="firstFlightRun">Côté long 1ère partie : <span class="info-icon" title="Longueur horizontale du bas jusqu'au virage. Note CNB: avec marches rayonnantes, l'ensemble forme UNE SEULE volée.">i</span></label>
+       <input type="text" id="firstFlightRun" class="metric-input" placeholder="Ex: 2500 mm">
+       <input type="text" id="firstFlightRunImperial" class="imperial-input" placeholder="Ex: 8'-3&quot;" style="display: none;">
+       <div class="error" id="firstFlightRunError"></div>
+      </div>
+      <div class="form-col">
+       <label for="secondFlightRun">Côté long 2ème partie : <span class="info-icon" title="Longueur verticale du virage jusqu'en haut. Note CNB: avec marches rayonnantes, l'ensemble forme UNE SEULE volée.">i</span></label>
+       <input type="text" id="secondFlightRun" class="metric-input" placeholder="Ex: 2200 mm">
+       <input type="text" id="secondFlightRunImperial" class="imperial-input" placeholder="Ex: 7'-3&quot;" style="display: none;">
+       <div class="error" id="secondFlightRunError"></div>
+      </div>
+     </div>
+    </div>
+    
+    <!-- Pour escalier en U -->
+    <div id="calcUDimensions" style="display: none;">
+     <div class="form-row">
+      <div class="form-col">
+       <label for="uFirstFlightRun" id="uFirstFlightRunLabel">Longueur 1ère partie : <span class="info-icon" title="1er segment vertical du U (girons + profondeur palier/zone virage)">i</span></label>
+       <input type="text" id="uFirstFlightRun" class="metric-input" placeholder="Ex: 1800 mm">
+       <input type="text" id="uFirstFlightRunImperial" class="imperial-input" placeholder="Ex: 6'" style="display: none;">
+       <div class="error" id="uFirstFlightRunError"></div>
+      </div>
+      <div class="form-col">
+       <label for="uSecondFlightRun" id="uSecondFlightRunLabel">Longueur 2ème partie : <span class="info-icon" title="Segment horizontal du U (largeur totale du palier/zone centrale)">i</span></label>
+       <input type="text" id="uSecondFlightRun" class="metric-input" placeholder="Ex: 1800 mm">
+       <input type="text" id="uSecondFlightRunImperial" class="imperial-input" placeholder="Ex: 6'" style="display: none;">
+       <div class="error" id="uSecondFlightRunError"></div>
+      </div>
+     </div>
+     <div class="form-row" id="uThirdFlightRow" style="display: none;">
+      <div class="form-col">
+       <label for="uThirdFlightRun" id="uThirdFlightRunLabel">Longueur 3ème partie : <span class="info-icon" title="Dernier segment vertical du U (girons + profondeur palier/zone virage)">i</span></label>
+       <input type="text" id="uThirdFlightRun" class="metric-input" placeholder="Ex: 1200 mm">
+       <input type="text" id="uThirdFlightRunImperial" class="imperial-input" placeholder="Ex: 4'" style="display: none;">
+       <div class="error" id="uThirdFlightRunError"></div>
+      </div>
+     </div>
+     <div class="form-row" id="uLandingWidthRow">
+      <div class="form-col">
+       <label for="uLandingWidth">Largeur du palier : <span class="info-icon" title="Mesure extérieure totale du palier (= 2àƒ"” largeur escalier si volées adjacentes, ou plus si espace entre volées)">i</span></label>
+       <input type="text" id="uLandingWidth" class="metric-input" placeholder="Ex: 1800 mm">
+       <input type="text" id="uLandingWidthImperial" class="imperial-input" placeholder="Ex: 6'" style="display: none;">
+       <div class="error" id="uLandingWidthError"></div>
+      </div>
+     </div>
+     <div class="form-row" id="uLandingDepthRow">
+      <div class="form-col">
+       <label for="uLandingDepth">Profondeur du palier : <span class="info-icon" title="Profondeur du palier de retournement (min. = largeur escalier selon CNB 9.8.6.3)">i</span></label>
+       <input type="text" id="uLandingDepth" class="metric-input" placeholder="Ex: 900 mm">
+       <input type="text" id="uLandingDepthImperial" class="imperial-input" placeholder="Ex: 36&quot;" style="display: none;">
+       <div class="error" id="uLandingDepthError"></div>
+      </div>
+     </div>
+    </div>
+    
+    <!-- Dimensions pour marches dansantes -->
+    <div id="calcDancingDimensions" style="display: none;">
+     <div class="form-row">
+      <div class="form-col">
+       <label for="dancingFirstFlightRun">Longueur 1ère partie : <span class="info-icon" title="Longueur horizontale de la 1ère volée rectangulaire">i</span></label>
+       <input type="text" id="dancingFirstFlightRun" class="metric-input" placeholder="Ex: 2000 mm">
+       <input type="text" id="dancingFirstFlightRunImperial" class="imperial-input" placeholder="Ex: 6'-8&quot;" style="display: none;">
+       <div class="error" id="dancingFirstFlightRunError"></div>
+      </div>
+      <div class="form-col">
+       <label for="dancingSecondFlightRun">Longueur 2ème partie : <span class="info-icon" title="Longueur de la 2ème volée rectangulaire (après 1er virage)">i</span></label>
+       <input type="text" id="dancingSecondFlightRun" class="metric-input" placeholder="Ex: 1800 mm">
+       <input type="text" id="dancingSecondFlightRunImperial" class="imperial-input" placeholder="Ex: 6'" style="display: none;">
+       <div class="error" id="dancingSecondFlightRunError"></div>
+      </div>
+     </div>
+     <div class="form-row" id="dancingThirdFlightRow" style="display: none;">
+      <div class="form-col">
+       <label for="dancingThirdFlightRun">Longueur 3ème partie : <span class="info-icon" title="Longueur de la 3ème volée rectangulaire (après 2ème virage, config. U seulement)">i</span></label>
+       <input type="text" id="dancingThirdFlightRun" class="metric-input" placeholder="Ex: 1500 mm">
+       <input type="text" id="dancingThirdFlightRunImperial" class="imperial-input" placeholder="Ex: 5'" style="display: none;">
+       <div class="error" id="dancingThirdFlightRunError"></div>
+      </div>
+     </div>
+    </div>
+    
+    <!-- Hauteur totale (toujours visible) -->
+    <div class="form-row">
+     <div class="form-col">
+      <label for="totalRise">Hauteur totale à gravir : <span class="info-icon" title="Hauteur entre les deux niveaux de plancher">i</span></label>
+      <input type="text" id="totalRise" class="metric-input" placeholder="Ex: 2700 mm">
+      <input type="text" id="totalRiseImperial" class="imperial-input" placeholder="Ex: 8'-10&quot;" style="display: none;">
+      <div class="error" id="totalRiseError"></div>
+     </div>
+     <div class="form-col">
+      <label for="stairDesiredWidth">Largeur de l'escalier : <span class="info-icon" title="Largeur souhaitée de l'escalier (min. selon CNB)">i</span></label>
+      <input type="text" id="stairDesiredWidth" class="metric-input" placeholder="Ex: 900 mm">
+      <input type="text" id="stairDesiredWidthImperial" class="imperial-input" placeholder="Ex: 36&quot;" style="display: none;">
+      <div class="error" id="stairDesiredWidthError"></div>
+     </div>
+    </div>
+   </div>
+   
+   <!-- Panneau d'avertissements CNB en temps réel -->
+   <div id="cnbWarningsPanel" class="cnb-warnings-panel" style="display: none;">
+    <div class="cnb-warnings-header">
+     <span>! Avertissements CNB 2020</span>
+    </div>
+    <ul id="cnbWarningsList"></ul>
+   </div>
+   
+   <button id="calculateStair" class="btn-primary">Calculer l'escalier</button>
+   
+   <div id="calculatorResult" class="result">
+    <div id="calculatorResultContent"></div>
+   </div>
+  </div>
+  
+  <!-- ======================= ONGLET VÉRIFICATION ======================= -->
+  <div id="verification" class="tab-content">
+   <div class="disclaimer-section">
+ <h2>À propos de cet outil et du cadre réglementaire</h2>
+ 
+ <p><strong>Nature de l'outil :</strong> Ce calculateur est un outil <strong>éducatif et technique</strong> basé sur le Code de construction du Québec, Chapitre I : Bâtiment, et Code national du bâtiment : Canada 2020 (modifié). Il permet d'effectuer les calculs de dimensions d'escaliers conformes aux exigences du Code.</p>
+ 
+ <p>Cet outil <strong>n'est pas un rapport d'expertise</strong>. Les résultats générés sont fournis à titre indicatif et éducatif. L'utilisateur demeure responsable de valider la conformité des résultats auprès d'un professionnel qualifié ou de l'autorité compétente.</p>
+ 
+ <h3>Pour qui est conçu cet outil?</h3>
+ 
+ <p>Ce calculateur s'adresse aux professionnels du bâtiment : architectes, ingénieurs, technologues en architecture, inspecteurs municipaux, entrepreneurs en construction et autoconstructeurs qui souhaitent effectuer rapidement des calculs de conformité pour les escaliers.</p>
+ 
+ <h3>Cadre réglementaire au Québec</h3>
+ 
+ <p>Selon la <strong>Loi sur les architectes du Québec</strong>, certains types de bâtiments requièrent obligatoirement l'intervention d'un architecte pour la préparation des plans et devis, notamment :</p>
+ 
+ <ul>
+  <li>Les établissements de réunion (groupe A)</li>
+  <li>Les établissements de soins, de traitement ou de détention (groupes B1, B2, B4)</li>
+  <li>Les établissements industriels à risques très élevés (groupe F1)</li>
+  <li>Les bâtiments dépassant certains seuils de superficie ou de hauteur</li>
+ </ul>
+ 
+ <p>Pour plus d'informations sur les bâtiments assujettis : <a href="https://oaq.com/loi" target="_blank">oaq.com/loi</a></p>
+ 
+ <h3>À propos du créateur</h3>
+ 
+ <p><strong>FVA</strong> est une entreprise spécialisée en <strong>architecture bioclimatique</strong> adaptée au climat québécois. Ce calculateur a été développé pour faciliter les calculs de conformité au Code de construction du Québec et offrir un outil pratique aux professionnels du domaine.</p>
+</div>
+   
+   <!-- Système de mesure -->
+   <div class="form-section">
+    <h2>Système de mesure</h2>
+    <div class="form-row">
+     <div class="form-col">
+      <label for="measurementSystem">Unités :</label>
+      <select id="measurementSystem">
+       <option value="metric">Métrique (mm)</option>
+       <option value="imperial">Impérial (pieds-pouces)</option>
+      </select>
+     </div>
+    </div>
+   </div>
+   
+   <!-- Type de bâtiment et d'escalier -->
+   <div class="form-section">
+    <h2>Type de bâtiment et d'escalier</h2>
+    <div class="form-row">
+     <div class="form-col">
+      <label for="buildingType">Type de bâtiment :</label>
+      <select id="buildingType">
+       <option value="part9">Partie 9 "“ Maisons et petits bâtiments</option>
+       <option value="part3">Partie 3 "“ Grands bâtiments</option>
+      </select>
+     </div>
+     <div class="form-col">
+      <label for="buildingUse">Usage du bâtiment :</label>
+      <select id="buildingUse">
+       <option value="residential">Résidentiel</option>
+       <option value="commercial">Commercial</option>
+       <option value="industrial">Industriel</option>
+      </select>
+     </div>
+    </div>
+    <div class="form-row">
+     <div class="form-col">
+      <label for="stairType">Type d'escalier :</label>
+      <select id="stairType">
+       <option value="private">Privé (desservant un seul logement)</option>
+       <option value="common">Commun</option>
+       <option value="service">Service</option>
+      </select>
+     </div>
+     <div class="form-col">
+      <label for="stairUse">Usage de l'escalier :</label>
+      <select id="stairUse">
+       <option value="normal">Usage normal</option>
+       <option value="exit">Issue</option>
+      </select>
+     </div>
+    </div>
+   </div>
+   
+   <!-- Configuration de l'escalier -->
+   <div class="form-section">
+    <h2>Configuration de l'escalier</h2>
+    <div class="form-row">
+     <div class="form-col">
+      <label for="stairConfig">Configuration :</label>
+      <select id="stairConfig">
+       <option value="straight">Volée droite</option>
+       <option value="turning_30">Volée tournante à 30° (1 marche rayonnante)</option>
+       <option value="turning_45">Volée tournante à 45° (1 marche rayonnante)</option>
+       <option value="turning_60">Volée tournante à 60° (2 marches de 30°)</option>
+       <option value="l_shaped">Volée tournante à 90° (en "L")</option>
+       <option value="u_shaped">Volée tournante à 180° (en "U")</option>
+       <option value="dancing_steps">Marches dansantes</option>
+       <option value="spiral">Hélicoïdal</option>
+      </select>
+     </div>
+    </div>
+    
+    <!-- Options pour escalier en L -->
+    <div id="lShapedOptions" class="sub-options" style="display: none;">
+     <div class="form-row">
+      <div class="form-col">
+       <label for="lShapedConfig">Type de virage à 90° :</label>
+       <select id="lShapedConfig">
+        <option value="standard_landing">Palier standard</option>
+        <option value="two_45deg">2 marches rayonnantes de 45°</option>
+        <option value="three_30deg">3 marches rayonnantes de 30°</option>
+       </select>
+      </div>
+     </div>
+    </div>
+    
+    <!-- Options pour marches dansantes -->
+    <div id="dancingStepsOptions" class="sub-options" style="display: none;">
+     <div class="form-row">
+      <div class="form-col">
+       <label for="dancingStepsConfig">Configuration :</label>
+       <select id="dancingStepsConfig">
+        <option value="standard">Standard (angle constant)</option>
+        <option value="exit">Issue (conforme art. 3.4.6.9)</option>
+       </select>
+      </div>
+      <div class="form-col">
+       <label for="narrowSide">Giron côté étroit : <span class="info-icon" title="Mesuré à 300 mm de l'axe de la main courante">i</span></label>
+       <input type="text" id="narrowSide" class="metric-input" placeholder="Ex: 150 mm">
+       <input type="text" id="narrowSideImperial" class="imperial-input" placeholder="Ex: 6&quot;" style="display: none;">
+       <div class="error" id="narrowSideError"></div>
+      </div>
+     </div>
+    </div>
+    
+    <!-- Options pour escalier hélicoïdal -->
+    <div id="spiralOptions" class="sub-options" style="display: none;">
+     <div class="form-row">
+      <div class="form-col">
+       <label for="spiralConfig">Usage :</label>
+       <select id="spiralConfig">
+        <option value="secondary">Escalier secondaire</option>
+        <option value="primary">Seul moyen d'évacuation</option>
+       </select>
+      </div>
+      <div class="form-col">
+       <label for="spiralWidth">Largeur libre entre mains courantes : <span class="info-icon" title="Min. 660 mm selon CNB 9.8.4.7">i</span></label>
+       <input type="text" id="spiralWidth" class="metric-input" placeholder="Ex: 660 mm">
+       <input type="text" id="spiralWidthImperial" class="imperial-input" placeholder="Ex: 26&quot;" style="display: none;">
+       <div class="error" id="spiralWidthError"></div>
+      </div>
+     </div>
+     <div class="form-row">
+      <div class="form-col">
+       <label for="spiralTreadAt300">Giron à 300 mm de l'axe : <span class="info-icon" title="Min. 190 mm selon CNB 9.8.4.7">i</span></label>
+       <input type="text" id="spiralTreadAt300" class="metric-input" placeholder="Ex: 200 mm">
+       <input type="text" id="spiralTreadAt300Imperial" class="imperial-input" placeholder="Ex: 8&quot;" style="display: none;">
+       <div class="error" id="spiralTreadAt300Error"></div>
+      </div>
+     </div>
+    </div>
+   </div>
+   
+   <!-- Dimensions de l'escalier -->
+   <div class="form-section">
+    <h2>Dimensions de l'escalier</h2>
+    <div class="form-row">
+     <div class="form-col">
+      <label for="riserHeight">Hauteur de contremarche :</label>
+      <input type="text" id="riserHeight" class="metric-input" placeholder="Ex: 180 mm">
+      <input type="text" id="riserHeightImperial" class="imperial-input" placeholder="Ex: 7 1/4&quot;" style="display: none;">
+      <div class="error" id="riserHeightError"></div>
+     </div>
+     <div class="form-col">
+      <label for="treadDepth">Giron :</label>
+      <input type="text" id="treadDepth" class="metric-input" placeholder="Ex: 280 mm">
+      <input type="text" id="treadDepthImperial" class="imperial-input" placeholder="Ex: 11&quot;" style="display: none;">
+      <div class="error" id="treadDepthError"></div>
+     </div>
+    </div>
+    <div class="form-row">
+     <div class="form-col">
+      <label for="stairWidth">Largeur de l'escalier :</label>
+      <input type="text" id="stairWidth" class="metric-input" placeholder="Ex: 900 mm">
+      <input type="text" id="stairWidthImperial" class="imperial-input" placeholder="Ex: 36&quot;" style="display: none;">
+      <div class="error" id="stairWidthError"></div>
+     </div>
+     <div class="form-col">
+      <label for="headroom">Hauteur libre (échappée) : <span class="info-icon" title="Hauteur libre au-dessus des marches">i</span></label>
+      <input type="text" id="headroom" class="metric-input" placeholder="Ex: 2050 mm">
+      <input type="text" id="headroomImperial" class="imperial-input" placeholder="Ex: 6'-9&quot;" style="display: none;">
+      <div class="error" id="headroomError"></div>
+     </div>
+    </div>
+    
+    <!-- Champs pour palier (escalier en L) -->
+    <div id="verifyLandingDimensions" style="display: none;">
+     <div class="form-row">
+      <div class="form-col">
+       <label for="landingDepth">Profondeur du palier :</label>
+       <input type="text" id="landingDepth" class="metric-input" placeholder="Ex: 900 mm">
+       <input type="text" id="landingDepthImperial" class="imperial-input" placeholder="Ex: 36&quot;" style="display: none;">
+       <div class="error" id="landingDepthError"></div>
+      </div>
+     </div>
+    </div>
+   </div>
+   
+   <button id="checkCompliance" class="btn-primary">Vérifier la conformité</button>
+   
+   <div id="result" class="result">
+    <div id="resultContent"></div>
+   </div>
+  </div>
+ </div>
+ 
+ <script src="stairCheck.js"></script>
+</body>
+</html>
